@@ -7,6 +7,7 @@ import { CartProvider } from "@/contexts/CartContext";
 import Index from "./pages/Index";
 import CustomerMenu from "./pages/CustomerMenu";
 import OrderStatus from "./pages/OrderStatus";
+import PaymentResult from "./pages/PaymentResult";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminOrders from "./pages/AdminOrders";
@@ -28,6 +29,9 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/mesa/:tableId" element={<CustomerMenu />} />
             <Route path="/pedido/:orderId" element={<OrderStatus />} />
+            <Route path="/pago/exito" element={<PaymentResult status="exito" />} />
+            <Route path="/pago/error" element={<PaymentResult status="error" />} />
+            <Route path="/pago/pendiente" element={<PaymentResult status="pendiente" />} />
             <Route path="/admin" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route path="dashboard" element={<AdminDashboard />} />
