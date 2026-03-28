@@ -1,21 +1,76 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { ShoppingCart, Minus, Plus, Trash2 } from 'lucide-react';
+import { ShoppingCart, Minus, Plus, Trash2, Loader2 } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { restaurant } from '@/data/mockData';
-import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export default function CartSheet() {
   const { items, itemCount, subtotal, tax, total, removeItem, updateQuantity, clearCart, tableNumber } = useCart();
-  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleConfirmOrder = () => {
-    setOpen(false);
-    clearCart();
-    navigate(`/pedido/ORD-${Date.now().toString().slice(-4)}`);
+  const handleConfirmOrder = async () => {
+    setLoading(true);
+    try {
+      // 1. Create order in DB
+      const orderItems = items.map(i => ({
+        name: i.menuItem.name,
+        quantity: i.quantity,
+        unitPrice: i.unitPrice,
+        menuItemId: i.menuItem.id,
+        selectedOptions: i.selectedOptions,
+        notes: i.notes,
+      }));
+
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          table_number: tableNumber,
+          items: orderItems,
+          subtotal,
+          tax,
+          total,
+          status: 'pending_payment',
+          payment_status: 'pending',
+        })
+        .select('id')
+        .single();
+
+      if (orderError || !order) throw new Error(orderError?.message || 'Error creating order');
+
+      // 2. Call edge function to create MercadoPago preference
+      const backUrl = window.location.origin;
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: {
+          orderId: order.id,
+          items: orderItems,
+          total,
+          tableNumber,
+          backUrl,
+        },
+      });
+
+      if (error) throw new Error(error.message || 'Error creating payment');
+
+      // 3. Redirect to MercadoPago
+      const paymentUrl = data.sandboxInitPoint || data.initPoint;
+      if (paymentUrl) {
+        clearCart();
+        setOpen(false);
+        window.location.href = paymentUrl;
+      } else {
+        throw new Error('No payment URL received');
+      }
+    } catch (err: any) {
+      console.error('Payment error:', err);
+      toast.error('Error al procesar el pago. Intenta de nuevo.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (itemCount === 0) return null;
@@ -73,9 +128,24 @@ export default function CartSheet() {
           <div className="flex justify-between font-heading font-bold text-base"><span>Total</span><span>{restaurant.currency}{total.toFixed(0)}</span></div>
         </div>
 
-        <Button onClick={handleConfirmOrder} className="w-full gradient-primary font-heading font-semibold h-12 text-base mt-2">
-          Confirmar pedido
+        <Button
+          onClick={handleConfirmOrder}
+          disabled={loading}
+          className="w-full gradient-primary font-heading font-semibold h-12 text-base mt-2"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Procesando...
+            </>
+          ) : (
+            <>Pagar con MercadoPago — {restaurant.currency}{total.toFixed(0)}</>
+          )}
         </Button>
+
+        <p className="text-[11px] text-muted-foreground text-center mt-2">
+          Serás redirigido a MercadoPago para completar el pago
+        </p>
       </SheetContent>
     </Sheet>
   );

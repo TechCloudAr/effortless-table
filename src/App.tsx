@@ -7,6 +7,7 @@ import { CartProvider } from "@/contexts/CartContext";
 import Index from "./pages/Index";
 import CustomerMenu from "./pages/CustomerMenu";
 import OrderStatus from "./pages/OrderStatus";
+import PaymentResult from "./pages/PaymentResult";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminOrders from "./pages/AdminOrders";
