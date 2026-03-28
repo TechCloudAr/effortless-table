@@ -124,7 +124,7 @@ export default function Index() {
 
       {/* Footer */}
       <footer className="border-t border-border px-4 md:px-8 py-6 text-center">
-        <p className="text-xs text-muted-foreground">© 2025 Mesa Digital. Digitaliza la experiencia en mesa.</p>
+        <p className="text-xs text-muted-foreground">© 2025 Mesa Digital — Digitaliza la experiencia en mesa.</p>
       </footer>
     </div>
   );
