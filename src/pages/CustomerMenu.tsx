@@ -247,7 +247,7 @@ export default function CustomerMenu() {
             return (
               <section
                 key={cat.id}
-                ref={el => { sectionRefs.current[cat.id] = el; }}
+                ref={(el: HTMLDivElement | null) => { sectionRefs.current[cat.id] = el; }}
                 className="px-4 pt-5 pb-1"
               >
                 <div className="flex items-center gap-2 mb-3">
