@@ -29,6 +29,9 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/mesa/:tableId" element={<CustomerMenu />} />
             <Route path="/pedido/:orderId" element={<OrderStatus />} />
+            <Route path="/pago/exito" element={<PaymentResult status="exito" />} />
+            <Route path="/pago/error" element={<PaymentResult status="error" />} />
+            <Route path="/pago/pendiente" element={<PaymentResult status="pendiente" />} />
             <Route path="/admin" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route path="dashboard" element={<AdminDashboard />} />
