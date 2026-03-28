@@ -17,7 +17,7 @@ serve(async (req) => {
       throw new Error('MERCADOPAGO_ACCESS_TOKEN is not configured');
     }
 
-    const { orderId, items, total, tableNumber, backUrl } = await req.json();
+    const { orderId, items, total, tableNumber, backUrl, currencyId = 'MXN' } = await req.json();
 
     if (!orderId || !items || !total || !tableNumber || !backUrl) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
