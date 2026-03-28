@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { menuItems as initialMenuItems, categories } from '@/data/mockData';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -14,7 +14,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Pencil, Trash2, ImagePlus, Search, GripVertical } from 'lucide-react';
+import { Plus, Pencil, Trash2, ImagePlus, Search, GripVertical, X, Upload, Link } from 'lucide-react';
 import type { MenuItem } from '@/types/restaurant';
 import { toast } from 'sonner';
 
@@ -23,7 +23,7 @@ type FormData = {
   description: string;
   price: string;
   categoryId: string;
-  image: string;
+  images: string[];
   tags: string;
   available: boolean;
   popular: boolean;
@@ -34,7 +34,7 @@ const emptyForm: FormData = {
   description: '',
   price: '',
   categoryId: '',
-  image: '',
+  images: [],
   tags: '',
   available: true,
   popular: false,
@@ -49,6 +49,9 @@ export default function AdminMenuPage() {
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [deletingItem, setDeletingItem] = useState<MenuItem | null>(null);
   const [form, setForm] = useState<FormData>(emptyForm);
+  const [urlInput, setUrlInput] = useState('');
+  const [imageMode, setImageMode] = useState<'file' | 'url'>('file');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const toggleAvailability = (id: string) => {
     setItems(prev => prev.map(i => i.id === id ? { ...i, available: !i.available } : i));
@@ -57,27 +60,68 @@ export default function AdminMenuPage() {
   const openCreate = () => {
     setEditingItem(null);
     setForm(emptyForm);
+    setUrlInput('');
     setDialogOpen(true);
   };
 
   const openEdit = (item: MenuItem) => {
     setEditingItem(item);
+    const allImages = item.images?.length ? item.images : [item.image];
     setForm({
       name: item.name,
       description: item.description,
       price: String(item.price),
       categoryId: item.categoryId,
-      image: item.image,
+      images: allImages,
       tags: item.tags.join(', '),
       available: item.available,
       popular: item.popular ?? false,
     });
+    setUrlInput('');
     setDialogOpen(true);
   };
 
   const openDelete = (item: MenuItem) => {
     setDeletingItem(item);
     setDeleteDialogOpen(true);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    Array.from(files).forEach(file => {
+      if (!file.type.startsWith('image/')) {
+        toast.error(`"${file.name}" no es una imagen válida`);
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`"${file.name}" excede 5MB`);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result as string;
+        setForm(prev => ({ ...prev, images: [...prev.images, dataUrl] }));
+      };
+      reader.readAsDataURL(file);
+    });
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const addUrlImage = () => {
+    const url = urlInput.trim();
+    if (!url) return;
+    try {
+      new URL(url);
+      setForm(prev => ({ ...prev, images: [...prev.images, url] }));
+      setUrlInput('');
+    } catch {
+      toast.error('URL inválida');
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setForm(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== index) }));
   };
 
   const handleSave = () => {
@@ -91,6 +135,8 @@ export default function AdminMenuPage() {
       return;
     }
 
+    const mainImage = form.images[0] || (editingItem?.image ?? '/placeholder.svg');
+
     if (editingItem) {
       setItems(prev => prev.map(i => i.id === editingItem.id ? {
         ...i,
@@ -98,7 +144,8 @@ export default function AdminMenuPage() {
         description: form.description.trim(),
         price,
         categoryId: form.categoryId,
-        image: form.image || i.image,
+        image: mainImage,
+        images: form.images.length ? form.images : undefined,
         tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
         available: form.available,
         popular: form.popular,
@@ -111,7 +158,8 @@ export default function AdminMenuPage() {
         description: form.description.trim(),
         price,
         categoryId: form.categoryId,
-        image: form.image || '/placeholder.svg',
+        image: mainImage,
+        images: form.images.length ? form.images : undefined,
         tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
         available: form.available,
         popular: form.popular,
@@ -204,60 +252,58 @@ export default function AdminMenuPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {filtered.map(item => (
-            <div
-              key={item.id}
-              className={`bg-card rounded-xl p-3 shadow-card flex items-center gap-3 group transition-all hover:shadow-md border ${
-                !item.available ? 'opacity-60 border-border' : 'border-transparent'
-              }`}
-            >
-              <GripVertical className="h-4 w-4 text-muted-foreground/40 flex-shrink-0 hidden md:block" />
-              <div className="relative flex-shrink-0">
-                <img src={item.image} alt={item.name} className="h-14 w-14 rounded-lg object-cover" />
-                {!item.available && (
-                  <div className="absolute inset-0 bg-background/60 rounded-lg flex items-center justify-center">
-                    <span className="text-[9px] font-bold text-destructive uppercase">Pausado</span>
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-heading font-semibold text-sm truncate">{item.name}</h3>
-                  {item.popular && <Badge variant="secondary" className="text-[10px] h-4 bg-orange-500/20 text-orange-400">⭐ Popular</Badge>}
-                  {item.tags.slice(0, 1).map(t => (
-                    <Badge key={t} variant="outline" className="text-[10px] h-4">{t}</Badge>
-                  ))}
+          {filtered.map(item => {
+            const imgCount = item.images?.length || 1;
+            return (
+              <div
+                key={item.id}
+                className={`bg-card rounded-xl p-3 shadow-card flex items-center gap-3 group transition-all hover:shadow-md border ${
+                  !item.available ? 'opacity-60 border-border' : 'border-transparent'
+                }`}
+              >
+                <GripVertical className="h-4 w-4 text-muted-foreground/40 flex-shrink-0 hidden md:block" />
+                <div className="relative flex-shrink-0">
+                  <img src={item.image} alt={item.name} className="h-14 w-14 rounded-lg object-cover" />
+                  {imgCount > 1 && (
+                    <span className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground text-[9px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                      {imgCount}
+                    </span>
+                  )}
+                  {!item.available && (
+                    <div className="absolute inset-0 bg-background/60 rounded-lg flex items-center justify-center">
+                      <span className="text-[9px] font-bold text-destructive uppercase">Pausado</span>
+                    </div>
+                  )}
                 </div>
-                <p className="text-xs text-muted-foreground truncate">{item.description}</p>
-                <p className="text-xs font-semibold mt-0.5 text-primary">${item.price} • {categories.find(c => c.id === item.categoryId)?.name}</p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-heading font-semibold text-sm truncate">{item.name}</h3>
+                    {item.popular && <Badge variant="secondary" className="text-[10px] h-4 bg-orange-500/20 text-orange-400">⭐ Popular</Badge>}
+                    {item.tags.slice(0, 1).map(t => (
+                      <Badge key={t} variant="outline" className="text-[10px] h-4">{t}</Badge>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">{item.description}</p>
+                  <p className="text-xs font-semibold mt-0.5 text-primary">${item.price} • {categories.find(c => c.id === item.categoryId)?.name}</p>
+                </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => openEdit(item)}>
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive" onClick={() => openDelete(item)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                  <Switch checked={item.available} onCheckedChange={() => toggleAvailability(item.id)} />
+                </div>
               </div>
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => openEdit(item)}
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
-                  onClick={() => openDelete(item)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-                <Switch checked={item.available} onCheckedChange={() => toggleAvailability(item.id)} />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingItem ? 'Editar producto' : 'Nuevo producto'}</DialogTitle>
             <DialogDescription>
@@ -266,24 +312,97 @@ export default function AdminMenuPage() {
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            {/* Image preview */}
+            {/* Images section */}
             <div>
-              <Label>Imagen</Label>
-              <div className="mt-1.5 flex items-center gap-3">
-                <div className="h-20 w-20 rounded-xl bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden flex-shrink-0">
-                  {form.image ? (
-                    <img src={form.image} alt="Preview" className="h-full w-full object-cover" />
-                  ) : (
-                    <ImagePlus className="h-6 w-6 text-muted-foreground" />
-                  )}
+              <Label>Imágenes</Label>
+
+              {/* Image gallery */}
+              {form.images.length > 0 && (
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  {form.images.map((img, idx) => (
+                    <div key={idx} className="relative group/img">
+                      <img
+                        src={img}
+                        alt={`Foto ${idx + 1}`}
+                        className={`h-20 w-20 rounded-xl object-cover border-2 transition-all ${
+                          idx === 0 ? 'border-primary' : 'border-border'
+                        }`}
+                      />
+                      {idx === 0 && (
+                        <span className="absolute -top-1.5 -left-1.5 bg-primary text-primary-foreground text-[8px] font-bold px-1.5 py-0.5 rounded-full">
+                          Principal
+                        </span>
+                      )}
+                      <button
+                        onClick={() => removeImage(idx)}
+                        className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full h-5 w-5 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-                <Input
-                  placeholder="URL de la imagen"
-                  value={form.image}
-                  onChange={e => setForm({ ...form, image: e.target.value })}
-                  className="flex-1"
-                />
+              )}
+
+              {/* Upload mode toggle */}
+              <div className="flex gap-1 mt-3 bg-muted rounded-lg p-0.5">
+                <button
+                  onClick={() => setImageMode('file')}
+                  className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    imageMode === 'file' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'
+                  }`}
+                >
+                  <Upload className="h-3.5 w-3.5" />
+                  Subir archivo
+                </button>
+                <button
+                  onClick={() => setImageMode('url')}
+                  className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    imageMode === 'url' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'
+                  }`}
+                >
+                  <Link className="h-3.5 w-3.5" />
+                  Pegar URL
+                </button>
               </div>
+
+              {imageMode === 'file' ? (
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="mt-2 border-2 border-dashed border-border rounded-xl p-4 text-center cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-all"
+                >
+                  <ImagePlus className="h-6 w-6 mx-auto text-muted-foreground mb-1" />
+                  <p className="text-xs text-muted-foreground">Click para seleccionar imágenes</p>
+                  <p className="text-[10px] text-muted-foreground/60 mt-0.5">JPG, PNG, WebP • Máx 5MB</p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleFileUpload}
+                  />
+                </div>
+              ) : (
+                <div className="mt-2 flex gap-2">
+                  <Input
+                    placeholder="https://ejemplo.com/foto.jpg"
+                    value={urlInput}
+                    onChange={e => setUrlInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && addUrlImage()}
+                    className="flex-1"
+                  />
+                  <Button variant="outline" size="sm" onClick={addUrlImage} disabled={!urlInput.trim()}>
+                    Agregar
+                  </Button>
+                </div>
+              )}
+
+              {form.images.length > 0 && (
+                <p className="text-[11px] text-muted-foreground mt-1.5">
+                  {form.images.length} imagen{form.images.length !== 1 ? 'es' : ''} • La primera será la imagen principal
+                </p>
+              )}
             </div>
 
             <div>
@@ -347,17 +466,11 @@ export default function AdminMenuPage() {
 
             <div className="flex items-center justify-between gap-4 pt-2">
               <div className="flex items-center gap-2">
-                <Switch
-                  checked={form.available}
-                  onCheckedChange={v => setForm({ ...form, available: v })}
-                />
+                <Switch checked={form.available} onCheckedChange={v => setForm({ ...form, available: v })} />
                 <Label className="text-sm cursor-pointer">Disponible</Label>
               </div>
               <div className="flex items-center gap-2">
-                <Switch
-                  checked={form.popular}
-                  onCheckedChange={v => setForm({ ...form, popular: v })}
-                />
+                <Switch checked={form.popular} onCheckedChange={v => setForm({ ...form, popular: v })} />
                 <Label className="text-sm cursor-pointer">⭐ Popular</Label>
               </div>
             </div>
