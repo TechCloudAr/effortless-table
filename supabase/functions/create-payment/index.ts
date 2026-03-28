@@ -31,7 +31,6 @@ serve(async (req) => {
         title: item.name,
         quantity: item.quantity,
         unit_price: Number(item.unitPrice),
-        currency_id: currencyId,
       })),
       back_urls: {
         success: `${backUrl}/pago/exito?order=${orderId}`,
