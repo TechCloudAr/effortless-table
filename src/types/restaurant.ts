@@ -35,6 +35,7 @@ export interface MenuItem {
   description: string;
   price: number;
   image: string;
+  images?: string[];
   tags: string[];
   available: boolean;
   optionGroups?: MenuItemOptionGroup[];
