@@ -14,7 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      orders: {
+        Row: {
+          created_at: string
+          id: string
+          items: Json
+          mercadopago_preference_id: string | null
+          payment_id: string | null
+          payment_status: string
+          status: string
+          subtotal: number
+          table_number: number
+          tax: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          items?: Json
+          mercadopago_preference_id?: string | null
+          payment_id?: string | null
+          payment_status?: string
+          status?: string
+          subtotal: number
+          table_number: number
+          tax: number
+          total: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          items?: Json
+          mercadopago_preference_id?: string | null
+          payment_id?: string | null
+          payment_status?: string
+          status?: string
+          subtotal?: number
+          table_number?: number
+          tax?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
