@@ -1,0 +1,328 @@
+import type { Restaurant, MenuCategory, MenuItem, Order, TableInfo } from '@/types/restaurant';
+
+import foodNachos from '@/assets/food-nachos.jpg';
+import foodBurger from '@/assets/food-burger.jpg';
+import foodTacos from '@/assets/food-tacos.jpg';
+import foodBowl from '@/assets/food-bowl.jpg';
+import foodDrink from '@/assets/food-drink.jpg';
+import foodChurros from '@/assets/food-churros.jpg';
+import foodWings from '@/assets/food-wings.jpg';
+import foodBurrito from '@/assets/food-burrito.jpg';
+
+export const restaurant: Restaurant = {
+  id: 'fuego-sazon',
+  name: 'Fuego & Sazón',
+  description: 'Cocina casual con sabor auténtico',
+  currency: '$',
+  taxRate: 0.16,
+};
+
+export const categories: MenuCategory[] = [
+  { id: 'entradas', name: 'Entradas', icon: '🥑', order: 0 },
+  { id: 'principales', name: 'Principales', icon: '🔥', order: 1 },
+  { id: 'bebidas', name: 'Bebidas', icon: '🥤', order: 2 },
+  { id: 'postres', name: 'Postres', icon: '🍰', order: 3 },
+  { id: 'combos', name: 'Combos', icon: '🎯', order: 4 },
+];
+
+export const menuItems: MenuItem[] = [
+  {
+    id: 'nachos-supremos',
+    categoryId: 'entradas',
+    name: 'Nachos Supremos',
+    description: 'Totopos crujientes con queso fundido, jalapeños, guacamole y crema.',
+    price: 149,
+    image: foodNachos,
+    tags: ['más vendido'],
+    available: true,
+    popular: true,
+    optionGroups: [
+      {
+        id: 'proteina-nachos',
+        name: 'Agregar proteína',
+        required: false,
+        maxSelections: 1,
+        options: [
+          { id: 'pollo', name: 'Pollo', price: 35 },
+          { id: 'res', name: 'Res', price: 45 },
+          { id: 'chorizo', name: 'Chorizo', price: 40 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'alitas-bbq',
+    categoryId: 'entradas',
+    name: 'Alitas BBQ',
+    description: 'Alitas de pollo bañadas en salsa BBQ ahumada con apio y aderezo blue cheese.',
+    price: 169,
+    image: foodWings,
+    tags: ['picante'],
+    available: true,
+    optionGroups: [
+      {
+        id: 'salsa-alitas',
+        name: 'Salsa',
+        required: true,
+        maxSelections: 1,
+        options: [
+          { id: 'bbq', name: 'BBQ Clásica', price: 0 },
+          { id: 'buffalo', name: 'Buffalo', price: 0 },
+          { id: 'mango-habanero', name: 'Mango Habanero', price: 0 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'guacamole',
+    categoryId: 'entradas',
+    name: 'Guacamole Fresco',
+    description: 'Guacamole preparado al momento con totopos artesanales.',
+    price: 119,
+    image: foodNachos,
+    tags: ['vegano', 'sin gluten'],
+    available: true,
+  },
+  {
+    id: 'burger-clasica',
+    categoryId: 'principales',
+    name: 'Burger Clásica',
+    description: 'Doble carne angus, queso cheddar, lechuga, tomate y salsa especial en pan brioche.',
+    price: 189,
+    image: foodBurger,
+    tags: ['más vendido'],
+    available: true,
+    popular: true,
+    optionGroups: [
+      {
+        id: 'termino',
+        name: 'Término',
+        required: true,
+        maxSelections: 1,
+        options: [
+          { id: 'medio', name: 'Medio', price: 0 },
+          { id: 'tres-cuartos', name: 'Tres cuartos', price: 0 },
+          { id: 'bien-cocido', name: 'Bien cocido', price: 0 },
+        ],
+      },
+      {
+        id: 'extras-burger',
+        name: 'Extras',
+        required: false,
+        maxSelections: 3,
+        options: [
+          { id: 'bacon', name: 'Bacon', price: 25 },
+          { id: 'extra-queso', name: 'Extra queso', price: 15 },
+          { id: 'huevo', name: 'Huevo frito', price: 20 },
+          { id: 'aguacate', name: 'Aguacate', price: 25 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'tacos-pastor',
+    categoryId: 'principales',
+    name: 'Tacos al Pastor',
+    description: 'Tres tacos de cerdo marinado con piña, cilantro, cebolla y limón.',
+    price: 159,
+    image: foodTacos,
+    tags: ['nuevo'],
+    available: true,
+    optionGroups: [
+      {
+        id: 'picante-tacos',
+        name: 'Nivel de picante',
+        required: false,
+        maxSelections: 1,
+        options: [
+          { id: 'suave', name: 'Suave', price: 0 },
+          { id: 'medio', name: 'Medio', price: 0 },
+          { id: 'alto', name: '¡Máximo!', price: 0 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'bowl-mediterraneo',
+    categoryId: 'principales',
+    name: 'Bowl Mediterráneo',
+    description: 'Quinoa, aguacate, garbanzos, tomates cherry, pepino, feta y aderezo de limón.',
+    price: 169,
+    image: foodBowl,
+    tags: ['vegano', 'sin gluten'],
+    available: true,
+  },
+  {
+    id: 'burrito-supremo',
+    categoryId: 'principales',
+    name: 'Burrito Supremo',
+    description: 'Tortilla de harina rellena de arroz, frijoles, carne, queso y pico de gallo.',
+    price: 175,
+    image: foodBurrito,
+    tags: [],
+    available: true,
+    optionGroups: [
+      {
+        id: 'proteina-burrito',
+        name: 'Proteína',
+        required: true,
+        maxSelections: 1,
+        options: [
+          { id: 'pollo', name: 'Pollo', price: 0 },
+          { id: 'res', name: 'Res', price: 15 },
+          { id: 'carnitas', name: 'Carnitas', price: 10 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'limonada',
+    categoryId: 'bebidas',
+    name: 'Limonada Natural',
+    description: 'Limonada recién exprimida con hierbabuena.',
+    price: 55,
+    image: foodDrink,
+    tags: [],
+    available: true,
+  },
+  {
+    id: 'agua-jamaica',
+    categoryId: 'bebidas',
+    name: 'Agua de Jamaica',
+    description: 'Infusión tradicional de jamaica, servida bien fría.',
+    price: 49,
+    image: foodDrink,
+    tags: ['vegano'],
+    available: true,
+  },
+  {
+    id: 'cerveza',
+    categoryId: 'bebidas',
+    name: 'Cerveza Artesanal',
+    description: 'IPA local con notas cítricas y amargor equilibrado. 355ml.',
+    price: 85,
+    image: foodDrink,
+    tags: [],
+    available: true,
+    optionGroups: [
+      {
+        id: 'tipo-cerveza',
+        name: 'Estilo',
+        required: true,
+        maxSelections: 1,
+        options: [
+          { id: 'ipa', name: 'IPA', price: 0 },
+          { id: 'lager', name: 'Lager', price: 0 },
+          { id: 'stout', name: 'Stout', price: 10 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'smoothie',
+    categoryId: 'bebidas',
+    name: 'Smoothie Tropical',
+    description: 'Mango, piña, plátano y leche de coco.',
+    price: 75,
+    image: foodDrink,
+    tags: ['vegano'],
+    available: true,
+  },
+  {
+    id: 'churros',
+    categoryId: 'postres',
+    name: 'Churros con Chocolate',
+    description: 'Churros recién hechos espolvoreados con canela y chocolate caliente.',
+    price: 89,
+    image: foodChurros,
+    tags: ['más vendido'],
+    available: true,
+    popular: true,
+  },
+  {
+    id: 'brownie',
+    categoryId: 'postres',
+    name: 'Brownie Caliente',
+    description: 'Brownie de chocolate oscuro con helado de vainilla y salsa de caramelo.',
+    price: 99,
+    image: foodChurros,
+    tags: ['nuevo'],
+    available: true,
+  },
+  {
+    id: 'combo-fuego',
+    categoryId: 'combos',
+    name: 'Combo Fuego',
+    description: 'Burger Clásica + Papas + Bebida de tu elección. ¡El más popular!',
+    price: 249,
+    image: foodBurger,
+    tags: ['más vendido', 'ahorro'],
+    available: true,
+    popular: true,
+  },
+  {
+    id: 'combo-familiar',
+    categoryId: 'combos',
+    name: 'Combo Familiar',
+    description: '2 Burgers + Nachos Supremos + 4 Bebidas. Ideal para compartir.',
+    price: 599,
+    image: foodNachos,
+    tags: ['ahorro'],
+    available: true,
+  },
+];
+
+export const demoOrders: Order[] = [
+  {
+    id: 'ORD-001',
+    tableNumber: 3,
+    items: [],
+    status: 'preparing',
+    subtotal: 338,
+    tax: 54.08,
+    total: 392.08,
+    createdAt: new Date(Date.now() - 12 * 60000).toISOString(),
+    estimatedMinutes: 15,
+  },
+  {
+    id: 'ORD-002',
+    tableNumber: 7,
+    items: [],
+    status: 'ready',
+    subtotal: 249,
+    tax: 39.84,
+    total: 288.84,
+    createdAt: new Date(Date.now() - 25 * 60000).toISOString(),
+    estimatedMinutes: 10,
+  },
+  {
+    id: 'ORD-003',
+    tableNumber: 1,
+    items: [],
+    status: 'received',
+    subtotal: 523,
+    tax: 83.68,
+    total: 606.68,
+    createdAt: new Date(Date.now() - 2 * 60000).toISOString(),
+    estimatedMinutes: 20,
+  },
+  {
+    id: 'ORD-004',
+    tableNumber: 12,
+    items: [],
+    status: 'delivered',
+    subtotal: 175,
+    tax: 28,
+    total: 203,
+    createdAt: new Date(Date.now() - 45 * 60000).toISOString(),
+    estimatedMinutes: 12,
+  },
+];
+
+export const tables: TableInfo[] = Array.from({ length: 15 }, (_, i) => ({
+  id: `table-${i + 1}`,
+  number: i + 1,
+  status: (i === 0 || i === 2 || i === 6 || i === 11 ? 'occupied' : i === 4 ? 'reserved' : 'available') as TableInfo['status'],
+  capacity: i < 8 ? 4 : 6,
+  currentOrderId: i === 0 ? 'ORD-003' : i === 2 ? 'ORD-001' : i === 6 ? 'ORD-002' : undefined,
+}));
