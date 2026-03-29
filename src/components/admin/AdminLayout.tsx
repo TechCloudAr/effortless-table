@@ -6,7 +6,7 @@ const links = [
   { to: '/admin/pedidos', icon: ClipboardList, label: 'Pedidos' },
   { to: '/admin/menu', icon: UtensilsCrossed, label: 'Menú' },
   { to: '/admin/mesas', icon: Grid3X3, label: 'Mesas' },
-  { to: '/admin/diseno', icon: Palette, label: 'Diseño' },
+  { to: '/admin/diseno', icon: Palette, label: 'Templates' },
 ];
 
 export default function AdminLayout() {
