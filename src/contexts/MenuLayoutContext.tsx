@@ -131,6 +131,8 @@ export function MenuLayoutProvider({ children }: { children: ReactNode }) {
       enabled: true,
       order: maxOrder + 1,
       label: `🎁 ${banner.title}`,
+      displayMode: 'horizontal',
+      cardStyle: 'compact',
       config: { banner },
     };
     save({ ...layout, sections: [...layout.sections, newSection] });
