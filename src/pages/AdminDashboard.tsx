@@ -49,6 +49,7 @@ const stats = [
 ];
 
 export default function AdminDashboard() {
+  const [tab, setTab] = useState<'overview' | 'forecast'>('overview');
   const activeOrders = demoOrders.filter(o => o.status !== 'delivered');
   const totalRevenue = weeklyData.reduce((s, d) => s + d.ingresos, 0);
 
