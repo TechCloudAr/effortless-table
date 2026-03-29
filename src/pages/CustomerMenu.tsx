@@ -258,8 +258,8 @@ export default function CustomerMenu() {
               >
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-lg">{cat.icon}</span>
-                  <h2 className="font-heading font-bold text-base">{cat.name}</h2>
-                  <span className="text-xs text-muted-foreground">({catItems.length})</span>
+                  <h2 className={`font-heading font-bold text-base ${theme.colors.textPrimary}`}>{cat.name}</h2>
+                  <span className={`text-xs ${theme.colors.textSecondary}`}>({catItems.length})</span>
                 </div>
 
                 {/* Mix layout: first item big, rest compact */}
