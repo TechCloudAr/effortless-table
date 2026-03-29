@@ -73,8 +73,8 @@ export default function CustomerMenu() {
               <Flame className="h-4 w-4 text-white" />
             </div>
             <div>
-              <h1 className="font-heading text-sm font-bold text-white leading-tight">{restaurant.name}</h1>
-              <p className="text-[10px] text-white/60">Mesa {tableNum} • Menú digital</p>
+              <h1 className={`font-heading text-sm font-bold ${theme.colors.headerText} leading-tight`}>{restaurant.name}</h1>
+              <p className={`text-[10px] ${theme.colors.headerAccent}`}>Mesa {tableNum} • Menú digital</p>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
