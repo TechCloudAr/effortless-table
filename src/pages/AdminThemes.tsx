@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useMenuLayout, type BannerConfig, type MenuSection, type DisplayMode, type CardStyle } from '@/contexts/MenuLayoutContext';
 import { useMenuTheme, menuThemes, type MenuThemeConfig } from '@/contexts/MenuThemeContext';
+import { useBranding, fontCatalog, type FontPair } from '@/contexts/BrandingContext';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
