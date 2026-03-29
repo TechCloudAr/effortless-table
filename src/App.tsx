@@ -27,6 +27,7 @@ const App = () => (
     <TooltipProvider>
       <CartProvider>
         <MenuThemeProvider>
+        <BrandingProvider>
         <MenuLayoutProvider>
         <Toaster />
         <Sonner />
