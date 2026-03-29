@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "@/contexts/CartContext";
 import { MenuThemeProvider } from "@/contexts/MenuThemeContext";
+import { MenuLayoutProvider } from "@/contexts/MenuLayoutContext";
 import Index from "./pages/Index";
 import CustomerMenu from "./pages/CustomerMenu";
 import OrderStatus from "./pages/OrderStatus";
@@ -25,6 +26,7 @@ const App = () => (
     <TooltipProvider>
       <CartProvider>
         <MenuThemeProvider>
+        <MenuLayoutProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -46,6 +48,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        </MenuLayoutProvider>
         </MenuThemeProvider>
       </CartProvider>
     </TooltipProvider>
