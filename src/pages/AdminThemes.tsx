@@ -584,11 +584,12 @@ function BrandingPanel({ branding, updateBranding, activeFontPair }: {
 }
 
 /* PHONE PREVIEW */
-function PhonePreview({ sections, theme, hoveredSection, getProductsForSection }: {
+function PhonePreview({ sections, theme, hoveredSection, getProductsForSection, branding }: {
   sections: MenuSection[];
   theme: MenuThemeConfig;
   hoveredSection: string | null;
   getProductsForSection: (s: MenuSection) => MenuItem[];
+  branding: { logoUrl: string; restaurantName: string };
 }) {
   const allAvailable = menuItems.filter(i => i.available);
   const popularItems = menuItems.filter(i => i.popular && i.available);
@@ -603,11 +604,15 @@ function PhonePreview({ sections, theme, hoveredSection, getProductsForSection }
         <div className={`${theme.colors.headerBg} px-3 pt-3 pb-2.5`}>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
-              <div className="h-5 w-5 bg-white/20 rounded-md flex items-center justify-center">
-                <Flame className="h-3 w-3 text-white" />
-              </div>
+              {branding.logoUrl ? (
+                <img src={branding.logoUrl} alt="" className="h-5 w-5 rounded-md object-contain" />
+              ) : (
+                <div className="h-5 w-5 bg-white/20 rounded-md flex items-center justify-center">
+                  <Flame className="h-3 w-3 text-white" />
+                </div>
+              )}
               <div>
-                <p className={`text-[9px] font-bold ${theme.colors.headerText}`}>{restaurant.name}</p>
+                <p className={`text-[9px] font-bold ${theme.colors.headerText}`}>{branding.restaurantName || restaurant.name}</p>
                 <p className={`text-[7px] ${theme.colors.headerAccent}`}>Mesa 5 • Menú digital</p>
               </div>
             </div>
