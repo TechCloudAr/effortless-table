@@ -23,6 +23,7 @@ const tagConfig: Record<string, { bg: string; icon?: string }> = {
 export default function CustomerMenu() {
   const { tableId } = useParams();
   const { setTableNumber, addItem } = useCart();
+  const { activeTheme: theme } = useMenuTheme();
   const tableNum = parseInt(tableId || '5');
   useState(() => { setTableNumber(tableNum); });
 
