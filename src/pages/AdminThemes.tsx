@@ -15,7 +15,7 @@ import {
   ChevronUp, ChevronDown, Plus, Trash2, Pencil, Image as ImageIcon,
   Palette, LayoutList, GripVertical, Check, Smartphone, Eye, Zap, Clock,
   Crown, TrendingUp, Flame, Star, Bell, Search, Sparkles,
-  Rows3, Columns3, LayoutGrid, ChevronRight, ArrowUpDown,
+  Rows3, Columns3, LayoutGrid, ChevronRight, ArrowUpDown, Type, Upload,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { categories, menuItems, restaurant } from '@/data/mockData';
