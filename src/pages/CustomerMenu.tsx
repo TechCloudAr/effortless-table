@@ -86,7 +86,12 @@ export default function CustomerMenu() {
       case 'category': {
         const catId = section.config.categoryId!;
         const cat = categories.find(c => c.id === catId);
-        const catItems = allAvailable.filter(i => i.categoryId === catId);
+        let catItems = allAvailable.filter(i => i.categoryId === catId);
+        // Apply custom product order
+        if (section.config.productOrder && section.config.productOrder.length > 0) {
+          const orderMap = new Map(section.config.productOrder.map((id, idx) => [id, idx]));
+          catItems = [...catItems].sort((a, b) => (orderMap.get(a.id) ?? 999) - (orderMap.get(b.id) ?? 999));
+        }
         if (!cat || catItems.length === 0) return null;
         return (
           <CategorySection
@@ -97,6 +102,8 @@ export default function CustomerMenu() {
             sectionRefs={sectionRefs}
             onSelect={setSelectedItem}
             onQuickAdd={handleQuickAdd}
+            displayMode={section.displayMode}
+            cardStyle={section.cardStyle}
           />
         );
       }
