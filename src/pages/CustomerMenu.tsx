@@ -228,7 +228,8 @@ export default function CustomerMenu() {
           </section>
 
           {/* 🎁 PROMO BANNER */}
-          <section className="px-4 pt-3 pb-1">
+          {theme.style.showPromoBanner && (
+           <section className="px-4 pt-3 pb-1">
             <div className="bg-gradient-to-r from-violet-600 to-fuchsia-500 rounded-2xl p-4 flex items-center gap-3 relative overflow-hidden">
               <div className="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full" />
               <div className="h-12 w-12 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center flex-shrink-0">
@@ -242,7 +243,8 @@ export default function CustomerMenu() {
                 <p className="text-white text-[10px] font-bold">HOY</p>
               </div>
             </div>
-          </section>
+           </section>
+          )}
 
           {/* ALL CATEGORIES — vertical feed */}
           {categories.map(cat => {
