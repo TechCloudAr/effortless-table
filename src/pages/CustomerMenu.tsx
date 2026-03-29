@@ -7,6 +7,7 @@ import ProductDetailModal from '@/components/customer/ProductDetailModal';
 import CartSheet from '@/components/customer/CartSheet';
 import type { MenuItem } from '@/types/restaurant';
 import { useCart } from '@/contexts/CartContext';
+import { useMenuTheme } from '@/contexts/MenuThemeContext';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
