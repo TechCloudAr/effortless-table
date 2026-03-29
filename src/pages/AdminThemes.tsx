@@ -202,8 +202,10 @@ export default function AdminThemes() {
               getProductsForSection={getProductsForSection}
               onMoveProduct={moveProduct}
             />
-          ) : (
+          ) : activePanel === 'theme' ? (
             <ThemePanel activeTheme={activeTheme} setThemeId={setThemeId} />
+          ) : (
+            <BrandingPanel branding={branding} updateBranding={updateBranding} activeFontPair={activeFontPair} />
           )}
         </div>
 
