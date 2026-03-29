@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "@/contexts/CartContext";
+import { MenuThemeProvider } from "@/contexts/MenuThemeContext";
 import Index from "./pages/Index";
 import CustomerMenu from "./pages/CustomerMenu";
 import OrderStatus from "./pages/OrderStatus";
