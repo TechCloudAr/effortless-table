@@ -486,7 +486,102 @@ function ThemePanel({ activeTheme, setThemeId }: { activeTheme: MenuThemeConfig;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   PHONE PREVIEW
+   BRANDING PANEL
+   ═══════════════════════════════════════════════════════════ */
+function BrandingPanel({ branding, updateBranding, activeFontPair }: {
+  branding: { logoUrl: string; restaurantName: string; fontPairId: string };
+  updateBranding: (u: Partial<typeof branding>) => void;
+  activeFontPair: FontPair;
+}) {
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { toast.error('Solo imágenes'); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error('Máximo 5MB'); return; }
+    const reader = new FileReader();
+    reader.onload = () => updateBranding({ logoUrl: reader.result as string });
+    reader.readAsDataURL(file);
+    if (logoInputRef.current) logoInputRef.current.value = '';
+  };
+
+  return (
+    <div className="p-4 space-y-5">
+      <p className="text-[11px] text-muted-foreground mb-2">Personalizá la identidad visual de tu restaurante.</p>
+
+      {/* Logo */}
+      <div>
+        <Label className="text-xs font-semibold">Logo del restaurante</Label>
+        <div className="mt-2 flex items-center gap-3">
+          <div className="h-16 w-16 rounded-xl border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-muted/30 flex-shrink-0">
+            {branding.logoUrl ? (
+              <img src={branding.logoUrl} alt="Logo" className="h-full w-full object-contain" />
+            ) : (
+              <Upload className="h-5 w-5 text-muted-foreground" />
+            )}
+          </div>
+          <div className="flex-1 space-y-1.5">
+            <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => logoInputRef.current?.click()}>
+              <Upload className="h-3 w-3 mr-1.5" /> Subir logo
+            </Button>
+            <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+            <Input placeholder="O pegá una URL" value={branding.logoUrl}
+              onChange={e => updateBranding({ logoUrl: e.target.value })} className="text-xs h-8" />
+            {branding.logoUrl && (
+              <button onClick={() => updateBranding({ logoUrl: '' })} className="text-[10px] text-destructive">Quitar logo</button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Restaurant name */}
+      <div>
+        <Label className="text-xs font-semibold">Nombre del restaurante</Label>
+        <Input value={branding.restaurantName}
+          onChange={e => updateBranding({ restaurantName: e.target.value })}
+          className="mt-1.5" placeholder="Mi Restaurante" />
+      </div>
+
+      {/* Font pair catalog */}
+      <div>
+        <Label className="text-xs font-semibold">Tipografía</Label>
+        <p className="text-[10px] text-muted-foreground mt-0.5 mb-2">Elegí la combinación de fuentes para títulos y cuerpo.</p>
+        <div className="space-y-2">
+          {fontCatalog.map(font => (
+            <button
+              key={font.id}
+              onClick={() => { updateBranding({ fontPairId: font.id }); toast.success(`Tipografía "${font.name}" aplicada`); }}
+              className={`w-full text-left p-3 rounded-xl border-2 transition-all ${
+                activeFontPair.id === font.id ? 'border-primary shadow-md bg-primary/5' : 'border-border hover:border-primary/30'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-xs">{font.name}</h3>
+                  <p className="text-[10px] text-muted-foreground">{font.preview}</p>
+                </div>
+                {activeFontPair.id === font.id && (
+                  <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                    <Check className="h-3 w-3 text-primary-foreground" />
+                  </div>
+                )}
+              </div>
+              {/* Font preview text */}
+              <div className="mt-2 p-2 rounded-lg bg-muted/50">
+                <p className="text-sm font-bold" style={{ fontFamily: font.heading }}>Título de ejemplo</p>
+                <p className="text-xs text-muted-foreground" style={{ fontFamily: font.body }}>
+                  Texto del cuerpo para ver cómo queda la lectura
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
    ═══════════════════════════════════════════════════════════ */
 function PhonePreview({ sections, theme, hoveredSection, getProductsForSection }: {
   sections: MenuSection[];
