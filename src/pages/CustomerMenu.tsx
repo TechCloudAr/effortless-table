@@ -137,8 +137,9 @@ export default function CustomerMenu() {
 
       {!search && (
         <div className="space-y-0">
-          {/* 🔥 FLASH DEALS BANNER */}
-          <section className="px-4 pt-4 pb-2">
+          {/* 🔥 FLASH DEALS BANNER — only for themes that enable it */}
+          {theme.style.showFlashDeals && (
+           <section className="px-4 pt-4 pb-2">
             <div className="bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 rounded-2xl p-4 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
               <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
@@ -176,7 +177,8 @@ export default function CustomerMenu() {
                 </div>
               </div>
             </div>
-          </section>
+           </section>
+          )}
 
           {/* 🏆 TOP SELLERS — big hero cards */}
           <section className="px-4 pt-4 pb-2">
