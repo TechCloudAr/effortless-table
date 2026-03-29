@@ -86,7 +86,12 @@ export default function CustomerMenu() {
       case 'category': {
         const catId = section.config.categoryId!;
         const cat = categories.find(c => c.id === catId);
-        const catItems = allAvailable.filter(i => i.categoryId === catId);
+        let catItems = allAvailable.filter(i => i.categoryId === catId);
+        // Apply custom product order
+        if (section.config.productOrder && section.config.productOrder.length > 0) {
+          const orderMap = new Map(section.config.productOrder.map((id, idx) => [id, idx]));
+          catItems = [...catItems].sort((a, b) => (orderMap.get(a.id) ?? 999) - (orderMap.get(b.id) ?? 999));
+        }
         if (!cat || catItems.length === 0) return null;
         return (
           <CategorySection
@@ -97,6 +102,8 @@ export default function CustomerMenu() {
             sectionRefs={sectionRefs}
             onSelect={setSelectedItem}
             onQuickAdd={handleQuickAdd}
+            displayMode={section.displayMode}
+            cardStyle={section.cardStyle}
           />
         );
       }
@@ -296,7 +303,10 @@ function CustomBannerSection({ banner }: { banner: any }) {
   );
 }
 
-function CategorySection({ cat, items, theme, sectionRefs, onSelect, onQuickAdd }: any) {
+function CategorySection({ cat, items, theme, sectionRefs, onSelect, onQuickAdd, displayMode, cardStyle }: any) {
+  const isHorizontal = displayMode === 'horizontal';
+  const isGrid = displayMode === 'grid';
+
   return (
     <section ref={(el: HTMLDivElement | null) => { sectionRefs.current[cat.id] = el; }} className="px-4 pt-5 pb-1">
       <div className="flex items-center gap-2 mb-3">
@@ -304,12 +314,86 @@ function CategorySection({ cat, items, theme, sectionRefs, onSelect, onQuickAdd 
         <h2 className={`font-heading font-bold text-base ${theme.colors.textPrimary}`}>{cat.name}</h2>
         <span className={`text-xs ${theme.colors.textSecondary}`}>({items.length})</span>
       </div>
-      <div className="space-y-2.5">
-        {items.length > 0 && <HeroCard item={items[0]} theme={theme} onSelect={onSelect} onQuickAdd={onQuickAdd} />}
-        {items.slice(1).map((item: MenuItem) => (
-          <CompactCard key={item.id} item={item} theme={theme} onSelect={onSelect} onQuickAdd={onQuickAdd} />
-        ))}
-      </div>
+
+      {isHorizontal ? (
+        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
+          {items.map((item: MenuItem, i: number) => (
+            <motion.button key={item.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
+              onClick={() => onSelect(item)}
+              className={`flex-shrink-0 w-40 ${theme.style.cardRadius} overflow-hidden ${theme.colors.cardBg} shadow-card active:scale-[0.96] transition-transform relative border ${theme.colors.cardBorder}`}
+            >
+              <div className="relative">
+                <img src={item.image} alt={item.name} className="w-full h-28 object-cover" loading="lazy" />
+                <div className={`absolute inset-0 bg-gradient-to-t ${theme.style.heroOverlay}`} />
+                {item.tags.length > 0 && (
+                  <div className={`absolute top-2 left-2 text-[9px] font-bold px-2 py-0.5 rounded-full ${tagConfig[item.tags[0]]?.bg || 'bg-white/20 text-white'}`}>
+                    {tagConfig[item.tags[0]]?.icon} {item.tags[0]}
+                  </div>
+                )}
+                <button onClick={(e) => onQuickAdd(e, item)} className="absolute bottom-2 right-2 h-7 w-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="p-2.5">
+                <p className={`font-heading font-${theme.style.fontWeight} text-sm truncate text-left ${theme.colors.textPrimary}`}>{item.name}</p>
+                <span className={`font-heading font-bold ${theme.colors.priceColor} text-sm`}>{restaurant.currency}{item.price}</span>
+              </div>
+            </motion.button>
+          ))}
+        </div>
+      ) : isGrid ? (
+        <div className="grid grid-cols-2 gap-2.5">
+          {items.map((item: MenuItem) => (
+            <button key={item.id} onClick={() => onSelect(item)}
+              className={`${theme.style.cardRadius} overflow-hidden ${theme.colors.cardBg} shadow-card active:scale-[0.96] transition-transform relative border ${theme.colors.cardBorder} text-left`}
+            >
+              <div className="relative">
+                <img src={item.image} alt={item.name} className="w-full h-32 object-cover" loading="lazy" />
+                <div className={`absolute inset-0 bg-gradient-to-t ${theme.style.heroOverlay}`} />
+                {item.tags.length > 0 && (
+                  <div className={`absolute top-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${tagConfig[item.tags[0]]?.bg || 'bg-white/20 text-white'}`}>
+                    {tagConfig[item.tags[0]]?.icon} {item.tags[0]}
+                  </div>
+                )}
+                <button onClick={(e) => onQuickAdd(e, item)} className="absolute bottom-1.5 right-1.5 h-7 w-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="p-2">
+                <p className={`font-heading font-${theme.style.fontWeight} text-sm truncate ${theme.colors.textPrimary}`}>{item.name}</p>
+                <span className={`font-heading font-bold ${theme.colors.priceColor} text-sm`}>{restaurant.currency}{item.price}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      ) : (
+        /* Vertical mode */
+        <div className="space-y-2.5">
+          {cardStyle === 'hero-first' && items.length > 0 && <HeroCard item={items[0]} theme={theme} onSelect={onSelect} onQuickAdd={onQuickAdd} />}
+          {(cardStyle === 'hero-first' ? items.slice(1) : items).map((item: MenuItem) => (
+            cardStyle === 'cards-only' ? (
+              <button key={item.id} onClick={() => onSelect(item)}
+                className={`w-full ${theme.style.cardRadius} overflow-hidden ${theme.colors.cardBg} shadow-card text-left active:scale-[0.98] transition-transform relative border ${theme.colors.cardBorder}`}
+              >
+                <div className="relative">
+                  <img src={item.image} alt={item.name} className="w-full h-36 object-cover" loading="lazy" />
+                  <div className={`absolute inset-0 bg-gradient-to-t ${theme.style.heroOverlay}`} />
+                  <button onClick={(e) => onQuickAdd(e, item)} className="absolute bottom-2 right-2 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="p-3">
+                  <p className={`font-heading font-${theme.style.fontWeight} text-base ${theme.colors.textPrimary}`}>{item.name}</p>
+                  <p className={`text-xs ${theme.colors.textSecondary} mt-0.5 line-clamp-1`}>{item.description}</p>
+                  <span className={`font-heading font-bold ${theme.colors.priceColor} text-base mt-1 block`}>{restaurant.currency}{item.price}</span>
+                </div>
+              </button>
+            ) : (
+              <CompactCard key={item.id} item={item} theme={theme} onSelect={onSelect} onQuickAdd={onQuickAdd} />
+            )
+          ))}
+        </div>
+      )}
     </section>
   );
 }
