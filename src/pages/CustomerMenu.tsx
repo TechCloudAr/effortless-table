@@ -64,9 +64,9 @@ export default function CustomerMenu() {
   ], []);
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className={`min-h-screen ${theme.colors.pageBg} pb-24`}>
       {/* Header — compact, vibrant */}
-      <div className="bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--primary)/0.9)] to-[hsl(20,90%,45%)] px-4 pt-5 pb-4">
+      <div className={`${theme.colors.headerBg} px-4 pt-5 pb-4`}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 bg-white/20 backdrop-blur rounded-lg flex items-center justify-center">
