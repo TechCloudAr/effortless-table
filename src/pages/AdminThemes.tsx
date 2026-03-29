@@ -163,6 +163,14 @@ export default function AdminThemes() {
             >
               <Palette className="h-3.5 w-3.5" /> Tema
             </button>
+            <button
+              onClick={() => setActivePanel('branding')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                activePanel === 'branding' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'
+              }`}
+            >
+              <Type className="h-3.5 w-3.5" /> Marca
+            </button>
           </div>
         </div>
         <div className="flex items-center gap-2">
