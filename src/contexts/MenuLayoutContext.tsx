@@ -55,14 +55,14 @@ const defaultBanners: BannerConfig[] = [
 
 export const defaultLayout: MenuLayoutConfig = {
   sections: [
-    { id: 'flash-deals', type: 'flash-deals', enabled: true, order: 0, label: '⚡ Ofertas Relámpago', config: {} },
-    { id: 'popular', type: 'popular', enabled: true, order: 1, label: '🏆 Los más pedidos', config: { title: 'Los más pedidos' } },
-    { id: 'banner-1', type: 'custom-banner', enabled: true, order: 2, label: '🎁 Banner Promo', config: { banner: defaultBanners[0] } },
-    { id: 'cat-entradas', type: 'category', enabled: true, order: 3, label: '🥑 Entradas', config: { categoryId: 'entradas' } },
-    { id: 'cat-principales', type: 'category', enabled: true, order: 4, label: '🔥 Principales', config: { categoryId: 'principales' } },
-    { id: 'cat-bebidas', type: 'category', enabled: true, order: 5, label: '🥤 Bebidas', config: { categoryId: 'bebidas' } },
-    { id: 'cat-postres', type: 'category', enabled: true, order: 6, label: '🍰 Postres', config: { categoryId: 'postres' } },
-    { id: 'cat-combos', type: 'category', enabled: true, order: 7, label: '🎯 Combos', config: { categoryId: 'combos' } },
+    { id: 'flash-deals', type: 'flash-deals', enabled: true, order: 0, label: '⚡ Ofertas Relámpago', displayMode: 'horizontal', cardStyle: 'compact', config: {} },
+    { id: 'popular', type: 'popular', enabled: true, order: 1, label: '🏆 Los más pedidos', displayMode: 'horizontal', cardStyle: 'cards-only', config: { title: 'Los más pedidos' } },
+    { id: 'banner-1', type: 'custom-banner', enabled: true, order: 2, label: '🎁 Banner Promo', displayMode: 'horizontal', cardStyle: 'compact', config: { banner: defaultBanners[0] } },
+    { id: 'cat-entradas', type: 'category', enabled: true, order: 3, label: '🥑 Entradas', displayMode: 'vertical', cardStyle: 'hero-first', config: { categoryId: 'entradas' } },
+    { id: 'cat-principales', type: 'category', enabled: true, order: 4, label: '🔥 Principales', displayMode: 'vertical', cardStyle: 'hero-first', config: { categoryId: 'principales' } },
+    { id: 'cat-bebidas', type: 'category', enabled: true, order: 5, label: '🥤 Bebidas', displayMode: 'horizontal', cardStyle: 'cards-only', config: { categoryId: 'bebidas' } },
+    { id: 'cat-postres', type: 'category', enabled: true, order: 6, label: '🍰 Postres', displayMode: 'vertical', cardStyle: 'compact', config: { categoryId: 'postres' } },
+    { id: 'cat-combos', type: 'category', enabled: true, order: 7, label: '🎯 Combos', displayMode: 'grid', cardStyle: 'image-grid', config: { categoryId: 'combos' } },
   ],
   categoryOrder: ['entradas', 'principales', 'bebidas', 'postres', 'combos'],
 };
