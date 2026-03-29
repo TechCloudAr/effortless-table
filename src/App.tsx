@@ -46,6 +46,7 @@ const App = () => (
               <Route path="pedidos" element={<AdminOrders />} />
               <Route path="menu" element={<AdminMenuPage />} />
               <Route path="mesas" element={<AdminTables />} />
+              <Route path="pagos" element={<AdminPayments />} />
               <Route path="diseno" element={<AdminThemes />} />
             </Route>
             <Route path="*" element={<NotFound />} />
