@@ -183,11 +183,11 @@ export default function CustomerMenu() {
           {/* 🏆 TOP SELLERS — big hero cards */}
           <section className="px-4 pt-4 pb-2">
             <div className="flex items-center gap-2 mb-3">
-              <div className="h-6 w-6 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+              <div className={`h-6 w-6 rounded-lg bg-gradient-to-br ${theme.colors.accentGradient} flex items-center justify-center`}>
                 <Crown className="h-3.5 w-3.5 text-white" />
               </div>
-              <h2 className="font-heading font-bold text-base">Los más pedidos</h2>
-              <TrendingUp className="h-3.5 w-3.5 text-primary ml-auto" />
+              <h2 className={`font-heading font-bold text-base ${theme.colors.textPrimary}`}>Los más pedidos</h2>
+              <TrendingUp className={`h-3.5 w-3.5 ${theme.colors.priceColor} ml-auto`} />
             </div>
             <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
               {popularItems.map((item, i) => (
@@ -197,12 +197,12 @@ export default function CustomerMenu() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.08 }}
                   onClick={() => setSelectedItem(item)}
-                  className="flex-shrink-0 w-40 rounded-2xl overflow-hidden bg-card shadow-card active:scale-[0.96] transition-transform relative group"
+                  className={`flex-shrink-0 w-40 ${theme.style.cardRadius} overflow-hidden ${theme.colors.cardBg} shadow-card active:scale-[0.96] transition-transform relative group border ${theme.colors.cardBorder}`}
                 >
                   <div className="relative">
                     <img src={item.image} alt={item.name} className="w-full h-28 object-cover" loading="lazy" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                    <div className="absolute top-2 left-2 bg-gradient-to-r from-red-500 to-orange-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                    <div className={`absolute inset-0 bg-gradient-to-t ${theme.style.heroOverlay}`} />
+                    <div className={`absolute top-2 left-2 bg-gradient-to-r ${theme.colors.accentGradient} text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5`}>
                       <Flame className="h-2.5 w-2.5" /> #{i + 1} vendido
                     </div>
                     <button
@@ -213,12 +213,12 @@ export default function CustomerMenu() {
                     </button>
                   </div>
                   <div className="p-2.5">
-                    <p className="font-heading font-bold text-sm truncate text-left">{item.name}</p>
+                    <p className={`font-heading font-${theme.style.fontWeight} text-sm truncate text-left ${theme.colors.textPrimary}`}>{item.name}</p>
                     <div className="flex items-center gap-1.5 mt-1">
-                      <span className="font-heading font-bold text-primary text-sm">{restaurant.currency}{item.price}</span>
+                      <span className={`font-heading font-bold ${theme.colors.priceColor} text-sm`}>{restaurant.currency}{item.price}</span>
                       <div className="flex items-center gap-0.5">
                         <Star className="h-3 w-3 fill-warning text-warning" />
-                        <span className="text-[10px] text-muted-foreground font-medium">4.{8 + i}</span>
+                        <span className={`text-[10px] ${theme.colors.textSecondary} font-medium`}>4.{8 + i}</span>
                       </div>
                     </div>
                   </div>
