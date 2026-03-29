@@ -48,6 +48,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        </MenuLayoutProvider>
         </MenuThemeProvider>
       </CartProvider>
     </TooltipProvider>
