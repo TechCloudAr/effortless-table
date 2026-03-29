@@ -9,6 +9,7 @@ import type { MenuItem } from '@/types/restaurant';
 import { useCart } from '@/contexts/CartContext';
 import { useMenuTheme } from '@/contexts/MenuThemeContext';
 import { useMenuLayout, type MenuSection } from '@/contexts/MenuLayoutContext';
+import { useBranding } from '@/contexts/BrandingContext';
 import { toast } from 'sonner';
 
 const tagConfig: Record<string, { bg: string; icon?: string }> = {
