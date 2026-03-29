@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useMenuLayout, type BannerConfig, type MenuSection } from '@/contexts/MenuLayoutContext';
-import { useMenuTheme, menuThemes } from '@/contexts/MenuThemeContext';
+import { useMenuTheme, menuThemes, type MenuThemeConfig } from '@/contexts/MenuThemeContext';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,12 +11,12 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog';
 import {
-  ChevronUp, ChevronDown, Eye, EyeOff, Plus, Trash2, Pencil, Image as ImageIcon,
-  Palette, LayoutList, GripVertical, Sparkles, Check, Smartphone,
+  ChevronUp, ChevronDown, Plus, Trash2, Pencil, Image as ImageIcon,
+  Palette, LayoutList, GripVertical, Check, Smartphone, Eye, Zap, Clock,
+  Crown, TrendingUp, Flame, Star, Bell, Search, Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { categories, menuItems, restaurant } from '@/data/mockData';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const gradientOptions = [
   { value: 'from-violet-600 to-fuchsia-500', label: '💜 Violeta → Fucsia' },
@@ -30,28 +30,20 @@ const gradientOptions = [
 
 const iconOptions = ['✨', '🔥', '🎁', '💰', '🎉', '⭐', '🏷️', '🍔', '🥤', '🍕'];
 
-function SectionTypeLabel({ type }: { type: string }) {
-  const labels: Record<string, { icon: string; text: string; color: string }> = {
-    'flash-deals': { icon: '⚡', text: 'Ofertas', color: 'bg-orange-500/15 text-orange-500' },
-    'popular': { icon: '🏆', text: 'Populares', color: 'bg-amber-500/15 text-amber-600' },
-    'custom-banner': { icon: '🎨', text: 'Banner', color: 'bg-violet-500/15 text-violet-500' },
-    'category': { icon: '📂', text: 'Categoría', color: 'bg-blue-500/15 text-blue-500' },
-  };
-  const l = labels[type] || { icon: '?', text: type, color: 'bg-muted text-muted-foreground' };
-  return <Badge variant="outline" className={`text-[10px] h-5 ${l.color} border-0`}>{l.icon} {l.text}</Badge>;
-}
-
 export default function AdminThemes() {
   const { layout, toggleSection, moveSection, updateSection, addBanner, removeSection } = useMenuLayout();
   const { activeTheme, setThemeId } = useMenuTheme();
   const [bannerDialogOpen, setBannerDialogOpen] = useState(false);
   const [editingSection, setEditingSection] = useState<MenuSection | null>(null);
+  const [activePanel, setActivePanel] = useState<'sections' | 'theme'>('sections');
+  const [hoveredSection, setHoveredSection] = useState<string | null>(null);
   const [bannerForm, setBannerForm] = useState<BannerConfig>({
     title: '', subtitle: '', gradient: 'from-violet-600 to-fuchsia-500', icon: '✨', badge: '', imageUrl: '',
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const sortedSections = [...layout.sections].sort((a, b) => a.order - b.order);
+  const enabledSections = sortedSections.filter(s => s.enabled);
 
   const openNewBanner = () => {
     setEditingSection(null);
@@ -68,15 +60,9 @@ export default function AdminThemes() {
   };
 
   const handleSaveBanner = () => {
-    if (!bannerForm.title.trim()) {
-      toast.error('El banner necesita un título');
-      return;
-    }
+    if (!bannerForm.title.trim()) { toast.error('El banner necesita un título'); return; }
     if (editingSection) {
-      updateSection(editingSection.id, {
-        label: `🎁 ${bannerForm.title}`,
-        config: { ...editingSection.config, banner: bannerForm },
-      });
+      updateSection(editingSection.id, { label: `🎁 ${bannerForm.title}`, config: { ...editingSection.config, banner: bannerForm } });
       toast.success('Banner actualizado');
     } else {
       addBanner(bannerForm);
@@ -86,12 +72,15 @@ export default function AdminThemes() {
   };
 
   const handleEditTitle = (section: MenuSection) => {
-    if (section.type === 'popular' && section.config.title !== undefined) {
-      const newTitle = prompt('Título de la sección:', section.config.title);
-      if (newTitle !== null) {
+    const currentTitle = section.type === 'popular' ? (section.config.title || 'Los más pedidos') : section.label;
+    const newTitle = prompt('Título de la sección:', currentTitle);
+    if (newTitle !== null && newTitle.trim()) {
+      if (section.type === 'popular') {
         updateSection(section.id, { config: { ...section.config, title: newTitle }, label: `🏆 ${newTitle}` });
-        toast.success('Título actualizado');
+      } else if (section.type === 'flash-deals') {
+        updateSection(section.id, { label: `⚡ ${newTitle}`, config: { ...section.config, title: newTitle } });
       }
+      toast.success('Título actualizado');
     }
   };
 
@@ -107,284 +96,527 @@ export default function AdminThemes() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="font-heading text-2xl font-bold">Editor de Menú</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Diseñá el menú que ven tus clientes: arrastrá secciones, creá banners y cambiá el tema visual
-          </p>
+    <div className="h-[calc(100vh-0px)] md:h-screen flex flex-col">
+      {/* Top toolbar */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <h1 className="font-heading text-lg font-bold hidden sm:block">Editor Visual</h1>
+          <div className="flex bg-muted rounded-lg p-0.5">
+            <button
+              onClick={() => setActivePanel('sections')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                activePanel === 'sections' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'
+              }`}
+            >
+              <LayoutList className="h-3.5 w-3.5" /> Secciones
+            </button>
+            <button
+              onClick={() => setActivePanel('theme')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                activePanel === 'theme' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'
+              }`}
+            >
+              <Palette className="h-3.5 w-3.5" /> Tema
+            </button>
+          </div>
         </div>
-        <Button onClick={openNewBanner} className="gradient-primary gap-2 shadow-lg">
-          <Plus className="h-4 w-4" /> Nuevo banner
-        </Button>
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-[10px] h-5 hidden sm:flex">{activeTheme.name}</Badge>
+          <Button size="sm" onClick={openNewBanner} className="gradient-primary gap-1.5 h-8 text-xs">
+            <Plus className="h-3.5 w-3.5" /> Banner
+          </Button>
+        </div>
       </div>
 
-      <Tabs defaultValue="layout" className="space-y-4">
-        <TabsList className="bg-muted">
-          <TabsTrigger value="layout" className="gap-1.5"><LayoutList className="h-3.5 w-3.5" /> Secciones</TabsTrigger>
-          <TabsTrigger value="theme" className="gap-1.5"><Palette className="h-3.5 w-3.5" /> Tema visual</TabsTrigger>
-        </TabsList>
+      {/* Main split panel */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left panel — controls */}
+        <div className="w-full md:w-[380px] lg:w-[420px] border-r border-border overflow-y-auto bg-background flex-shrink-0">
+          {activePanel === 'sections' ? (
+            <SectionsPanel
+              sections={sortedSections}
+              hoveredSection={hoveredSection}
+              setHoveredSection={setHoveredSection}
+              onToggle={toggleSection}
+              onMove={moveSection}
+              onEditBanner={openEditBanner}
+              onEditTitle={handleEditTitle}
+              onRemove={removeSection}
+              onAddBanner={openNewBanner}
+            />
+          ) : (
+            <ThemePanel activeTheme={activeTheme} setThemeId={setThemeId} />
+          )}
+        </div>
 
-        {/* ─── SECCIONES TAB ─── */}
-        <TabsContent value="layout" className="space-y-3">
-          <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-xl border border-border">
-            <Smartphone className="h-4 w-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">
-              Las secciones se muestran en este orden en el menú del cliente. Usá las flechas para reordenar.
+        {/* Right panel — live preview */}
+        <div className="hidden md:flex flex-1 items-center justify-center bg-[hsl(var(--muted)/0.3)] overflow-hidden p-6">
+          <PhonePreview
+            sections={enabledSections}
+            theme={activeTheme}
+            hoveredSection={hoveredSection}
+          />
+        </div>
+      </div>
+
+      {/* Banner Dialog */}
+      <BannerDialog
+        open={bannerDialogOpen}
+        onOpenChange={setBannerDialogOpen}
+        form={bannerForm}
+        setForm={setBannerForm}
+        editing={!!editingSection}
+        onSave={handleSaveBanner}
+        onImageUpload={handleImageUpload}
+        fileInputRef={fileInputRef}
+      />
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SECTIONS PANEL
+   ═══════════════════════════════════════════════════════════ */
+function SectionsPanel({
+  sections, hoveredSection, setHoveredSection, onToggle, onMove, onEditBanner, onEditTitle, onRemove, onAddBanner,
+}: {
+  sections: MenuSection[];
+  hoveredSection: string | null;
+  setHoveredSection: (id: string | null) => void;
+  onToggle: (id: string) => void;
+  onMove: (id: string, dir: 'up' | 'down') => void;
+  onEditBanner: (s: MenuSection) => void;
+  onEditTitle: (s: MenuSection) => void;
+  onRemove: (id: string) => void;
+  onAddBanner: () => void;
+}) {
+  const typeLabels: Record<string, { icon: string; text: string; color: string }> = {
+    'flash-deals': { icon: '⚡', text: 'Ofertas', color: 'bg-orange-500/15 text-orange-500' },
+    'popular': { icon: '🏆', text: 'Populares', color: 'bg-amber-500/15 text-amber-600' },
+    'custom-banner': { icon: '🎨', text: 'Banner', color: 'bg-violet-500/15 text-violet-500' },
+    'category': { icon: '📂', text: 'Categoría', color: 'bg-blue-500/15 text-blue-500' },
+  };
+
+  return (
+    <div className="p-4 space-y-2">
+      <p className="text-[11px] text-muted-foreground mb-3">
+        Reordená, activá o editá cada sección. El preview se actualiza en tiempo real →
+      </p>
+
+      {sections.map((section, idx) => {
+        const tl = typeLabels[section.type] || { icon: '?', text: section.type, color: 'bg-muted' };
+        const isHovered = hoveredSection === section.id;
+        const canEdit = section.type === 'custom-banner' || section.type === 'popular' || section.type === 'flash-deals';
+
+        return (
+          <div
+            key={section.id}
+            onMouseEnter={() => setHoveredSection(section.id)}
+            onMouseLeave={() => setHoveredSection(null)}
+            className={`flex items-center gap-2 p-2.5 rounded-xl border transition-all cursor-default ${
+              isHovered ? 'border-primary/40 bg-primary/5 shadow-sm' :
+              section.enabled ? 'bg-card border-border' : 'bg-muted/30 border-border/50 opacity-50'
+            }`}
+          >
+            <GripVertical className="h-4 w-4 text-muted-foreground/30 flex-shrink-0" />
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="font-heading font-semibold text-xs truncate">{section.label}</span>
+                <Badge variant="outline" className={`text-[9px] h-4 ${tl.color} border-0`}>{tl.icon} {tl.text}</Badge>
+              </div>
+              {section.type === 'custom-banner' && section.config.banner && (
+                <p className="text-[10px] text-muted-foreground truncate">{section.config.banner.subtitle || 'Sin subtítulo'}</p>
+              )}
+              {section.type === 'category' && section.config.categoryId && (
+                <p className="text-[10px] text-muted-foreground">
+                  {menuItems.filter(i => i.categoryId === section.config.categoryId && i.available).length} productos
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-center gap-0.5 flex-shrink-0">
+              {canEdit && (
+                <Button variant="ghost" size="icon" className="h-6 w-6"
+                  onClick={() => section.type === 'custom-banner' ? onEditBanner(section) : onEditTitle(section)}>
+                  <Pencil className="h-3 w-3" />
+                </Button>
+              )}
+              <Button variant="ghost" size="icon" className="h-6 w-6" disabled={idx === 0}
+                onClick={() => onMove(section.id, 'up')}>
+                <ChevronUp className="h-3 w-3" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-6 w-6" disabled={idx === sections.length - 1}
+                onClick={() => onMove(section.id, 'down')}>
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+              {section.type === 'custom-banner' && (
+                <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive"
+                  onClick={() => { onRemove(section.id); toast.success('Eliminado'); }}>
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              )}
+              <Switch checked={section.enabled} onCheckedChange={() => onToggle(section.id)} className="ml-1" />
+            </div>
+          </div>
+        );
+      })}
+
+      <button onClick={onAddBanner}
+        className="w-full border-2 border-dashed border-border rounded-xl p-3 text-center hover:border-primary/40 hover:bg-primary/5 transition-all group">
+        <Plus className="h-4 w-4 mx-auto text-muted-foreground group-hover:text-primary mb-1" />
+        <p className="text-xs text-muted-foreground group-hover:text-foreground">Agregar banner</p>
+      </button>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME PANEL
+   ═══════════════════════════════════════════════════════════ */
+function ThemePanel({ activeTheme, setThemeId }: { activeTheme: MenuThemeConfig; setThemeId: (id: any) => void }) {
+  return (
+    <div className="p-4 space-y-3">
+      <p className="text-[11px] text-muted-foreground mb-2">Elegí el estilo visual del menú. Se aplica al instante.</p>
+      {menuThemes.map(theme => (
+        <button
+          key={theme.id}
+          onClick={() => { setThemeId(theme.id); toast.success(`Tema "${theme.name}" aplicado`); }}
+          className={`w-full text-left p-3 rounded-xl border-2 transition-all ${
+            activeTheme.id === theme.id ? 'border-primary shadow-md bg-primary/5' : 'border-border hover:border-primary/30'
+          }`}
+        >
+          <div className="flex gap-1 mb-2">
+            <div className={`h-6 w-10 rounded-md ${theme.colors.headerBg}`} />
+            <div className={`h-6 w-6 rounded-md ${theme.colors.pageBg} border border-border`} />
+            <div className={`h-6 flex-1 rounded-md bg-gradient-to-r ${theme.colors.accentGradient}`} />
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-heading font-bold text-xs">{theme.name}</h3>
+              <p className="text-[10px] text-muted-foreground">{theme.description}</p>
+            </div>
+            {activeTheme.id === theme.id && (
+              <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                <Check className="h-3 w-3 text-primary-foreground" />
+              </div>
+            )}
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PHONE PREVIEW — live rendered mini menu
+   ═══════════════════════════════════════════════════════════ */
+function PhonePreview({ sections, theme, hoveredSection }: {
+  sections: MenuSection[];
+  theme: MenuThemeConfig;
+  hoveredSection: string | null;
+}) {
+  const allAvailable = menuItems.filter(i => i.available);
+  const popularItems = menuItems.filter(i => i.popular && i.available);
+
+  return (
+    <div className="w-[320px] h-[620px] rounded-[2.5rem] border-[6px] border-foreground/20 bg-foreground/10 shadow-2xl overflow-hidden flex flex-col">
+      {/* Phone notch */}
+      <div className="h-6 bg-foreground/20 flex items-center justify-center">
+        <div className="w-20 h-3 bg-foreground/30 rounded-full" />
+      </div>
+
+      {/* Scrollable content */}
+      <div className={`flex-1 overflow-y-auto ${theme.colors.pageBg}`}>
+        {/* Header */}
+        <div className={`${theme.colors.headerBg} px-3 pt-3 pb-2.5`}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <div className="h-5 w-5 bg-white/20 rounded-md flex items-center justify-center">
+                <Flame className="h-3 w-3 text-white" />
+              </div>
+              <div>
+                <p className={`text-[9px] font-bold ${theme.colors.headerText}`}>{restaurant.name}</p>
+                <p className={`text-[7px] ${theme.colors.headerAccent}`}>Mesa 5 • Menú digital</p>
+              </div>
+            </div>
+            <div className="h-5 w-5 bg-white/15 rounded-full flex items-center justify-center">
+              <Bell className="h-2.5 w-2.5 text-white" />
+            </div>
+          </div>
+          <div className="bg-white/15 rounded-lg h-5 flex items-center px-2 gap-1">
+            <Search className="h-2.5 w-2.5 text-white/40" />
+            <span className="text-[8px] text-white/40">¿Qué se te antoja hoy?</span>
+          </div>
+        </div>
+
+        {/* Category pills */}
+        <div className={`${theme.colors.pageBg} px-2 py-1.5 flex gap-1 overflow-x-hidden border-b border-border/30`}>
+          {categories.slice(0, 4).map((cat, i) => (
+            <div key={cat.id} className={`px-1.5 py-0.5 rounded-full text-[7px] font-medium whitespace-nowrap ${
+              i === 0 ? `${theme.colors.categoryActiveBg} ${theme.colors.categoryActiveText}` : `${theme.colors.categoryBg} ${theme.colors.categoryText}`
+            }`}>
+              {cat.icon} {cat.name}
+            </div>
+          ))}
+        </div>
+
+        {/* Sections */}
+        <div className="space-y-0">
+          {sections.map(section => (
+            <div
+              key={section.id}
+              className={`transition-all ${hoveredSection === section.id ? 'ring-2 ring-primary ring-inset rounded-sm' : ''}`}
+            >
+              <PreviewSection section={section} theme={theme} allAvailable={allAvailable} popularItems={popularItems} />
+            </div>
+          ))}
+        </div>
+
+        <div className="h-4" />
+      </div>
+
+      {/* Bottom bar */}
+      <div className="h-5 bg-foreground/10 flex items-center justify-center">
+        <div className="w-24 h-1 bg-foreground/20 rounded-full" />
+      </div>
+    </div>
+  );
+}
+
+function PreviewSection({ section, theme, allAvailable, popularItems }: {
+  section: MenuSection; theme: MenuThemeConfig; allAvailable: any[]; popularItems: any[];
+}) {
+  switch (section.type) {
+    case 'flash-deals':
+      return (
+        <div className="px-2 pt-2 pb-1">
+          <div className="bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 rounded-lg p-2 relative overflow-hidden">
+            <div className="flex items-center gap-1 mb-1">
+              <Zap className="h-2.5 w-2.5 text-yellow-200" />
+              <span className="text-white font-heading font-bold text-[8px]">
+                {section.config.title || 'OFERTAS RELÁMPAGO'}
+              </span>
+              <div className="ml-auto flex items-center gap-0.5 bg-white/20 rounded-full px-1 py-0.5">
+                <Clock className="h-2 w-2 text-white" />
+                <span className="text-white text-[6px] font-bold">02:34</span>
+              </div>
+            </div>
+            <div className="flex gap-1.5">
+              {[0, 1, 2].map(i => (
+                <div key={i} className="w-14 bg-white/15 rounded-md overflow-hidden">
+                  <div className="h-8 bg-white/10" />
+                  <div className="p-1">
+                    <div className="h-[3px] bg-white/40 rounded w-10 mb-0.5" />
+                    <div className="h-[3px] bg-yellow-200/50 rounded w-6" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+
+    case 'popular':
+      return (
+        <div className="px-2 pt-2 pb-1">
+          <div className="flex items-center gap-1 mb-1.5">
+            <div className={`h-4 w-4 rounded bg-gradient-to-br ${theme.colors.accentGradient} flex items-center justify-center`}>
+              <Crown className="h-2.5 w-2.5 text-white" />
+            </div>
+            <span className={`font-heading font-bold text-[9px] ${theme.colors.textPrimary}`}>
+              {section.config.title || 'Los más pedidos'}
             </span>
           </div>
-
-          <div className="space-y-1.5">
-            {sortedSections.map((section, idx) => (
-              <div
-                key={section.id}
-                className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${
-                  section.enabled ? 'bg-card border-border shadow-sm' : 'bg-muted/30 border-border/50 opacity-60'
-                }`}
-              >
-                <GripVertical className="h-4 w-4 text-muted-foreground/40 flex-shrink-0 cursor-grab" />
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-heading font-semibold text-sm truncate">{section.label}</span>
-                    <SectionTypeLabel type={section.type} />
-                    {!section.enabled && <Badge variant="outline" className="text-[10px] h-5 text-destructive border-destructive/30">Oculto</Badge>}
+          <div className="flex gap-1.5 overflow-hidden">
+            {popularItems.slice(0, 3).map((item, i) => (
+              <div key={item.id} className={`w-[80px] flex-shrink-0 ${theme.style.cardRadius} overflow-hidden ${theme.colors.cardBg} border ${theme.colors.cardBorder} shadow-sm`}>
+                <div className="relative h-14">
+                  <img src={item.image} alt="" className="w-full h-full object-cover" />
+                  <div className={`absolute inset-0 bg-gradient-to-t ${theme.style.heroOverlay}`} />
+                  <div className={`absolute top-0.5 left-0.5 bg-gradient-to-r ${theme.colors.accentGradient} text-white text-[5px] font-bold px-1 rounded-full`}>
+                    #{i + 1}
                   </div>
-                  {section.type === 'custom-banner' && section.config.banner && (
-                    <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{section.config.banner.subtitle || 'Sin subtítulo'}</p>
-                  )}
-                  {section.type === 'category' && section.config.categoryId && (
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      {menuItems.filter(i => i.categoryId === section.config.categoryId && i.available).length} productos disponibles
-                    </p>
-                  )}
                 </div>
-
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  {/* Edit button for banners and popular */}
-                  {(section.type === 'custom-banner') && (
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditBanner(section)}>
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                  )}
-                  {section.type === 'popular' && (
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditTitle(section)}>
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                  )}
-
-                  {/* Move buttons */}
-                  <Button
-                    variant="ghost" size="icon" className="h-7 w-7"
-                    disabled={idx === 0}
-                    onClick={() => moveSection(section.id, 'up')}
-                  >
-                    <ChevronUp className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost" size="icon" className="h-7 w-7"
-                    disabled={idx === sortedSections.length - 1}
-                    onClick={() => moveSection(section.id, 'down')}
-                  >
-                    <ChevronDown className="h-3.5 w-3.5" />
-                  </Button>
-
-                  {/* Delete (only for custom banners) */}
-                  {section.type === 'custom-banner' && (
-                    <Button
-                      variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"
-                      onClick={() => { removeSection(section.id); toast.success('Sección eliminada'); }}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  )}
-
-                  {/* Toggle visibility */}
-                  <Switch
-                    checked={section.enabled}
-                    onCheckedChange={() => toggleSection(section.id)}
-                  />
+                <div className="p-1">
+                  <p className={`text-[7px] font-bold ${theme.colors.textPrimary} truncate`}>{item.name}</p>
+                  <p className={`text-[7px] font-bold ${theme.colors.priceColor}`}>${item.price}</p>
                 </div>
               </div>
             ))}
           </div>
+        </div>
+      );
 
-          {/* Quick add section */}
-          <div className="border-2 border-dashed border-border rounded-xl p-4 text-center">
-            <p className="text-sm text-muted-foreground mb-2">¿Querés agregar más contenido?</p>
-            <Button variant="outline" size="sm" onClick={openNewBanner} className="gap-1.5">
-              <Plus className="h-3.5 w-3.5" /> Crear banner personalizado
-            </Button>
+    case 'custom-banner':
+      if (!section.config.banner) return null;
+      const b = section.config.banner;
+      return (
+        <div className="px-2 pt-1.5 pb-0.5">
+          <div className={`bg-gradient-to-r ${b.gradient} rounded-lg p-2 flex items-center gap-2 relative overflow-hidden`}>
+            <div className="absolute -right-3 -top-3 w-10 h-10 bg-white/10 rounded-full" />
+            {b.imageUrl ? (
+              <img src={b.imageUrl} alt="" className="h-7 w-7 rounded-md object-cover flex-shrink-0 relative z-10" />
+            ) : (
+              <div className="h-7 w-7 bg-white/20 rounded-md flex items-center justify-center flex-shrink-0 text-sm relative z-10">
+                {b.icon}
+              </div>
+            )}
+            <div className="flex-1 min-w-0 relative z-10">
+              <p className="text-white font-heading font-bold text-[8px] truncate">{b.title}</p>
+              {b.subtitle && <p className="text-white/70 text-[7px] truncate">{b.subtitle}</p>}
+            </div>
+            {b.badge && (
+              <div className="bg-white/20 rounded px-1 py-0.5 relative z-10">
+                <p className="text-white text-[6px] font-bold">{b.badge}</p>
+              </div>
+            )}
           </div>
-        </TabsContent>
+        </div>
+      );
 
-        {/* ─── TEMA VISUAL TAB ─── */}
-        <TabsContent value="theme">
-          <div className="flex items-center gap-2 mb-4 p-3 bg-card rounded-xl border border-border">
-            <Smartphone className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Tema activo:</span>
-            <Badge className="gradient-primary text-white border-0">{activeTheme.name}</Badge>
+    case 'category': {
+      const catId = section.config.categoryId;
+      const cat = categories.find(c => c.id === catId);
+      const items = allAvailable.filter(i => i.categoryId === catId);
+      if (!cat || items.length === 0) return null;
+      return (
+        <div className="px-2 pt-2.5 pb-0.5">
+          <div className="flex items-center gap-1 mb-1.5">
+            <span className="text-[10px]">{cat.icon}</span>
+            <span className={`font-heading font-bold text-[9px] ${theme.colors.textPrimary}`}>{cat.name}</span>
+            <span className={`text-[7px] ${theme.colors.textSecondary}`}>({items.length})</span>
+          </div>
+          {/* Hero item */}
+          <div className={`${theme.style.cardRadius} overflow-hidden ${theme.colors.cardBg} border ${theme.colors.cardBorder} shadow-sm mb-1.5`}>
+            <div className="relative h-16">
+              <img src={items[0].image} alt="" className="w-full h-full object-cover" />
+              <div className={`absolute inset-0 bg-gradient-to-t ${theme.style.heroOverlay}`} />
+              <div className="absolute bottom-1 left-1.5">
+                <p className="text-white font-heading font-bold text-[8px]">{items[0].name}</p>
+                <p className="text-white font-bold text-[8px]">${items[0].price}</p>
+              </div>
+            </div>
+          </div>
+          {/* Compact items */}
+          {items.slice(1, 3).map(item => (
+            <div key={item.id} className={`flex gap-1.5 ${theme.style.cardRadius} ${theme.colors.cardBg} p-1 border ${theme.colors.cardBorder} shadow-sm mb-1`}>
+              <img src={item.image} alt="" className={`h-8 w-8 ${theme.style.imageRadius} object-cover flex-shrink-0`} />
+              <div className="flex-1 min-w-0 flex flex-col justify-center">
+                <p className={`text-[7px] font-bold ${theme.colors.textPrimary} truncate`}>{item.name}</p>
+                <p className={`text-[7px] font-bold ${theme.colors.priceColor}`}>${item.price}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    default:
+      return null;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BANNER DIALOG
+   ═══════════════════════════════════════════════════════════ */
+function BannerDialog({ open, onOpenChange, form, setForm, editing, onSave, onImageUpload, fileInputRef }: {
+  open: boolean; onOpenChange: (v: boolean) => void; form: BannerConfig;
+  setForm: (fn: (f: BannerConfig) => BannerConfig) => void;
+  editing: boolean; onSave: () => void;
+  onImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  fileInputRef: React.RefObject<HTMLInputElement>;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{editing ? 'Editar banner' : 'Nuevo banner'}</DialogTitle>
+          <DialogDescription>Creá un banner promocional para tu menú</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+          {/* Live preview */}
+          <div className={`bg-gradient-to-r ${form.gradient} rounded-2xl p-4 flex items-center gap-3 relative overflow-hidden`}>
+            <div className="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full" />
+            {form.imageUrl ? (
+              <img src={form.imageUrl} alt="" className="h-12 w-12 rounded-xl object-cover flex-shrink-0 relative z-10" />
+            ) : (
+              <div className="h-12 w-12 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center flex-shrink-0 text-xl relative z-10">
+                {form.icon}
+              </div>
+            )}
+            <div className="flex-1 min-w-0 relative z-10">
+              <p className="text-white font-heading font-bold text-sm truncate">{form.title || 'Título del banner'}</p>
+              <p className="text-white/70 text-[11px] truncate">{form.subtitle || 'Subtítulo opcional'}</p>
+            </div>
+            {form.badge && (
+              <div className="bg-white/20 rounded-lg px-2.5 py-1 flex-shrink-0 relative z-10">
+                <p className="text-white text-[10px] font-bold">{form.badge}</p>
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {menuThemes.map(theme => (
-              <button
-                key={theme.id}
-                onClick={() => { setThemeId(theme.id); toast.success(`Tema "${theme.name}" aplicado`); }}
-                className={`text-left p-4 rounded-2xl border-2 transition-all ${
-                  activeTheme.id === theme.id ? 'border-primary shadow-lg' : 'border-border hover:border-primary/30'
-                }`}
-              >
-                {/* Mini color preview */}
-                <div className="flex gap-1 mb-3">
-                  <div className={`h-8 w-8 rounded-lg ${theme.colors.headerBg}`} />
-                  <div className={`h-8 w-8 rounded-lg ${theme.colors.pageBg} border border-border`} />
-                  <div className={`h-8 w-8 rounded-lg ${theme.colors.cardBg} border border-border`} />
-                  <div className={`h-8 flex-1 rounded-lg bg-gradient-to-r ${theme.colors.accentGradient}`} />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-heading font-bold text-sm">{theme.name}</h3>
-                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{theme.description}</p>
-                  </div>
-                  {activeTheme.id === theme.id && (
-                    <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0 ml-2">
-                      <Check className="h-3.5 w-3.5 text-primary-foreground" />
-                    </div>
-                  )}
-                </div>
-              </button>
-            ))}
+          <div>
+            <Label>Título *</Label>
+            <Input placeholder="Ej: ¡2x1 en bebidas!" value={form.title}
+              onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="mt-1.5" />
           </div>
-        </TabsContent>
-      </Tabs>
-
-      {/* Banner Create/Edit Dialog */}
-      <Dialog open={bannerDialogOpen} onOpenChange={setBannerDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{editingSection ? 'Editar banner' : 'Nuevo banner'}</DialogTitle>
-            <DialogDescription>
-              Creá un banner promocional para mostrar en el menú de tus clientes
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            {/* Preview */}
-            <div className={`bg-gradient-to-r ${bannerForm.gradient} rounded-2xl p-4 flex items-center gap-3 relative overflow-hidden`}>
-              <div className="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full" />
-              {bannerForm.imageUrl ? (
-                <img src={bannerForm.imageUrl} alt="" className="h-12 w-12 rounded-xl object-cover flex-shrink-0" />
-              ) : (
-                <div className="h-12 w-12 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center flex-shrink-0 text-xl">
-                  {bannerForm.icon}
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-heading font-bold text-sm truncate">{bannerForm.title || 'Título del banner'}</p>
-                <p className="text-white/70 text-[11px] truncate">{bannerForm.subtitle || 'Subtítulo opcional'}</p>
-              </div>
-              {bannerForm.badge && (
-                <div className="bg-white/20 rounded-lg px-2.5 py-1 flex-shrink-0">
-                  <p className="text-white text-[10px] font-bold">{bannerForm.badge}</p>
-                </div>
-              )}
-            </div>
-
+          <div>
+            <Label>Subtítulo</Label>
+            <Input placeholder="Ej: De lunes a jueves" value={form.subtitle}
+              onChange={e => setForm(f => ({ ...f, subtitle: e.target.value }))} className="mt-1.5" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Título *</Label>
-              <Input
-                placeholder="Ej: ¡2x1 en bebidas!"
-                value={bannerForm.title}
-                onChange={e => setBannerForm(f => ({ ...f, title: e.target.value }))}
-                className="mt-1.5"
-              />
+              <Label>Etiqueta</Label>
+              <Input placeholder="HOY, NUEVO, -20%" value={form.badge || ''}
+                onChange={e => setForm(f => ({ ...f, badge: e.target.value }))} className="mt-1.5" />
             </div>
-
             <div>
-              <Label>Subtítulo</Label>
-              <Input
-                placeholder="Ej: De lunes a jueves"
-                value={bannerForm.subtitle}
-                onChange={e => setBannerForm(f => ({ ...f, subtitle: e.target.value }))}
-                className="mt-1.5"
-              />
+              <Label>Color</Label>
+              <Select value={form.gradient} onValueChange={v => setForm(f => ({ ...f, gradient: v }))}>
+                <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {gradientOptions.map(g => <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Etiqueta</Label>
-                <Input
-                  placeholder="Ej: HOY, NUEVO, -20%"
-                  value={bannerForm.badge || ''}
-                  onChange={e => setBannerForm(f => ({ ...f, badge: e.target.value }))}
-                  className="mt-1.5"
-                />
-              </div>
-              <div>
-                <Label>Color</Label>
-                <Select value={bannerForm.gradient} onValueChange={v => setBannerForm(f => ({ ...f, gradient: v }))}>
-                  <SelectTrigger className="mt-1.5">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {gradientOptions.map(g => (
-                      <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <Label>Icono</Label>
-              <div className="flex gap-1.5 mt-1.5 flex-wrap">
-                {iconOptions.map(icon => (
-                  <button
-                    key={icon}
-                    onClick={() => setBannerForm(f => ({ ...f, icon }))}
-                    className={`h-9 w-9 rounded-lg flex items-center justify-center text-lg transition-all ${
-                      bannerForm.icon === icon ? 'bg-primary/20 ring-2 ring-primary' : 'bg-muted hover:bg-accent'
-                    }`}
-                  >
-                    {icon}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <Label>Imagen (opcional)</Label>
-              <div className="flex gap-2 mt-1.5">
-                <Input
-                  placeholder="URL de imagen o subí un archivo"
-                  value={bannerForm.imageUrl || ''}
-                  onChange={e => setBannerForm(f => ({ ...f, imageUrl: e.target.value }))}
-                  className="flex-1"
-                />
-                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                  <ImageIcon className="h-3.5 w-3.5" />
-                </Button>
-                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-              </div>
-              {bannerForm.imageUrl && (
-                <button onClick={() => setBannerForm(f => ({ ...f, imageUrl: '' }))} className="text-xs text-destructive mt-1">
-                  Quitar imagen
+          </div>
+          <div>
+            <Label>Icono</Label>
+            <div className="flex gap-1.5 mt-1.5 flex-wrap">
+              {iconOptions.map(icon => (
+                <button key={icon} onClick={() => setForm(f => ({ ...f, icon }))}
+                  className={`h-9 w-9 rounded-lg flex items-center justify-center text-lg transition-all ${
+                    form.icon === icon ? 'bg-primary/20 ring-2 ring-primary' : 'bg-muted hover:bg-accent'
+                  }`}>
+                  {icon}
                 </button>
-              )}
+              ))}
             </div>
           </div>
+          <div>
+            <Label>Imagen (opcional)</Label>
+            <div className="flex gap-2 mt-1.5">
+              <Input placeholder="URL de imagen" value={form.imageUrl || ''}
+                onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))} className="flex-1" />
+              <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                <ImageIcon className="h-3.5 w-3.5" />
+              </Button>
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onImageUpload} />
+            </div>
+            {form.imageUrl && (
+              <button onClick={() => setForm(f => ({ ...f, imageUrl: '' }))} className="text-xs text-destructive mt-1">Quitar imagen</button>
+            )}
+          </div>
+        </div>
 
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setBannerDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSaveBanner} className="gradient-primary">
-              {editingSection ? 'Guardar cambios' : 'Agregar banner'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button onClick={onSave} className="gradient-primary">{editing ? 'Guardar' : 'Agregar'}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
