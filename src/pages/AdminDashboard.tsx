@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { TrendingUp, TrendingDown, ShoppingBag, Clock, Users, DollarSign, ChefHat, Flame, Star, ArrowUpRight, Utensils, CreditCard, BarChart3, Target } from 'lucide-react';
 import { demoOrders, tables, menuItems } from '@/data/mockData';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import ForecastingPanel from '@/components/admin/ForecastingPanel';
 
 const hourlyData = [
   { hour: '10am', ventas: 1200 }, { hour: '11am', ventas: 2800 },
