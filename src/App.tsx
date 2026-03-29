@@ -14,6 +14,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminOrders from "./pages/AdminOrders";
 import AdminMenuPage from "./pages/AdminMenuPage";
 import AdminTables from "./pages/AdminTables";
+import AdminThemes from "./pages/AdminThemes";
 import AdminLayout from "./components/admin/AdminLayout";
 import NotFound from "./pages/NotFound";
 
