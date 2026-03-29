@@ -72,6 +72,23 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-1 bg-muted/50 rounded-lg p-1 w-fit">
+        <button
+          onClick={() => setTab('overview')}
+          className={`px-4 py-1.5 rounded-md text-xs font-heading font-semibold transition-colors ${tab === 'overview' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+        >
+          Resumen
+        </button>
+        <button
+          onClick={() => setTab('forecast')}
+          className={`px-4 py-1.5 rounded-md text-xs font-heading font-semibold transition-colors ${tab === 'forecast' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+        >
+          Forecasting & Compras
+        </button>
+      </div>
+
+      {tab === 'forecast' ? <ForecastingPanel /> : <>
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {stats.map(stat => (
