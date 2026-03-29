@@ -15,17 +15,24 @@ export interface BannerConfig {
   imageUrl?: string;
 }
 
+export type DisplayMode = 'vertical' | 'horizontal' | 'grid';
+export type CardStyle = 'compact' | 'hero-first' | 'cards-only' | 'image-grid';
+
 export interface MenuSection {
   id: string;
   type: SectionType;
   enabled: boolean;
   order: number;
   label: string; // admin-facing label
+  displayMode: DisplayMode;
+  cardStyle: CardStyle;
   config: {
     // For custom-banner
     banner?: BannerConfig;
     // For category
     categoryId?: string;
+    // For category – custom product order
+    productOrder?: string[];
     // For popular
     title?: string;
   };
