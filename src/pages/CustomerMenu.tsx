@@ -26,6 +26,7 @@ export default function CustomerMenu() {
   const { setTableNumber, addItem } = useCart();
   const { activeTheme: theme } = useMenuTheme();
   const { layout } = useMenuLayout();
+  const { branding } = useBranding();
   const tableNum = parseInt(tableId || '5');
   useState(() => { setTableNumber(tableNum); });
 
