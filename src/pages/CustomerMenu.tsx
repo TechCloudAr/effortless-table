@@ -120,11 +120,15 @@ export default function CustomerMenu() {
       <div className={`${theme.colors.headerBg} px-4 pt-5 pb-4`}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 bg-white/20 backdrop-blur rounded-lg flex items-center justify-center">
-              <Flame className="h-4 w-4 text-white" />
-            </div>
+            {branding.logoUrl ? (
+              <img src={branding.logoUrl} alt="" className="h-8 w-8 rounded-lg object-contain" />
+            ) : (
+              <div className="h-8 w-8 bg-white/20 backdrop-blur rounded-lg flex items-center justify-center">
+                <Flame className="h-4 w-4 text-white" />
+              </div>
+            )}
             <div>
-              <h1 className={`font-heading text-sm font-bold ${theme.colors.headerText} leading-tight`}>{restaurant.name}</h1>
+              <h1 className={`font-heading text-sm font-bold ${theme.colors.headerText} leading-tight`}>{branding.restaurantName || restaurant.name}</h1>
               <p className={`text-[10px] ${theme.colors.headerAccent}`}>Mesa {tableNum} • Menú digital</p>
             </div>
           </div>
