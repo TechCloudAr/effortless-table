@@ -582,7 +582,7 @@ function BrandingPanel({ branding, updateBranding, activeFontPair }: {
   );
 }
 
-   ═══════════════════════════════════════════════════════════ */
+/* PHONE PREVIEW */
 function PhonePreview({ sections, theme, hoveredSection, getProductsForSection }: {
   sections: MenuSection[];
   theme: MenuThemeConfig;
