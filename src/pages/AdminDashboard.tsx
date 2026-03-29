@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { TrendingUp, TrendingDown, ShoppingBag, Clock, Users, DollarSign, ChefHat, Flame, Star, ArrowUpRight, Utensils, CreditCard, BarChart3, Target } from 'lucide-react';
 import { demoOrders, tables, menuItems } from '@/data/mockData';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import ForecastingPanel from '@/components/admin/ForecastingPanel';
 
 const hourlyData = [
   { hour: '10am', ventas: 1200 }, { hour: '11am', ventas: 2800 },
@@ -47,6 +49,7 @@ const stats = [
 ];
 
 export default function AdminDashboard() {
+  const [tab, setTab] = useState<'overview' | 'forecast'>('overview');
   const activeOrders = demoOrders.filter(o => o.status !== 'delivered');
   const totalRevenue = weeklyData.reduce((s, d) => s + d.ingresos, 0);
 
@@ -69,6 +72,23 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-1 bg-muted/50 rounded-lg p-1 w-fit">
+        <button
+          onClick={() => setTab('overview')}
+          className={`px-4 py-1.5 rounded-md text-xs font-heading font-semibold transition-colors ${tab === 'overview' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+        >
+          Resumen
+        </button>
+        <button
+          onClick={() => setTab('forecast')}
+          className={`px-4 py-1.5 rounded-md text-xs font-heading font-semibold transition-colors ${tab === 'forecast' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+        >
+          Forecasting & Compras
+        </button>
+      </div>
+
+      {tab === 'forecast' ? <ForecastingPanel /> : <>
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {stats.map(stat => (
@@ -234,6 +254,7 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+      </>}
     </div>
   );
 }

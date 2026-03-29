@@ -17,6 +17,7 @@ import AdminOrders from "./pages/AdminOrders";
 import AdminMenuPage from "./pages/AdminMenuPage";
 import AdminTables from "./pages/AdminTables";
 import AdminThemes from "./pages/AdminThemes";
+import AdminPayments from "./pages/AdminPayments";
 import AdminLayout from "./components/admin/AdminLayout";
 import NotFound from "./pages/NotFound";
 
@@ -45,6 +46,7 @@ const App = () => (
               <Route path="pedidos" element={<AdminOrders />} />
               <Route path="menu" element={<AdminMenuPage />} />
               <Route path="mesas" element={<AdminTables />} />
+              <Route path="pagos" element={<AdminPayments />} />
               <Route path="diseno" element={<AdminThemes />} />
             </Route>
             <Route path="*" element={<NotFound />} />

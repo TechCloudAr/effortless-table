@@ -1,11 +1,13 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ClipboardList, UtensilsCrossed, Grid3X3, Palette, LogOut, Flame } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, UtensilsCrossed, Grid3X3, Palette, LogOut, Flame, CreditCard } from 'lucide-react';
+import AIChatWidget from './AIChatWidget';
 
 const links = [
   { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/admin/pedidos', icon: ClipboardList, label: 'Pedidos' },
   { to: '/admin/menu', icon: UtensilsCrossed, label: 'Menú' },
   { to: '/admin/mesas', icon: Grid3X3, label: 'Mesas' },
+  { to: '/admin/pagos', icon: CreditCard, label: 'Pagos' },
   { to: '/admin/diseno', icon: Palette, label: 'Templates' },
 ];
 
@@ -65,6 +67,8 @@ export default function AdminLayout() {
       <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
         <Outlet />
       </main>
+
+      <AIChatWidget />
     </div>
   );
 }
