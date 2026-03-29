@@ -15,6 +15,8 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminOrders from "./pages/AdminOrders";
 import AdminMenuPage from "./pages/AdminMenuPage";
+import AdminSalesProfit from "./pages/AdminSalesProfit";
+import AdminMenuIntelligence from "./pages/AdminMenuIntelligence";
 import AdminTables from "./pages/AdminTables";
 import AdminThemes from "./pages/AdminThemes";
 import AdminPayments from "./pages/AdminPayments";
