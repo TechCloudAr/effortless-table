@@ -7,6 +7,7 @@ import ProductDetailModal from '@/components/customer/ProductDetailModal';
 import CartSheet from '@/components/customer/CartSheet';
 import type { MenuItem } from '@/types/restaurant';
 import { useCart } from '@/contexts/CartContext';
+import { useMenuTheme } from '@/contexts/MenuThemeContext';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
@@ -22,6 +23,7 @@ const tagConfig: Record<string, { bg: string; icon?: string }> = {
 export default function CustomerMenu() {
   const { tableId } = useParams();
   const { setTableNumber, addItem } = useCart();
+  const { activeTheme: theme } = useMenuTheme();
   const tableNum = parseInt(tableId || '5');
   useState(() => { setTableNumber(tableNum); });
 
@@ -62,17 +64,17 @@ export default function CustomerMenu() {
   ], []);
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className={`min-h-screen ${theme.colors.pageBg} pb-24`}>
       {/* Header — compact, vibrant */}
-      <div className="bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--primary)/0.9)] to-[hsl(20,90%,45%)] px-4 pt-5 pb-4">
+      <div className={`${theme.colors.headerBg} px-4 pt-5 pb-4`}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 bg-white/20 backdrop-blur rounded-lg flex items-center justify-center">
               <Flame className="h-4 w-4 text-white" />
             </div>
             <div>
-              <h1 className="font-heading text-sm font-bold text-white leading-tight">{restaurant.name}</h1>
-              <p className="text-[10px] text-white/60">Mesa {tableNum} • Menú digital</p>
+              <h1 className={`font-heading text-sm font-bold ${theme.colors.headerText} leading-tight`}>{restaurant.name}</h1>
+              <p className={`text-[10px] ${theme.colors.headerAccent}`}>Mesa {tableNum} • Menú digital</p>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
@@ -97,13 +99,13 @@ export default function CustomerMenu() {
 
       {/* Quick category nav — sticky */}
       {!search && (
-        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border">
+        <div className={`sticky top-0 z-40 ${theme.colors.pageBg} backdrop-blur-lg border-b border-border`}>
           <div className="flex gap-1 px-3 py-2 overflow-x-auto no-scrollbar">
             {categories.map(cat => (
               <button
                 key={cat.id}
                 onClick={() => scrollToSection(cat.id)}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-muted hover:bg-accent transition-colors"
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap ${theme.colors.categoryBg} hover:opacity-80 transition-colors ${theme.colors.categoryText}`}
               >
                 <span>{cat.icon}</span>
                 <span>{cat.name}</span>
@@ -135,8 +137,9 @@ export default function CustomerMenu() {
 
       {!search && (
         <div className="space-y-0">
-          {/* 🔥 FLASH DEALS BANNER */}
-          <section className="px-4 pt-4 pb-2">
+          {/* 🔥 FLASH DEALS BANNER — only for themes that enable it */}
+          {theme.style.showFlashDeals && (
+           <section className="px-4 pt-4 pb-2">
             <div className="bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 rounded-2xl p-4 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
               <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
@@ -174,16 +177,17 @@ export default function CustomerMenu() {
                 </div>
               </div>
             </div>
-          </section>
+           </section>
+          )}
 
           {/* 🏆 TOP SELLERS — big hero cards */}
           <section className="px-4 pt-4 pb-2">
             <div className="flex items-center gap-2 mb-3">
-              <div className="h-6 w-6 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+              <div className={`h-6 w-6 rounded-lg bg-gradient-to-br ${theme.colors.accentGradient} flex items-center justify-center`}>
                 <Crown className="h-3.5 w-3.5 text-white" />
               </div>
-              <h2 className="font-heading font-bold text-base">Los más pedidos</h2>
-              <TrendingUp className="h-3.5 w-3.5 text-primary ml-auto" />
+              <h2 className={`font-heading font-bold text-base ${theme.colors.textPrimary}`}>Los más pedidos</h2>
+              <TrendingUp className={`h-3.5 w-3.5 ${theme.colors.priceColor} ml-auto`} />
             </div>
             <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
               {popularItems.map((item, i) => (
@@ -193,12 +197,12 @@ export default function CustomerMenu() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.08 }}
                   onClick={() => setSelectedItem(item)}
-                  className="flex-shrink-0 w-40 rounded-2xl overflow-hidden bg-card shadow-card active:scale-[0.96] transition-transform relative group"
+                  className={`flex-shrink-0 w-40 ${theme.style.cardRadius} overflow-hidden ${theme.colors.cardBg} shadow-card active:scale-[0.96] transition-transform relative group border ${theme.colors.cardBorder}`}
                 >
                   <div className="relative">
                     <img src={item.image} alt={item.name} className="w-full h-28 object-cover" loading="lazy" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                    <div className="absolute top-2 left-2 bg-gradient-to-r from-red-500 to-orange-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                    <div className={`absolute inset-0 bg-gradient-to-t ${theme.style.heroOverlay}`} />
+                    <div className={`absolute top-2 left-2 bg-gradient-to-r ${theme.colors.accentGradient} text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5`}>
                       <Flame className="h-2.5 w-2.5" /> #{i + 1} vendido
                     </div>
                     <button
@@ -209,12 +213,12 @@ export default function CustomerMenu() {
                     </button>
                   </div>
                   <div className="p-2.5">
-                    <p className="font-heading font-bold text-sm truncate text-left">{item.name}</p>
+                    <p className={`font-heading font-${theme.style.fontWeight} text-sm truncate text-left ${theme.colors.textPrimary}`}>{item.name}</p>
                     <div className="flex items-center gap-1.5 mt-1">
-                      <span className="font-heading font-bold text-primary text-sm">{restaurant.currency}{item.price}</span>
+                      <span className={`font-heading font-bold ${theme.colors.priceColor} text-sm`}>{restaurant.currency}{item.price}</span>
                       <div className="flex items-center gap-0.5">
                         <Star className="h-3 w-3 fill-warning text-warning" />
-                        <span className="text-[10px] text-muted-foreground font-medium">4.{8 + i}</span>
+                        <span className={`text-[10px] ${theme.colors.textSecondary} font-medium`}>4.{8 + i}</span>
                       </div>
                     </div>
                   </div>
@@ -224,7 +228,8 @@ export default function CustomerMenu() {
           </section>
 
           {/* 🎁 PROMO BANNER */}
-          <section className="px-4 pt-3 pb-1">
+          {theme.style.showPromoBanner && (
+           <section className="px-4 pt-3 pb-1">
             <div className="bg-gradient-to-r from-violet-600 to-fuchsia-500 rounded-2xl p-4 flex items-center gap-3 relative overflow-hidden">
               <div className="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full" />
               <div className="h-12 w-12 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center flex-shrink-0">
@@ -238,7 +243,8 @@ export default function CustomerMenu() {
                 <p className="text-white text-[10px] font-bold">HOY</p>
               </div>
             </div>
-          </section>
+           </section>
+          )}
 
           {/* ALL CATEGORIES — vertical feed */}
           {categories.map(cat => {
@@ -252,8 +258,8 @@ export default function CustomerMenu() {
               >
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-lg">{cat.icon}</span>
-                  <h2 className="font-heading font-bold text-base">{cat.name}</h2>
-                  <span className="text-xs text-muted-foreground">({catItems.length})</span>
+                  <h2 className={`font-heading font-bold text-base ${theme.colors.textPrimary}`}>{cat.name}</h2>
+                  <span className={`text-xs ${theme.colors.textSecondary}`}>({catItems.length})</span>
                 </div>
 
                 {/* Mix layout: first item big, rest compact */}
@@ -287,11 +293,12 @@ export default function CustomerMenu() {
 
 /* ── Hero Card (big, first in category) ── */
 function HeroCard({ item, onSelect, onQuickAdd }: { item: MenuItem; onSelect: (i: MenuItem) => void; onQuickAdd: (e: React.MouseEvent, i: MenuItem) => void }) {
+  const { activeTheme: theme } = useMenuTheme();
   return (
-    <button onClick={() => onSelect(item)} className="w-full rounded-2xl overflow-hidden bg-card shadow-card text-left active:scale-[0.98] transition-transform relative">
+    <button onClick={() => onSelect(item)} className={`w-full ${theme.style.cardRadius} overflow-hidden ${theme.colors.cardBg} shadow-card text-left active:scale-[0.98] transition-transform relative border ${theme.colors.cardBorder}`}>
       <div className="relative">
         <img src={item.image} alt={item.name} className="w-full h-44 object-cover" loading="lazy" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+        <div className={`absolute inset-0 bg-gradient-to-t ${theme.style.heroOverlay}`} />
         <div className="absolute bottom-0 left-0 right-0 p-4">
           <div className="flex items-end justify-between">
             <div>
@@ -325,15 +332,16 @@ function HeroCard({ item, onSelect, onQuickAdd }: { item: MenuItem; onSelect: (i
 
 /* ── Compact Card (list-style) ── */
 function CompactCard({ item, onSelect, onQuickAdd }: { item: MenuItem; onSelect: (i: MenuItem) => void; onQuickAdd: (e: React.MouseEvent, i: MenuItem) => void }) {
+  const { activeTheme: theme } = useMenuTheme();
   return (
     <button
       onClick={() => onSelect(item)}
-      className="flex gap-3 rounded-xl bg-card p-2.5 shadow-card text-left w-full transition-all active:scale-[0.98] hover:shadow-elevated relative"
+      className={`flex gap-3 ${theme.style.cardRadius} ${theme.colors.cardBg} p-2.5 shadow-card text-left w-full transition-all active:scale-[0.98] hover:shadow-elevated relative border ${theme.colors.cardBorder}`}
     >
       <div className="relative flex-shrink-0">
-        <img src={item.image} alt={item.name} loading="lazy" className="h-20 w-20 rounded-xl object-cover" />
+        <img src={item.image} alt={item.name} loading="lazy" className={`h-20 w-20 ${theme.style.imageRadius} object-cover`} />
         {item.tags.includes('más vendido') && (
-          <div className="absolute -top-1 -left-1 bg-gradient-to-r from-red-500 to-orange-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-md">
+          <div className={`absolute -top-1 -left-1 bg-gradient-to-r ${theme.colors.accentGradient} text-white text-[8px] font-bold px-1.5 py-0.5 rounded-md`}>
             🔥 TOP
           </div>
         )}
@@ -345,19 +353,19 @@ function CompactCard({ item, onSelect, onQuickAdd }: { item: MenuItem; onSelect:
       </div>
       <div className="flex flex-col justify-between flex-1 min-w-0 py-0.5">
         <div>
-          <h3 className="font-heading font-semibold text-sm leading-tight">{item.name}</h3>
-          <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{item.description}</p>
+          <h3 className={`font-heading font-${theme.style.fontWeight} text-sm leading-tight ${theme.colors.textPrimary}`}>{item.name}</h3>
+          <p className={`text-[11px] ${theme.colors.textSecondary} mt-0.5 line-clamp-2`}>{item.description}</p>
         </div>
         <div className="flex items-center justify-between mt-1">
           <div className="flex items-baseline gap-1.5">
-            <span className="font-heading font-bold text-primary text-base">{restaurant.currency}{item.price}</span>
+            <span className={`font-heading font-bold ${theme.colors.priceColor} text-base`}>{restaurant.currency}{item.price}</span>
             {item.tags.includes('ahorro') && (
-              <span className="text-[10px] text-muted-foreground line-through">${Math.round(item.price * 1.25)}</span>
+              <span className={`text-[10px] ${theme.colors.textSecondary} line-through`}>${Math.round(item.price * 1.25)}</span>
             )}
           </div>
           <div className="flex gap-1">
             {item.tags.filter(t => !['más vendido', 'nuevo', 'ahorro'].includes(t)).slice(0, 1).map(tag => (
-              <span key={tag} className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full ${tagConfig[tag]?.bg || 'bg-muted text-muted-foreground'}`}>
+              <span key={tag} className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full ${tagConfig[tag]?.bg || `${theme.colors.badgeBg} ${theme.colors.badgeText}`}`}>
                 {tagConfig[tag]?.icon} {tag}
               </span>
             ))}

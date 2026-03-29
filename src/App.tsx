@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "@/contexts/CartContext";
+import { MenuThemeProvider } from "@/contexts/MenuThemeContext";
 import Index from "./pages/Index";
 import CustomerMenu from "./pages/CustomerMenu";
 import OrderStatus from "./pages/OrderStatus";
@@ -13,6 +14,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminOrders from "./pages/AdminOrders";
 import AdminMenuPage from "./pages/AdminMenuPage";
 import AdminTables from "./pages/AdminTables";
+import AdminThemes from "./pages/AdminThemes";
 import AdminLayout from "./components/admin/AdminLayout";
 import NotFound from "./pages/NotFound";
 
@@ -22,6 +24,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <CartProvider>
+        <MenuThemeProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -38,10 +41,12 @@ const App = () => (
               <Route path="pedidos" element={<AdminOrders />} />
               <Route path="menu" element={<AdminMenuPage />} />
               <Route path="mesas" element={<AdminTables />} />
+              <Route path="diseno" element={<AdminThemes />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        </MenuThemeProvider>
       </CartProvider>
     </TooltipProvider>
   </QueryClientProvider>

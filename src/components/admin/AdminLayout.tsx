@@ -1,11 +1,12 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ClipboardList, UtensilsCrossed, Grid3X3, LogOut, Flame } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, UtensilsCrossed, Grid3X3, Palette, LogOut, Flame } from 'lucide-react';
 
 const links = [
   { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/admin/pedidos', icon: ClipboardList, label: 'Pedidos' },
   { to: '/admin/menu', icon: UtensilsCrossed, label: 'Menú' },
   { to: '/admin/mesas', icon: Grid3X3, label: 'Mesas' },
+  { to: '/admin/diseno', icon: Palette, label: 'Diseño' },
 ];
 
 export default function AdminLayout() {
