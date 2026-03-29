@@ -1,11 +1,13 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ClipboardList, UtensilsCrossed, Grid3X3, Palette, LogOut, Flame, CreditCard } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, UtensilsCrossed, Grid3X3, Palette, LogOut, Flame, CreditCard, DollarSign, Brain } from 'lucide-react';
 import AIChatWidget from './AIChatWidget';
 
 const links = [
-  { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Overview' },
   { to: '/admin/pedidos', icon: ClipboardList, label: 'Pedidos' },
   { to: '/admin/menu', icon: UtensilsCrossed, label: 'Menú' },
+  { to: '/admin/rentabilidad', icon: DollarSign, label: 'Sales & Profit' },
+  { to: '/admin/inteligencia', icon: Brain, label: 'Menu Intelligence' },
   { to: '/admin/mesas', icon: Grid3X3, label: 'Mesas' },
   { to: '/admin/pagos', icon: CreditCard, label: 'Pagos' },
   { to: '/admin/diseno', icon: Palette, label: 'Templates' },

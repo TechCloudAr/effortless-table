@@ -15,6 +15,8 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminOrders from "./pages/AdminOrders";
 import AdminMenuPage from "./pages/AdminMenuPage";
+import AdminSalesProfit from "./pages/AdminSalesProfit";
+import AdminMenuIntelligence from "./pages/AdminMenuIntelligence";
 import AdminTables from "./pages/AdminTables";
 import AdminThemes from "./pages/AdminThemes";
 import AdminPayments from "./pages/AdminPayments";
@@ -45,6 +47,8 @@ const App = () => (
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="pedidos" element={<AdminOrders />} />
               <Route path="menu" element={<AdminMenuPage />} />
+              <Route path="rentabilidad" element={<AdminSalesProfit />} />
+              <Route path="inteligencia" element={<AdminMenuIntelligence />} />
               <Route path="mesas" element={<AdminTables />} />
               <Route path="pagos" element={<AdminPayments />} />
               <Route path="diseno" element={<AdminThemes />} />
