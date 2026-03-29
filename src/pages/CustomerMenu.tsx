@@ -293,11 +293,12 @@ export default function CustomerMenu() {
 
 /* ── Hero Card (big, first in category) ── */
 function HeroCard({ item, onSelect, onQuickAdd }: { item: MenuItem; onSelect: (i: MenuItem) => void; onQuickAdd: (e: React.MouseEvent, i: MenuItem) => void }) {
+  const { activeTheme: theme } = useMenuTheme();
   return (
-    <button onClick={() => onSelect(item)} className="w-full rounded-2xl overflow-hidden bg-card shadow-card text-left active:scale-[0.98] transition-transform relative">
+    <button onClick={() => onSelect(item)} className={`w-full ${theme.style.cardRadius} overflow-hidden ${theme.colors.cardBg} shadow-card text-left active:scale-[0.98] transition-transform relative border ${theme.colors.cardBorder}`}>
       <div className="relative">
         <img src={item.image} alt={item.name} className="w-full h-44 object-cover" loading="lazy" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+        <div className={`absolute inset-0 bg-gradient-to-t ${theme.style.heroOverlay}`} />
         <div className="absolute bottom-0 left-0 right-0 p-4">
           <div className="flex items-end justify-between">
             <div>
@@ -331,15 +332,16 @@ function HeroCard({ item, onSelect, onQuickAdd }: { item: MenuItem; onSelect: (i
 
 /* ── Compact Card (list-style) ── */
 function CompactCard({ item, onSelect, onQuickAdd }: { item: MenuItem; onSelect: (i: MenuItem) => void; onQuickAdd: (e: React.MouseEvent, i: MenuItem) => void }) {
+  const { activeTheme: theme } = useMenuTheme();
   return (
     <button
       onClick={() => onSelect(item)}
-      className="flex gap-3 rounded-xl bg-card p-2.5 shadow-card text-left w-full transition-all active:scale-[0.98] hover:shadow-elevated relative"
+      className={`flex gap-3 ${theme.style.cardRadius} ${theme.colors.cardBg} p-2.5 shadow-card text-left w-full transition-all active:scale-[0.98] hover:shadow-elevated relative border ${theme.colors.cardBorder}`}
     >
       <div className="relative flex-shrink-0">
-        <img src={item.image} alt={item.name} loading="lazy" className="h-20 w-20 rounded-xl object-cover" />
+        <img src={item.image} alt={item.name} loading="lazy" className={`h-20 w-20 ${theme.style.imageRadius} object-cover`} />
         {item.tags.includes('más vendido') && (
-          <div className="absolute -top-1 -left-1 bg-gradient-to-r from-red-500 to-orange-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-md">
+          <div className={`absolute -top-1 -left-1 bg-gradient-to-r ${theme.colors.accentGradient} text-white text-[8px] font-bold px-1.5 py-0.5 rounded-md`}>
             🔥 TOP
           </div>
         )}
@@ -351,19 +353,19 @@ function CompactCard({ item, onSelect, onQuickAdd }: { item: MenuItem; onSelect:
       </div>
       <div className="flex flex-col justify-between flex-1 min-w-0 py-0.5">
         <div>
-          <h3 className="font-heading font-semibold text-sm leading-tight">{item.name}</h3>
-          <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{item.description}</p>
+          <h3 className={`font-heading font-${theme.style.fontWeight} text-sm leading-tight ${theme.colors.textPrimary}`}>{item.name}</h3>
+          <p className={`text-[11px] ${theme.colors.textSecondary} mt-0.5 line-clamp-2`}>{item.description}</p>
         </div>
         <div className="flex items-center justify-between mt-1">
           <div className="flex items-baseline gap-1.5">
-            <span className="font-heading font-bold text-primary text-base">{restaurant.currency}{item.price}</span>
+            <span className={`font-heading font-bold ${theme.colors.priceColor} text-base`}>{restaurant.currency}{item.price}</span>
             {item.tags.includes('ahorro') && (
-              <span className="text-[10px] text-muted-foreground line-through">${Math.round(item.price * 1.25)}</span>
+              <span className={`text-[10px] ${theme.colors.textSecondary} line-through`}>${Math.round(item.price * 1.25)}</span>
             )}
           </div>
           <div className="flex gap-1">
             {item.tags.filter(t => !['más vendido', 'nuevo', 'ahorro'].includes(t)).slice(0, 1).map(tag => (
-              <span key={tag} className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full ${tagConfig[tag]?.bg || 'bg-muted text-muted-foreground'}`}>
+              <span key={tag} className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full ${tagConfig[tag]?.bg || `${theme.colors.badgeBg} ${theme.colors.badgeText}`}`}>
                 {tagConfig[tag]?.icon} {tag}
               </span>
             ))}
