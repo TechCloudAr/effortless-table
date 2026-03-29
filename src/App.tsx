@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "@/contexts/CartContext";
 import { MenuThemeProvider } from "@/contexts/MenuThemeContext";
 import { MenuLayoutProvider } from "@/contexts/MenuLayoutContext";
+import { BrandingProvider } from "@/contexts/BrandingContext";
 import Index from "./pages/Index";
 import CustomerMenu from "./pages/CustomerMenu";
 import OrderStatus from "./pages/OrderStatus";
@@ -26,6 +27,7 @@ const App = () => (
     <TooltipProvider>
       <CartProvider>
         <MenuThemeProvider>
+        <BrandingProvider>
         <MenuLayoutProvider>
         <Toaster />
         <Sonner />
@@ -49,6 +51,7 @@ const App = () => (
           </Routes>
         </BrowserRouter>
         </MenuLayoutProvider>
+        </BrandingProvider>
         </MenuThemeProvider>
       </CartProvider>
     </TooltipProvider>
