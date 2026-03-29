@@ -216,6 +216,7 @@ export default function AdminThemes() {
             theme={activeTheme}
             hoveredSection={hoveredSection}
             getProductsForSection={getProductsForSection}
+            branding={branding}
           />
         </div>
       </div>
