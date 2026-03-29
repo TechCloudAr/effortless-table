@@ -49,9 +49,10 @@ const cardStyleOptions: { value: CardStyle; label: string; desc: string }[] = [
 export default function AdminThemes() {
   const { layout, toggleSection, moveSection, updateSection, addBanner, removeSection } = useMenuLayout();
   const { activeTheme, setThemeId } = useMenuTheme();
+  const { branding, updateBranding, activeFontPair } = useBranding();
   const [bannerDialogOpen, setBannerDialogOpen] = useState(false);
   const [editingSection, setEditingSection] = useState<MenuSection | null>(null);
-  const [activePanel, setActivePanel] = useState<'sections' | 'theme'>('sections');
+  const [activePanel, setActivePanel] = useState<'sections' | 'theme' | 'branding'>('sections');
   const [hoveredSection, setHoveredSection] = useState<string | null>(null);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [bannerForm, setBannerForm] = useState<BannerConfig>({
