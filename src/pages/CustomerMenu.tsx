@@ -99,13 +99,13 @@ export default function CustomerMenu() {
 
       {/* Quick category nav — sticky */}
       {!search && (
-        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border">
+        <div className={`sticky top-0 z-40 ${theme.colors.pageBg} backdrop-blur-lg border-b border-border`}>
           <div className="flex gap-1 px-3 py-2 overflow-x-auto no-scrollbar">
             {categories.map(cat => (
               <button
                 key={cat.id}
                 onClick={() => scrollToSection(cat.id)}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-muted hover:bg-accent transition-colors"
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap ${theme.colors.categoryBg} hover:opacity-80 transition-colors ${theme.colors.categoryText}`}
               >
                 <span>{cat.icon}</span>
                 <span>{cat.name}</span>
