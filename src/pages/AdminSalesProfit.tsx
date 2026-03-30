@@ -1,10 +1,20 @@
 import { useState } from 'react';
-import { DollarSign, TrendingUp, TrendingDown, Star, Anchor, Package, AlertTriangle, Clock, Users, ArrowUpRight, ArrowDownRight, Lightbulb, BarChart3, PieChart as PieChartIcon } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Star, Anchor, Package, AlertTriangle, Clock, Users, ArrowUpRight, ArrowDownRight, Lightbulb, BarChart3, PieChart as PieChartIcon, Calendar } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, ScatterChart, Scatter, CartesianGrid, ZAxis, Legend } from 'recharts';
 
-// --- MOCK DATA ---
+// --- MOCK DATA PER PERIOD ---
 
-const productProfitability = [
+type Period = 'day' | 'week' | 'month';
+
+const periodLabels: Record<Period, string> = {
+  day: 'Hoy — Viernes 28 Mar, 2026',
+  week: 'Semana del 22 al 28 Mar',
+  month: 'Marzo 2026',
+};
+
+const periodMultipliers: Record<Period, number> = { day: 1, week: 1, month: 4.2 };
+
+const baseProductProfitability = [
   { name: 'Combo Fuego', sold: 187, revenue: 46563, cost: 18625, margin: 27938, marginPct: 60, views: 420, category: 'Combos' },
   { name: 'Burger Clásica', sold: 156, revenue: 29484, cost: 14040, margin: 15444, marginPct: 52, views: 380, category: 'Principales' },
   { name: 'Tacos al Pastor', sold: 134, revenue: 21306, cost: 8040, margin: 13266, marginPct: 62, views: 310, category: 'Principales' },
@@ -19,31 +29,36 @@ const productProfitability = [
   { name: 'Agua Mineral', sold: 230, revenue: 6900, cost: 1380, margin: 5520, marginPct: 80, views: 90, category: 'Bebidas' },
 ];
 
-// BCG-like matrix: popularidad (sold) vs rentabilidad (marginPct)
-const medianSold = 110;
-const medianMargin = 55;
-
-function classifyProduct(p: typeof productProfitability[0]) {
-  const highPop = p.sold >= medianSold;
-  const highMargin = p.marginPct >= medianMargin;
-  if (highPop && highMargin) return { type: '⭐ Estrella', color: 'hsl(38, 92%, 50%)', desc: 'Alta venta + alto margen' };
-  if (highPop && !highMargin) return { type: '🪝 Gancho', color: 'hsl(210, 80%, 55%)', desc: 'Alta venta, bajo margen' };
-  if (!highPop && highMargin) return { type: '📦 Relleno', color: 'hsl(152, 60%, 42%)', desc: 'Baja venta, alto margen' };
-  return { type: '⚠️ Problema', color: 'hsl(0, 84%, 60%)', desc: 'Baja venta + bajo margen' };
+function getProductData(period: Period) {
+  if (period === 'week') return baseProductProfitability;
+  const m = period === 'day' ? 1 / 7 : periodMultipliers.month;
+  return baseProductProfitability.map(p => ({
+    ...p,
+    sold: Math.round(p.sold * m),
+    revenue: Math.round(p.revenue * m),
+    cost: Math.round(p.cost * m),
+    margin: Math.round(p.margin * m),
+    views: Math.round(p.views * m),
+  }));
 }
 
-const classifiedProducts = productProfitability.map(p => ({
-  ...p,
-  classification: classifyProduct(p),
-}));
-
-const categoryMargins = [
-  { name: 'Bebidas', revenue: 20760, cost: 5340, margin: 15420, marginPct: 74 },
-  { name: 'Postres', revenue: 15328, cost: 5370, margin: 9958, marginPct: 65 },
-  { name: 'Combos', revenue: 82074, cost: 34645, margin: 47429, marginPct: 58 },
-  { name: 'Principales', revenue: 73050, cost: 34980, margin: 38070, marginPct: 52 },
-  { name: 'Entradas', revenue: 36172, cost: 19410, margin: 16762, marginPct: 46 },
-];
+function getCategoryMargins(period: Period) {
+  const base = [
+    { name: 'Bebidas', revenue: 20760, cost: 5340, margin: 15420, marginPct: 74 },
+    { name: 'Postres', revenue: 15328, cost: 5370, margin: 9958, marginPct: 65 },
+    { name: 'Combos', revenue: 82074, cost: 34645, margin: 47429, marginPct: 58 },
+    { name: 'Principales', revenue: 73050, cost: 34980, margin: 38070, marginPct: 52 },
+    { name: 'Entradas', revenue: 36172, cost: 19410, margin: 16762, marginPct: 46 },
+  ];
+  if (period === 'week') return base;
+  const m = period === 'day' ? 1 / 7 : periodMultipliers.month;
+  return base.map(c => ({
+    ...c,
+    revenue: Math.round(c.revenue * m),
+    cost: Math.round(c.cost * m),
+    margin: Math.round(c.margin * m),
+  }));
+}
 
 const ticketByHour = [
   { hour: '10-11', ticket: 285, orders: 12 },
@@ -69,6 +84,19 @@ const ticketByTable = [
   { mesa: 'Mesa 8', ticket: 310, orders: 13 },
 ];
 
+// BCG-like matrix
+const medianSold = 110;
+const medianMargin = 55;
+
+function classifyProduct(p: { sold: number; marginPct: number }, medSold: number) {
+  const highPop = p.sold >= medSold;
+  const highMargin = p.marginPct >= medianMargin;
+  if (highPop && highMargin) return { type: '⭐ Estrella', color: 'hsl(38, 92%, 50%)', desc: 'Alta venta + alto margen' };
+  if (highPop && !highMargin) return { type: '🪝 Gancho', color: 'hsl(210, 80%, 55%)', desc: 'Alta venta, bajo margen' };
+  if (!highPop && highMargin) return { type: '📦 Relleno', color: 'hsl(152, 60%, 42%)', desc: 'Baja venta, alto margen' };
+  return { type: '⚠️ Problema', color: 'hsl(0, 84%, 60%)', desc: 'Baja venta + bajo margen' };
+}
+
 const insights = [
   { type: 'profit', icon: Lightbulb, text: 'Tu Burger Clásica es el producto más vendido, pero el Combo Fuego deja 1.8x más margen por unidad.', action: 'Destacar Combo Fuego' },
   { type: 'warning', icon: AlertTriangle, text: 'Las Alitas BBQ tienen margen del 39%. Si sube el costo del pollo un 10%, pierden rentabilidad.', action: 'Revisar proveedor' },
@@ -83,6 +111,16 @@ type Tab = 'overview' | 'matrix' | 'tickets';
 
 export default function AdminSalesProfit() {
   const [tab, setTab] = useState<Tab>('overview');
+  const [period, setPeriod] = useState<Period>('week');
+
+  const productProfitability = getProductData(period);
+  const categoryMargins = getCategoryMargins(period);
+
+  const medSold = period === 'day' ? Math.round(medianSold / 7) : period === 'month' ? Math.round(medianSold * 4.2) : medianSold;
+  const classifiedProducts = productProfitability.map(p => ({
+    ...p,
+    classification: classifyProduct(p, medSold),
+  }));
 
   const totalRevenue = productProfitability.reduce((s, p) => s + p.revenue, 0);
   const totalCost = productProfitability.reduce((s, p) => s + p.cost, 0);
@@ -97,11 +135,29 @@ export default function AdminSalesProfit() {
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="font-heading text-2xl md:text-3xl font-bold flex items-center gap-2">
-          <DollarSign className="h-7 w-7 text-primary" /> Sales & Profit
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">Rentabilidad real, no solo ventas — Semana del 22 al 28 Mar</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="font-heading text-2xl md:text-3xl font-bold flex items-center gap-2">
+            <DollarSign className="h-7 w-7 text-primary" /> Sales & Profit
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">Rentabilidad real, no solo ventas — {periodLabels[period]}</p>
+        </div>
+        <div className="flex gap-1 bg-muted/50 rounded-lg p-1 w-fit">
+          {([
+            { id: 'day' as Period, label: 'Hoy' },
+            { id: 'week' as Period, label: 'Semana' },
+            { id: 'month' as Period, label: 'Mes' },
+          ]).map(p => (
+            <button
+              key={p.id}
+              onClick={() => setPeriod(p.id)}
+              className={`px-3 py-1.5 rounded-md text-xs font-heading font-semibold transition-colors flex items-center gap-1.5 ${period === p.id ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              {period === p.id && <Calendar className="h-3 w-3" />}
+              {p.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tabs */}
