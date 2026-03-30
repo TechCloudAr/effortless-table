@@ -74,7 +74,7 @@ function getCategoryMargins(period: Period, customRange?: DateRange) {
     { name: 'Entradas', revenue: 36172, cost: 19410, margin: 16762, marginPct: 46 },
   ];
   if (period === 'week') return base;
-  const m = period === 'day' ? 1 / 7 : periodMultipliers.month;
+  const m = getMultiplier(period, customRange);
   return base.map(c => ({
     ...c,
     revenue: Math.round(c.revenue * m),
