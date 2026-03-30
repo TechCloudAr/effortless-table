@@ -1,18 +1,41 @@
 import { useState } from 'react';
 import { DollarSign, TrendingUp, TrendingDown, Star, Anchor, Package, AlertTriangle, Clock, Users, ArrowUpRight, ArrowDownRight, Lightbulb, BarChart3, PieChart as PieChartIcon, Calendar } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, ScatterChart, Scatter, CartesianGrid, ZAxis, Legend } from 'recharts';
+import { format, differenceInDays } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Button } from '@/components/ui/button';
 
 // --- MOCK DATA PER PERIOD ---
 
-type Period = 'day' | 'week' | 'month';
+type Period = 'day' | 'week' | 'month' | 'custom';
 
-const periodLabels: Record<Period, string> = {
-  day: 'Hoy — Viernes 28 Mar, 2026',
-  week: 'Semana del 22 al 28 Mar',
-  month: 'Marzo 2026',
-};
+type DateRange = { from: Date; to: Date };
 
-const periodMultipliers: Record<Period, number> = { day: 1, week: 1, month: 4.2 };
+const periodMultipliers: Record<string, number> = { day: 1, week: 1, month: 4.2 };
+
+function getPeriodLabel(period: Period, customRange?: DateRange): string {
+  if (period === 'day') return 'Hoy — Viernes 28 Mar, 2026';
+  if (period === 'week') return 'Semana del 22 al 28 Mar';
+  if (period === 'month') return 'Marzo 2026';
+  if (customRange) {
+    return `${format(customRange.from, "d MMM", { locale: es })} — ${format(customRange.to, "d MMM yyyy", { locale: es })}`;
+  }
+  return '';
+}
+
+function getMultiplier(period: Period, customRange?: DateRange): number {
+  if (period === 'day') return 1 / 7;
+  if (period === 'week') return 1;
+  if (period === 'month') return 4.2;
+  if (customRange) {
+    const days = differenceInDays(customRange.to, customRange.from) + 1;
+    return days / 7;
+  }
+  return 1;
+}
 
 const baseProductProfitability = [
   { name: 'Combo Fuego', sold: 187, revenue: 46563, cost: 18625, margin: 27938, marginPct: 60, views: 420, category: 'Combos' },
@@ -29,9 +52,9 @@ const baseProductProfitability = [
   { name: 'Agua Mineral', sold: 230, revenue: 6900, cost: 1380, margin: 5520, marginPct: 80, views: 90, category: 'Bebidas' },
 ];
 
-function getProductData(period: Period) {
+function getProductData(period: Period, customRange?: DateRange) {
   if (period === 'week') return baseProductProfitability;
-  const m = period === 'day' ? 1 / 7 : periodMultipliers.month;
+  const m = getMultiplier(period, customRange);
   return baseProductProfitability.map(p => ({
     ...p,
     sold: Math.round(p.sold * m),
@@ -42,7 +65,7 @@ function getProductData(period: Period) {
   }));
 }
 
-function getCategoryMargins(period: Period) {
+function getCategoryMargins(period: Period, customRange?: DateRange) {
   const base = [
     { name: 'Bebidas', revenue: 20760, cost: 5340, margin: 15420, marginPct: 74 },
     { name: 'Postres', revenue: 15328, cost: 5370, margin: 9958, marginPct: 65 },
@@ -51,7 +74,7 @@ function getCategoryMargins(period: Period) {
     { name: 'Entradas', revenue: 36172, cost: 19410, margin: 16762, marginPct: 46 },
   ];
   if (period === 'week') return base;
-  const m = period === 'day' ? 1 / 7 : periodMultipliers.month;
+  const m = getMultiplier(period, customRange);
   return base.map(c => ({
     ...c,
     revenue: Math.round(c.revenue * m),
@@ -112,11 +135,15 @@ type Tab = 'overview' | 'matrix' | 'tickets';
 export default function AdminSalesProfit() {
   const [tab, setTab] = useState<Tab>('overview');
   const [period, setPeriod] = useState<Period>('week');
+  const [customRange, setCustomRange] = useState<DateRange>({ from: new Date(2026, 2, 15), to: new Date(2026, 2, 28) });
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [tempRange, setTempRange] = useState<{ from?: Date; to?: Date }>({});
 
-  const productProfitability = getProductData(period);
-  const categoryMargins = getCategoryMargins(period);
+  const productProfitability = getProductData(period, customRange);
+  const categoryMargins = getCategoryMargins(period, customRange);
 
-  const medSold = period === 'day' ? Math.round(medianSold / 7) : period === 'month' ? Math.round(medianSold * 4.2) : medianSold;
+  const mult = getMultiplier(period, customRange);
+  const medSold = Math.round(medianSold * mult);
   const classifiedProducts = productProfitability.map(p => ({
     ...p,
     classification: classifyProduct(p, medSold),
@@ -125,12 +152,14 @@ export default function AdminSalesProfit() {
   const totalRevenue = productProfitability.reduce((s, p) => s + p.revenue, 0);
   const totalCost = productProfitability.reduce((s, p) => s + p.cost, 0);
   const totalMargin = totalRevenue - totalCost;
-  const avgMarginPct = Math.round((totalMargin / totalRevenue) * 100);
+  const avgMarginPct = totalRevenue > 0 ? Math.round((totalMargin / totalRevenue) * 100) : 0;
 
   const stars = classifiedProducts.filter(p => p.classification.type.includes('Estrella'));
   const hooks = classifiedProducts.filter(p => p.classification.type.includes('Gancho'));
   const fillers = classifiedProducts.filter(p => p.classification.type.includes('Relleno'));
   const problems = classifiedProducts.filter(p => p.classification.type.includes('Problema'));
+
+  const currentLabel = getPeriodLabel(period, customRange);
 
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
@@ -140,9 +169,9 @@ export default function AdminSalesProfit() {
           <h1 className="font-heading text-2xl md:text-3xl font-bold flex items-center gap-2">
             <DollarSign className="h-7 w-7 text-primary" /> Sales & Profit
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">Rentabilidad real, no solo ventas — {periodLabels[period]}</p>
+          <p className="text-sm text-muted-foreground mt-1">Rentabilidad real, no solo ventas — {currentLabel}</p>
         </div>
-        <div className="flex gap-1 bg-muted/50 rounded-lg p-1 w-fit">
+        <div className="flex gap-1 bg-muted/50 rounded-lg p-1 w-fit items-center">
           {([
             { id: 'day' as Period, label: 'Hoy' },
             { id: 'week' as Period, label: 'Semana' },
@@ -157,6 +186,51 @@ export default function AdminSalesProfit() {
               {p.label}
             </button>
           ))}
+          <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+            <PopoverTrigger asChild>
+              <button
+                onClick={() => setTempRange({ from: customRange.from, to: customRange.to })}
+                className={`px-3 py-1.5 rounded-md text-xs font-heading font-semibold transition-colors flex items-center gap-1.5 ${period === 'custom' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                <Calendar className="h-3 w-3" />
+                {period === 'custom'
+                  ? `${format(customRange.from, 'd/M')} – ${format(customRange.to, 'd/M')}`
+                  : 'Personalizado'}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <div className="p-3 space-y-3">
+                <p className="text-xs font-heading font-semibold text-muted-foreground">Seleccioná el rango de fechas</p>
+                <CalendarComponent
+                  mode="range"
+                  selected={tempRange.from ? { from: tempRange.from, to: tempRange.to } : undefined}
+                  onSelect={(range) => setTempRange({ from: range?.from, to: range?.to })}
+                  numberOfMonths={1}
+                  className={cn("p-3 pointer-events-auto")}
+                  disabled={(date) => date > new Date(2026, 2, 28)}
+                />
+                <div className="flex justify-end gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => setDatePickerOpen(false)} className="text-xs">
+                    Cancelar
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="text-xs"
+                    disabled={!tempRange.from || !tempRange.to}
+                    onClick={() => {
+                      if (tempRange.from && tempRange.to) {
+                        setCustomRange({ from: tempRange.from, to: tempRange.to });
+                        setPeriod('custom');
+                        setDatePickerOpen(false);
+                      }
+                    }}
+                  >
+                    Aplicar
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
@@ -179,7 +253,7 @@ export default function AdminSalesProfit() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <SummaryCard label="Ingresos brutos" value={`$${(totalRevenue / 1000).toFixed(1)}k`} sub={periodLabels[period]} icon={BarChart3} />
+        <SummaryCard label="Ingresos brutos" value={`$${(totalRevenue / 1000).toFixed(1)}k`} sub={currentLabel} icon={BarChart3} />
         <SummaryCard label="Costo total" value={`$${(totalCost / 1000).toFixed(1)}k`} sub={`${Math.round((totalCost / totalRevenue) * 100)}% del ingreso`} icon={Package} negative />
         <SummaryCard label="Margen bruto" value={`$${(totalMargin / 1000).toFixed(1)}k`} sub={`${avgMarginPct}% margen`} icon={TrendingUp} />
         <SummaryCard label="Producto más rentable" value="Limonada Fuego" sub="71% margen" icon={Star} />
