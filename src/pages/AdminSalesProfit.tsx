@@ -52,9 +52,9 @@ const baseProductProfitability = [
   { name: 'Agua Mineral', sold: 230, revenue: 6900, cost: 1380, margin: 5520, marginPct: 80, views: 90, category: 'Bebidas' },
 ];
 
-function getProductData(period: Period) {
+function getProductData(period: Period, customRange?: DateRange) {
   if (period === 'week') return baseProductProfitability;
-  const m = period === 'day' ? 1 / 7 : periodMultipliers.month;
+  const m = getMultiplier(period, customRange);
   return baseProductProfitability.map(p => ({
     ...p,
     sold: Math.round(p.sold * m),
@@ -65,7 +65,7 @@ function getProductData(period: Period) {
   }));
 }
 
-function getCategoryMargins(period: Period) {
+function getCategoryMargins(period: Period, customRange?: DateRange) {
   const base = [
     { name: 'Bebidas', revenue: 20760, cost: 5340, margin: 15420, marginPct: 74 },
     { name: 'Postres', revenue: 15328, cost: 5370, margin: 9958, marginPct: 65 },
