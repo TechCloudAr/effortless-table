@@ -1,18 +1,41 @@
 import { useState } from 'react';
 import { DollarSign, TrendingUp, TrendingDown, Star, Anchor, Package, AlertTriangle, Clock, Users, ArrowUpRight, ArrowDownRight, Lightbulb, BarChart3, PieChart as PieChartIcon, Calendar } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, ScatterChart, Scatter, CartesianGrid, ZAxis, Legend } from 'recharts';
+import { format, differenceInDays } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Button } from '@/components/ui/button';
 
 // --- MOCK DATA PER PERIOD ---
 
-type Period = 'day' | 'week' | 'month';
+type Period = 'day' | 'week' | 'month' | 'custom';
 
-const periodLabels: Record<Period, string> = {
-  day: 'Hoy — Viernes 28 Mar, 2026',
-  week: 'Semana del 22 al 28 Mar',
-  month: 'Marzo 2026',
-};
+type DateRange = { from: Date; to: Date };
 
-const periodMultipliers: Record<Period, number> = { day: 1, week: 1, month: 4.2 };
+const periodMultipliers: Record<string, number> = { day: 1, week: 1, month: 4.2 };
+
+function getPeriodLabel(period: Period, customRange?: DateRange): string {
+  if (period === 'day') return 'Hoy — Viernes 28 Mar, 2026';
+  if (period === 'week') return 'Semana del 22 al 28 Mar';
+  if (period === 'month') return 'Marzo 2026';
+  if (customRange) {
+    return `${format(customRange.from, "d MMM", { locale: es })} — ${format(customRange.to, "d MMM yyyy", { locale: es })}`;
+  }
+  return '';
+}
+
+function getMultiplier(period: Period, customRange?: DateRange): number {
+  if (period === 'day') return 1 / 7;
+  if (period === 'week') return 1;
+  if (period === 'month') return 4.2;
+  if (customRange) {
+    const days = differenceInDays(customRange.to, customRange.from) + 1;
+    return days / 7;
+  }
+  return 1;
+}
 
 const baseProductProfitability = [
   { name: 'Combo Fuego', sold: 187, revenue: 46563, cost: 18625, margin: 27938, marginPct: 60, views: 420, category: 'Combos' },
