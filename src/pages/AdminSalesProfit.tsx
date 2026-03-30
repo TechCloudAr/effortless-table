@@ -135,11 +135,15 @@ type Tab = 'overview' | 'matrix' | 'tickets';
 export default function AdminSalesProfit() {
   const [tab, setTab] = useState<Tab>('overview');
   const [period, setPeriod] = useState<Period>('week');
+  const [customRange, setCustomRange] = useState<DateRange>({ from: new Date(2026, 2, 15), to: new Date(2026, 2, 28) });
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [tempRange, setTempRange] = useState<{ from?: Date; to?: Date }>({});
 
-  const productProfitability = getProductData(period);
-  const categoryMargins = getCategoryMargins(period);
+  const productProfitability = getProductData(period, customRange);
+  const categoryMargins = getCategoryMargins(period, customRange);
 
-  const medSold = period === 'day' ? Math.round(medianSold / 7) : period === 'month' ? Math.round(medianSold * 4.2) : medianSold;
+  const mult = getMultiplier(period, customRange);
+  const medSold = Math.round(medianSold * mult);
   const classifiedProducts = productProfitability.map(p => ({
     ...p,
     classification: classifyProduct(p, medSold),
@@ -148,12 +152,14 @@ export default function AdminSalesProfit() {
   const totalRevenue = productProfitability.reduce((s, p) => s + p.revenue, 0);
   const totalCost = productProfitability.reduce((s, p) => s + p.cost, 0);
   const totalMargin = totalRevenue - totalCost;
-  const avgMarginPct = Math.round((totalMargin / totalRevenue) * 100);
+  const avgMarginPct = totalRevenue > 0 ? Math.round((totalMargin / totalRevenue) * 100) : 0;
 
   const stars = classifiedProducts.filter(p => p.classification.type.includes('Estrella'));
   const hooks = classifiedProducts.filter(p => p.classification.type.includes('Gancho'));
   const fillers = classifiedProducts.filter(p => p.classification.type.includes('Relleno'));
   const problems = classifiedProducts.filter(p => p.classification.type.includes('Problema'));
+
+  const currentLabel = getPeriodLabel(period, customRange);
 
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
@@ -163,9 +169,9 @@ export default function AdminSalesProfit() {
           <h1 className="font-heading text-2xl md:text-3xl font-bold flex items-center gap-2">
             <DollarSign className="h-7 w-7 text-primary" /> Sales & Profit
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">Rentabilidad real, no solo ventas — {periodLabels[period]}</p>
+          <p className="text-sm text-muted-foreground mt-1">Rentabilidad real, no solo ventas — {currentLabel}</p>
         </div>
-        <div className="flex gap-1 bg-muted/50 rounded-lg p-1 w-fit">
+        <div className="flex gap-1 bg-muted/50 rounded-lg p-1 w-fit items-center">
           {([
             { id: 'day' as Period, label: 'Hoy' },
             { id: 'week' as Period, label: 'Semana' },
@@ -180,6 +186,51 @@ export default function AdminSalesProfit() {
               {p.label}
             </button>
           ))}
+          <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+            <PopoverTrigger asChild>
+              <button
+                onClick={() => setTempRange({ from: customRange.from, to: customRange.to })}
+                className={`px-3 py-1.5 rounded-md text-xs font-heading font-semibold transition-colors flex items-center gap-1.5 ${period === 'custom' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                <Calendar className="h-3 w-3" />
+                {period === 'custom'
+                  ? `${format(customRange.from, 'd/M')} – ${format(customRange.to, 'd/M')}`
+                  : 'Personalizado'}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <div className="p-3 space-y-3">
+                <p className="text-xs font-heading font-semibold text-muted-foreground">Seleccioná el rango de fechas</p>
+                <CalendarComponent
+                  mode="range"
+                  selected={tempRange.from ? { from: tempRange.from, to: tempRange.to } : undefined}
+                  onSelect={(range) => setTempRange({ from: range?.from, to: range?.to })}
+                  numberOfMonths={1}
+                  className={cn("p-3 pointer-events-auto")}
+                  disabled={(date) => date > new Date(2026, 2, 28)}
+                />
+                <div className="flex justify-end gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => setDatePickerOpen(false)} className="text-xs">
+                    Cancelar
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="text-xs"
+                    disabled={!tempRange.from || !tempRange.to}
+                    onClick={() => {
+                      if (tempRange.from && tempRange.to) {
+                        setCustomRange({ from: tempRange.from, to: tempRange.to });
+                        setPeriod('custom');
+                        setDatePickerOpen(false);
+                      }
+                    }}
+                  >
+                    Aplicar
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
