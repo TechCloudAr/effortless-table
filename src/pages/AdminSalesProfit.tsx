@@ -253,7 +253,7 @@ export default function AdminSalesProfit() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <SummaryCard label="Ingresos brutos" value={`$${(totalRevenue / 1000).toFixed(1)}k`} sub={periodLabels[period]} icon={BarChart3} />
+        <SummaryCard label="Ingresos brutos" value={`$${(totalRevenue / 1000).toFixed(1)}k`} sub={currentLabel} icon={BarChart3} />
         <SummaryCard label="Costo total" value={`$${(totalCost / 1000).toFixed(1)}k`} sub={`${Math.round((totalCost / totalRevenue) * 100)}% del ingreso`} icon={Package} negative />
         <SummaryCard label="Margen bruto" value={`$${(totalMargin / 1000).toFixed(1)}k`} sub={`${avgMarginPct}% margen`} icon={TrendingUp} />
         <SummaryCard label="Producto más rentable" value="Limonada Fuego" sub="71% margen" icon={Star} />
