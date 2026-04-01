@@ -1,6 +1,5 @@
 import type { MenuItem } from '@/types/restaurant';
 import { Badge } from '@/components/ui/badge';
-import { restaurant } from '@/data/mockData';
 
 const tagColors: Record<string, string> = {
   'más vendido': 'bg-primary text-primary-foreground',
