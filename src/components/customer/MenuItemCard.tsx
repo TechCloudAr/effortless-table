@@ -1,6 +1,5 @@
 import type { MenuItem } from '@/types/restaurant';
 import { Badge } from '@/components/ui/badge';
-import { restaurant } from '@/data/mockData';
 
 const tagColors: Record<string, string> = {
   'más vendido': 'bg-primary text-primary-foreground',
@@ -14,9 +13,10 @@ const tagColors: Record<string, string> = {
 interface MenuItemCardProps {
   item: MenuItem;
   onSelect: (item: MenuItem) => void;
+  currency?: string;
 }
 
-export default function MenuItemCard({ item, onSelect }: MenuItemCardProps) {
+export default function MenuItemCard({ item, onSelect, currency = '$' }: MenuItemCardProps) {
   return (
     <button
       onClick={() => onSelect(item)}
@@ -37,7 +37,7 @@ export default function MenuItemCard({ item, onSelect }: MenuItemCardProps) {
         </div>
         <div className="flex items-end justify-between mt-1">
           <span className="font-heading font-bold text-primary text-sm">
-            {restaurant.currency}{item.price}
+            {currency}{item.price}
           </span>
           {item.tags.length > 0 && (
             <div className="flex gap-1 flex-wrap justify-end">

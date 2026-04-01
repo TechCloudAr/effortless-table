@@ -1,8 +1,7 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Search, Bell, Flame, Zap, Clock, Star, Crown, TrendingUp, Sparkles, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { restaurant, categories, menuItems } from '@/data/mockData';
 import ProductDetailModal from '@/components/customer/ProductDetailModal';
 import CartSheet from '@/components/customer/CartSheet';
 import type { MenuItem } from '@/types/restaurant';
@@ -10,6 +9,8 @@ import { useCart } from '@/contexts/CartContext';
 import { useMenuTheme } from '@/contexts/MenuThemeContext';
 import { useMenuLayout, type MenuSection } from '@/contexts/MenuLayoutContext';
 import { useBranding } from '@/contexts/BrandingContext';
+import { useMenu } from '@/hooks/useMenu';
+import { useRestaurant } from '@/hooks/useRestaurant';
 import { toast } from 'sonner';
 
 const tagConfig: Record<string, { bg: string; icon?: string }> = {
@@ -23,19 +24,25 @@ const tagConfig: Record<string, { bg: string; icon?: string }> = {
 
 export default function CustomerMenu() {
   const { tableId } = useParams();
-  const { setTableNumber, addItem } = useCart();
+  const { setTableNumber, setTaxRate, addItem } = useCart();
   const { activeTheme: theme } = useMenuTheme();
   const { layout } = useMenuLayout();
   const { branding } = useBranding();
+  const { restaurant } = useRestaurant();
+  const { categories, menuItems, ingredients } = useMenu();
   const tableNum = parseInt(tableId || '5');
-  useState(() => { setTableNumber(tableNum); });
+
+  useEffect(() => {
+    setTableNumber(tableNum);
+    setTaxRate(restaurant.taxRate);
+  }, [tableNum, restaurant.taxRate, setTableNumber, setTaxRate]);
 
   const [search, setSearch] = useState('');
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  const popularItems = useMemo(() => menuItems.filter(i => i.popular && i.available), []);
-  const allAvailable = useMemo(() => menuItems.filter(i => i.available), []);
+  const popularItems = useMemo(() => menuItems.filter(i => i.popular && i.available), [menuItems]);
+  const allAvailable = useMemo(() => menuItems.filter(i => i.available), [menuItems]);
 
   const filteredItems = useMemo(() => {
     if (!search) return null;
@@ -81,6 +88,7 @@ export default function CustomerMenu() {
             theme={theme}
             onSelect={setSelectedItem}
             onQuickAdd={handleQuickAdd}
+            currency={restaurant.currency}
           />
         );
       case 'custom-banner':
@@ -106,6 +114,7 @@ export default function CustomerMenu() {
             onQuickAdd={handleQuickAdd}
             displayMode={section.displayMode}
             cardStyle={section.cardStyle}
+            currency={restaurant.currency}
           />
         );
       }
@@ -173,7 +182,7 @@ export default function CustomerMenu() {
           </p>
           <div className="grid gap-3">
             {filteredItems.map(item => (
-              <CompactCard key={item.id} item={item} theme={theme} onSelect={setSelectedItem} onQuickAdd={handleQuickAdd} />
+              <CompactCard key={item.id} item={item} theme={theme} onSelect={setSelectedItem} onQuickAdd={handleQuickAdd} currency={restaurant.currency} />
             ))}
             {filteredItems.length === 0 && (
               <div className="text-center py-12 text-muted-foreground">
@@ -193,7 +202,13 @@ export default function CustomerMenu() {
         </div>
       )}
 
-      <ProductDetailModal item={selectedItem} open={!!selectedItem} onClose={() => setSelectedItem(null)} />
+      <ProductDetailModal
+        item={selectedItem}
+        open={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
+        currency={restaurant.currency}
+        ingredients={selectedItem ? ingredients[selectedItem.id] || [] : []}
+      />
       <CartSheet />
 
       <style>{`.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}`}</style>
@@ -240,7 +255,7 @@ function FlashDealsSection({ flashDeals, onSelect }: { flashDeals: any[]; onSele
   );
 }
 
-function PopularSection({ items, title, theme, onSelect, onQuickAdd }: any) {
+function PopularSection({ items, title, theme, onSelect, onQuickAdd, currency }: any) {
   return (
     <section className="px-4 pt-4 pb-2">
       <div className="flex items-center gap-2 mb-3">
@@ -269,7 +284,7 @@ function PopularSection({ items, title, theme, onSelect, onQuickAdd }: any) {
             <div className="p-2.5">
               <p className={`font-heading font-${theme.style.fontWeight} text-sm truncate text-left ${theme.colors.textPrimary}`}>{item.name}</p>
               <div className="flex items-center gap-1.5 mt-1">
-                <span className={`font-heading font-bold ${theme.colors.priceColor} text-sm`}>{restaurant.currency}{item.price}</span>
+                <span className={`font-heading font-bold ${theme.colors.priceColor} text-sm`}>{currency}{item.price}</span>
                 <div className="flex items-center gap-0.5">
                   <Star className="h-3 w-3 fill-warning text-warning" />
                   <span className={`text-[10px] ${theme.colors.textSecondary} font-medium`}>4.{8 + i}</span>
@@ -309,7 +324,7 @@ function CustomBannerSection({ banner }: { banner: any }) {
   );
 }
 
-function CategorySection({ cat, items, theme, sectionRefs, onSelect, onQuickAdd, displayMode, cardStyle }: any) {
+function CategorySection({ cat, items, theme, sectionRefs, onSelect, onQuickAdd, displayMode, cardStyle, currency }: any) {
   const isHorizontal = displayMode === 'horizontal';
   const isGrid = displayMode === 'grid';
 
@@ -342,7 +357,7 @@ function CategorySection({ cat, items, theme, sectionRefs, onSelect, onQuickAdd,
               </div>
               <div className="p-2.5">
                 <p className={`font-heading font-${theme.style.fontWeight} text-sm truncate text-left ${theme.colors.textPrimary}`}>{item.name}</p>
-                <span className={`font-heading font-bold ${theme.colors.priceColor} text-sm`}>{restaurant.currency}{item.price}</span>
+                <span className={`font-heading font-bold ${theme.colors.priceColor} text-sm`}>{currency}{item.price}</span>
               </div>
             </motion.button>
           ))}
@@ -367,7 +382,7 @@ function CategorySection({ cat, items, theme, sectionRefs, onSelect, onQuickAdd,
               </div>
               <div className="p-2">
                 <p className={`font-heading font-${theme.style.fontWeight} text-sm truncate ${theme.colors.textPrimary}`}>{item.name}</p>
-                <span className={`font-heading font-bold ${theme.colors.priceColor} text-sm`}>{restaurant.currency}{item.price}</span>
+                <span className={`font-heading font-bold ${theme.colors.priceColor} text-sm`}>{currency}{item.price}</span>
               </div>
             </button>
           ))}
@@ -375,7 +390,7 @@ function CategorySection({ cat, items, theme, sectionRefs, onSelect, onQuickAdd,
       ) : (
         /* Vertical mode */
         <div className="space-y-2.5">
-          {cardStyle === 'hero-first' && items.length > 0 && <HeroCard item={items[0]} theme={theme} onSelect={onSelect} onQuickAdd={onQuickAdd} />}
+          {cardStyle === 'hero-first' && items.length > 0 && <HeroCard item={items[0]} theme={theme} onSelect={onSelect} onQuickAdd={onQuickAdd} currency={currency} />}
           {(cardStyle === 'hero-first' ? items.slice(1) : items).map((item: MenuItem) => (
             cardStyle === 'cards-only' ? (
               <button key={item.id} onClick={() => onSelect(item)}
@@ -391,11 +406,11 @@ function CategorySection({ cat, items, theme, sectionRefs, onSelect, onQuickAdd,
                 <div className="p-3">
                   <p className={`font-heading font-${theme.style.fontWeight} text-base ${theme.colors.textPrimary}`}>{item.name}</p>
                   <p className={`text-xs ${theme.colors.textSecondary} mt-0.5 line-clamp-1`}>{item.description}</p>
-                  <span className={`font-heading font-bold ${theme.colors.priceColor} text-base mt-1 block`}>{restaurant.currency}{item.price}</span>
+                  <span className={`font-heading font-bold ${theme.colors.priceColor} text-base mt-1 block`}>{currency}{item.price}</span>
                 </div>
               </button>
             ) : (
-              <CompactCard key={item.id} item={item} theme={theme} onSelect={onSelect} onQuickAdd={onQuickAdd} />
+              <CompactCard key={item.id} item={item} theme={theme} onSelect={onSelect} onQuickAdd={onQuickAdd} currency={currency} />
             )
           ))}
         </div>
@@ -404,7 +419,7 @@ function CategorySection({ cat, items, theme, sectionRefs, onSelect, onQuickAdd,
   );
 }
 
-function HeroCard({ item, theme, onSelect, onQuickAdd }: any) {
+function HeroCard({ item, theme, onSelect, onQuickAdd, currency }: any) {
   return (
     <button onClick={() => onSelect(item)} className={`w-full ${theme.style.cardRadius} overflow-hidden ${theme.colors.cardBg} shadow-card text-left active:scale-[0.98] transition-transform relative border ${theme.colors.cardBorder}`}>
       <div className="relative">
@@ -426,7 +441,7 @@ function HeroCard({ item, theme, onSelect, onQuickAdd }: any) {
               <p className="text-white/70 text-xs mt-0.5 line-clamp-1">{item.description}</p>
             </div>
             <div className="flex flex-col items-end gap-1.5 flex-shrink-0 ml-3">
-              <span className="font-heading font-bold text-white text-xl">{restaurant.currency}{item.price}</span>
+              <span className="font-heading font-bold text-white text-xl">{currency}{item.price}</span>
               <div onClick={(e: React.MouseEvent) => onQuickAdd(e, item)} className="h-9 w-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
                 <Plus className="h-5 w-5" />
               </div>
@@ -438,7 +453,7 @@ function HeroCard({ item, theme, onSelect, onQuickAdd }: any) {
   );
 }
 
-function CompactCard({ item, theme, onSelect, onQuickAdd }: any) {
+function CompactCard({ item, theme, onSelect, onQuickAdd, currency }: any) {
   return (
     <button onClick={() => onSelect(item)}
       className={`flex gap-3 ${theme.style.cardRadius} ${theme.colors.cardBg} p-2.5 shadow-card text-left w-full transition-all active:scale-[0.98] hover:shadow-elevated relative border ${theme.colors.cardBorder}`}
@@ -459,7 +474,7 @@ function CompactCard({ item, theme, onSelect, onQuickAdd }: any) {
         </div>
         <div className="flex items-center justify-between mt-1">
           <div className="flex items-baseline gap-1.5">
-            <span className={`font-heading font-bold ${theme.colors.priceColor} text-base`}>{restaurant.currency}{item.price}</span>
+            <span className={`font-heading font-bold ${theme.colors.priceColor} text-base`}>{currency}{item.price}</span>
             {item.tags.includes('ahorro') && (
               <span className={`text-[10px] ${theme.colors.textSecondary} line-through`}>${Math.round(item.price * 1.25)}</span>
             )}

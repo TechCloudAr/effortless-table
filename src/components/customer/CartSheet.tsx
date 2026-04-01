@@ -3,13 +3,15 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ShoppingCart, Minus, Plus, Trash2, Loader2 } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
-import { restaurant } from '@/data/mockData';
+import { useRestaurant } from '@/hooks/useRestaurant';
 import { useState } from 'react';
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export default function CartSheet() {
   const { items, itemCount, subtotal, tax, total, removeItem, updateQuantity, clearCart, tableNumber } = useCart();
+  const { restaurant } = useRestaurant();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
