@@ -28,6 +28,16 @@ export interface MenuItemOption {
   price: number;
 }
 
+export interface Ingredient {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  costPerUnit: number;
+  removable: boolean;
+  defaultIncluded: boolean;
+}
+
 export interface MenuItem {
   id: string;
   categoryId: string;
