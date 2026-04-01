@@ -1,53 +1,110 @@
 
 
-# Plan: Landing page renovada
+# Plan: Backend real con datos bien calculados + Personalización de ingredientes
 
-Rediseno completo de `src/pages/Index.tsx` centrado en los 3 diferenciadores clave que mencionaste. Sin testimonios, sin pricing, sin social proof ficticio.
+## Resumen
 
-## Mensajes centrales
+Dos objetivos: (1) mover toda la data del menú a la base de datos con fórmulas reales para métricas, y (2) que el cliente pueda quitar ingredientes y elegir opciones como término de carne.
 
-1. **Se alimenta sola** — No cargas datos, el sistema aprende del uso real de tus clientes
-2. **Inteligencia analitica infinita** — Cada interaccion genera datos accionables: que vender, que sacar, que mover, cuando reforzar
-3. **Reduccion de costos real** — Menos personal operativo, menos errores, menos friccion. Ahorro para vos y para el cliente (propina digital, sin esperas)
+---
 
-## Estructura de la pagina
+## Parte 1: Tablas de backend
 
-### 1. Nav (sin cambios)
-Logo + "Acceso staff" + "Ver demo"
+### Nuevas tablas (migración SQL)
 
-### 2. Hero
-- Titulo fuerte: algo como "Tu restaurante genera datos con cada pedido. Nosotros los convertimos en decisiones."
-- Subtitulo enfocado en que no hay carga manual, se adapta al negocio
-- Dos CTAs: "Probar como cliente" + "Panel del restaurante"
+| Tabla | Propósito |
+|---|---|
+| `restaurants` | Config del restaurante (nombre, moneda, tax_rate) |
+| `menu_categories` | Categorías con orden e ícono |
+| `menu_items` | Productos con precio, imagen, tags, disponibilidad |
+| `menu_item_option_groups` | Grupos de opciones (término, salsas, extras) |
+| `menu_item_options` | Opciones individuales con precio adicional |
+| `menu_item_ingredients` | Ingredientes con costo, cantidad, unidad, y flag `removable` |
 
-### 3. Seccion "Se adapta a vos, no vos a la app"
-- Comparacion visual (dos columnas):
-  - Izquierda: "Software tradicional" — cargar productos, cargar stock, cargar reportes, adaptarte a la herramienta
-  - Derecha: "Mesa Digital" — el cliente escanea, pide, paga. Los datos se generan solos. Vos solo decidis.
+Todas con RLS permisiva para lectura pública (menú público). Escritura abierta por ahora (admin auth viene después).
 
-### 4. Las 3 capas del producto
-Tres cards grandes con scroll animation:
-- **Pedir facil**: QR, menu interactivo, carrito, pago, sin mozo intermediario
-- **Operar mejor**: pedidos en tiempo real, tiempos de cocina, alertas, rotacion de mesas
-- **Decidir mejor**: rentabilidad por plato, inteligencia de menu, forecasting, recomendaciones de IA
+La migración incluye seed data con los productos actuales de mockData.ts y sus ingredientes con costos realistas.
 
-### 5. Metricas de impacto
-Mismas 3 metricas (40% menos espera, 3x mas rapido, 25% mas ticket) + agregar una 4ta: reduccion de costos operativos
+### Datos calculados reales
 
-### 6. Seccion "Inteligencia que crece con tu negocio"
-Lista de capacidades analiticas presentadas como bullets cortos y potentes:
-- Sabe que plato vende mucho pero te hace perder plata
-- Te dice que mover en el menu para vender mas
-- Detecta cuellos de botella en cocina antes de que exploten
-- Proyecta ventas y te sugiere que comprar manana
+El dashboard de **Sales & Profit** deja de usar arrays hardcodeados y pasa a calcular desde la tabla `orders` (que ya tiene 12 pedidos reales):
 
-### 7. CTA final
-Fondo gradiente, copy directo: "Implementa en minutos. Sin hardware. Sin carga de datos."
+- **Ingresos**: `SUM(total)` de orders agrupado por período
+- **Productos vendidos**: parseando el JSONB `items` de cada order para contar por producto
+- **Costo por producto**: cruzando items vendidos × costo de ingredientes de `menu_item_ingredients`
+- **Margen**: ingresos - costo, calculado en código, no inventado
+- **Ticket promedio**: `total / count(orders)` por mesa o por hora
+- **Clasificación BCG**: calculada dinámicamente sobre los datos reales
 
-### 8. Footer (sin cambios)
+Si no hay suficientes datos para una métrica, se muestra "Sin datos suficientes" en vez de inventar números.
 
-## Detalles tecnicos
-- Mismo stack: framer-motion `whileInView` para animaciones de scroll
-- Sin componentes externos nuevos
-- Un solo archivo: `src/pages/Index.tsx`
+---
+
+## Parte 2: Hooks de datos
+
+Nuevos hooks que reemplazan imports de `mockData.ts`:
+
+- **`useMenu.ts`**: lee `menu_items`, `menu_categories`, `menu_item_option_groups`, `menu_item_options`, `menu_item_ingredients` desde la DB
+- **`useRestaurant.ts`**: lee config del restaurante
+- **`useSalesData.ts`**: queries a `orders` + `menu_item_ingredients` para calcular métricas reales
+
+---
+
+## Parte 3: Personalización de ingredientes (cliente)
+
+### En `AdminMenuPage.tsx`
+- Sección "Composición" en el dialog de editar: lista de ingredientes con nombre, cantidad, unidad (`g`, `ml`, `unidad`), costo por unidad, y checkbox **"¿Removible?"**
+- Los ingredientes se guardan en `menu_item_ingredients`
+
+### En `ProductDetailModal.tsx`
+- Nueva sección **"Personalizar"** antes de las notas: muestra ingredientes marcados como `removable = true`
+- UI: lista con switches o chips con X para desmarcar (ej: "Sin tomate", "Sin cebolla")
+- Los ingredientes removidos se guardan en `selectedOptions` del carrito y se envían con la order
+- Los option groups existentes (término, salsas) siguen funcionando igual, ahora desde la DB
+
+---
+
+## Parte 4: Dashboards con datos reales
+
+### `AdminDashboard.tsx`
+- Stats calculadas desde `orders`: ventas del día, cantidad de pedidos, ticket promedio
+- Top productos: parseando JSONB de items en orders reales
+
+### `AdminSalesProfit.tsx`
+- Reemplazar arrays mock por queries reales
+- Margen = precio venta - costo ingredientes (calculado, no inventado)
+- Si los datos son insuficientes, mostrar estado vacío claro
+
+### `AdminTables.tsx`
+- Performance por mesa calculada desde orders reales (filtrado por `table_number`)
+
+---
+
+## Archivos a crear/modificar
+
+| Archivo | Acción |
+|---|---|
+| Migración SQL | 6 tablas + seed data + RLS |
+| `src/types/restaurant.ts` | Agregar `Ingredient` con `removable`, `defaultIncluded` |
+| `src/hooks/useMenu.ts` | Nuevo: lee menú desde DB |
+| `src/hooks/useRestaurant.ts` | Nuevo: lee config restaurante |
+| `src/hooks/useSalesData.ts` | Nuevo: métricas calculadas desde orders |
+| `src/pages/AdminMenuPage.tsx` | CRUD real + editor de ingredientes |
+| `src/components/customer/ProductDetailModal.tsx` | Sección de ingredientes removibles |
+| `src/pages/CustomerMenu.tsx` | Usar hooks en vez de mock |
+| `src/pages/AdminDashboard.tsx` | Datos reales desde orders |
+| `src/pages/AdminSalesProfit.tsx` | Métricas calculadas, no hardcodeadas |
+| `src/pages/AdminTables.tsx` | Stats por mesa desde orders reales |
+| `src/data/mockData.ts` | Se mantiene como fallback |
+
+---
+
+## Orden de implementación
+
+1. Migración SQL (tablas + seed)
+2. Hooks de datos (useMenu, useRestaurant, useSalesData)
+3. AdminMenuPage con ingredientes y CRUD real
+4. ProductDetailModal con personalización de ingredientes
+5. CustomerMenu usando hooks
+6. Dashboards con datos reales
 
