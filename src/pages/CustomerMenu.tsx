@@ -182,7 +182,7 @@ export default function CustomerMenu() {
           </p>
           <div className="grid gap-3">
             {filteredItems.map(item => (
-              <CompactCard key={item.id} item={item} theme={theme} onSelect={setSelectedItem} onQuickAdd={handleQuickAdd} />
+              <CompactCard key={item.id} item={item} theme={theme} onSelect={setSelectedItem} onQuickAdd={handleQuickAdd} currency={restaurant.currency} />
             ))}
             {filteredItems.length === 0 && (
               <div className="text-center py-12 text-muted-foreground">
