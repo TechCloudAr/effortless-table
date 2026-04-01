@@ -200,7 +200,13 @@ export default function CustomerMenu() {
         </div>
       )}
 
-      <ProductDetailModal item={selectedItem} open={!!selectedItem} onClose={() => setSelectedItem(null)} />
+      <ProductDetailModal
+        item={selectedItem}
+        open={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
+        currency={restaurant.currency}
+        ingredients={selectedItem ? ingredients[selectedItem.id] || [] : []}
+      />
       <CartSheet />
 
       <style>{`.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}`}</style>
