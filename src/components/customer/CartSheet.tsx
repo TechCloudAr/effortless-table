@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 
 export default function CartSheet() {
   const { items, itemCount, subtotal, tax, total, removeItem, updateQuantity, clearCart, tableNumber } = useCart();
+  const { restaurant } = useRestaurant();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
