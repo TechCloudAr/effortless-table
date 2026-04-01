@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import type { CartItem, MenuItem } from '@/types/restaurant';
-import { restaurant } from '@/data/mockData';
 
 interface CartContextType {
   items: CartItem[];
@@ -14,6 +13,8 @@ interface CartContextType {
   total: number;
   tableNumber: number;
   setTableNumber: (n: number) => void;
+  taxRate: number;
+  setTaxRate: (r: number) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -35,6 +36,7 @@ function calculateItemPrice(menuItem: MenuItem, selectedOptions: Record<string, 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [tableNumber, setTableNumber] = useState(5);
+  const [taxRate, setTaxRate] = useState(0.16);
 
   const addItem = useCallback((menuItem: MenuItem, quantity: number, selectedOptions: Record<string, string[]>, notes: string) => {
     const unitPrice = calculateItemPrice(menuItem, selectedOptions);
@@ -65,11 +67,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
   const subtotal = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
-  const tax = subtotal * restaurant.taxRate;
+  const tax = subtotal * taxRate;
   const total = subtotal + tax;
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, itemCount, subtotal, tax, total, tableNumber, setTableNumber }}>
+    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, itemCount, subtotal, tax, total, tableNumber, setTableNumber, taxRate, setTaxRate }}>
       {children}
     </CartContext.Provider>
   );

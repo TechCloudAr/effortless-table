@@ -2,24 +2,28 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Minus, Plus } from 'lucide-react';
-import type { MenuItem } from '@/types/restaurant';
+import { Minus, Plus, X } from 'lucide-react';
+import type { MenuItem, Ingredient } from '@/types/restaurant';
 import { useCart } from '@/contexts/CartContext';
-import { restaurant } from '@/data/mockData';
 
 interface ProductDetailModalProps {
   item: MenuItem | null;
   open: boolean;
   onClose: () => void;
+  currency?: string;
+  ingredients?: Ingredient[];
 }
 
-export default function ProductDetailModal({ item, open, onClose }: ProductDetailModalProps) {
+export default function ProductDetailModal({ item, open, onClose, currency = '$', ingredients = [] }: ProductDetailModalProps) {
   const { addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string[]>>({});
+  const [removedIngredients, setRemovedIngredients] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
 
   if (!item) return null;
+
+  const removableIngredients = ingredients.filter(i => i.removable && i.defaultIncluded);
 
   const toggleOption = (groupId: string, optionId: string, maxSelections: number) => {
     setSelectedOptions(prev => {
@@ -35,6 +39,14 @@ export default function ProductDetailModal({ item, open, onClose }: ProductDetai
     });
   };
 
+  const toggleIngredient = (ingredientId: string) => {
+    setRemovedIngredients(prev =>
+      prev.includes(ingredientId)
+        ? prev.filter(id => id !== ingredientId)
+        : [...prev, ingredientId]
+    );
+  };
+
   let unitPrice = item.price;
   if (item.optionGroups) {
     for (const group of item.optionGroups) {
@@ -46,10 +58,20 @@ export default function ProductDetailModal({ item, open, onClose }: ProductDetai
   }
 
   const handleAdd = () => {
-    addItem(item, quantity, selectedOptions, notes);
+    // Include removed ingredients info in notes
+    const removedNames = removedIngredients
+      .map(id => ingredients.find(i => i.id === id)?.name)
+      .filter(Boolean);
+    const fullNotes = [
+      ...(removedNames.length > 0 ? [`Sin: ${removedNames.join(', ')}`] : []),
+      ...(notes ? [notes] : []),
+    ].join(' | ');
+
+    addItem(item, quantity, selectedOptions, fullNotes);
     onClose();
     setQuantity(1);
     setSelectedOptions({});
+    setRemovedIngredients([]);
     setNotes('');
   };
 
@@ -68,6 +90,7 @@ export default function ProductDetailModal({ item, open, onClose }: ProductDetai
             </div>
           </DialogHeader>
 
+          {/* Option groups */}
           {item.optionGroups?.map(group => (
             <div key={group.id} className="space-y-2">
               <div className="flex items-center justify-between">
@@ -91,7 +114,7 @@ export default function ProductDetailModal({ item, open, onClose }: ProductDetai
                     >
                       <span>{opt.name}</span>
                       {opt.price > 0 && (
-                        <span className="text-muted-foreground">+{restaurant.currency}{opt.price}</span>
+                        <span className="text-muted-foreground">+{currency}{opt.price}</span>
                       )}
                     </button>
                   );
@@ -99,6 +122,37 @@ export default function ProductDetailModal({ item, open, onClose }: ProductDetai
               </div>
             </div>
           ))}
+
+          {/* Removable ingredients */}
+          {removableIngredients.length > 0 && (
+            <div className="space-y-2">
+              <span className="font-heading font-semibold text-sm">Personalizar ingredientes</span>
+              <div className="flex flex-wrap gap-2">
+                {removableIngredients.map(ing => {
+                  const isRemoved = removedIngredients.includes(ing.id);
+                  return (
+                    <button
+                      key={ing.id}
+                      onClick={() => toggleIngredient(ing.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all ${
+                        isRemoved
+                          ? 'bg-destructive/10 text-destructive line-through border border-destructive/20'
+                          : 'bg-accent text-accent-foreground border border-border'
+                      }`}
+                    >
+                      {isRemoved && <X className="h-3 w-3" />}
+                      <span>{ing.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {removedIngredients.length > 0 && (
+                <p className="text-[11px] text-muted-foreground">
+                  Se quitarán: {removedIngredients.map(id => ingredients.find(i => i.id === id)?.name).filter(Boolean).join(', ')}
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <span className="font-heading font-semibold text-sm">Notas especiales</span>
@@ -121,7 +175,7 @@ export default function ProductDetailModal({ item, open, onClose }: ProductDetai
               </button>
             </div>
             <Button onClick={handleAdd} className="gradient-primary font-heading font-semibold px-6">
-              Agregar {restaurant.currency}{(unitPrice * quantity).toFixed(0)}
+              Agregar {currency}{(unitPrice * quantity).toFixed(0)}
             </Button>
           </div>
         </div>
