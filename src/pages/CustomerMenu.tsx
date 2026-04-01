@@ -88,6 +88,7 @@ export default function CustomerMenu() {
             theme={theme}
             onSelect={setSelectedItem}
             onQuickAdd={handleQuickAdd}
+            currency={restaurant.currency}
           />
         );
       case 'custom-banner':
