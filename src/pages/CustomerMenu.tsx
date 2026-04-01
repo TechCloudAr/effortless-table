@@ -24,19 +24,25 @@ const tagConfig: Record<string, { bg: string; icon?: string }> = {
 
 export default function CustomerMenu() {
   const { tableId } = useParams();
-  const { setTableNumber, addItem } = useCart();
+  const { setTableNumber, setTaxRate, addItem } = useCart();
   const { activeTheme: theme } = useMenuTheme();
   const { layout } = useMenuLayout();
   const { branding } = useBranding();
+  const { restaurant } = useRestaurant();
+  const { categories, menuItems, ingredients } = useMenu();
   const tableNum = parseInt(tableId || '5');
-  useState(() => { setTableNumber(tableNum); });
+
+  useEffect(() => {
+    setTableNumber(tableNum);
+    setTaxRate(restaurant.taxRate);
+  }, [tableNum, restaurant.taxRate, setTableNumber, setTaxRate]);
 
   const [search, setSearch] = useState('');
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  const popularItems = useMemo(() => menuItems.filter(i => i.popular && i.available), []);
-  const allAvailable = useMemo(() => menuItems.filter(i => i.available), []);
+  const popularItems = useMemo(() => menuItems.filter(i => i.popular && i.available), [menuItems]);
+  const allAvailable = useMemo(() => menuItems.filter(i => i.available), [menuItems]);
 
   const filteredItems = useMemo(() => {
     if (!search) return null;
