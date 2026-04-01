@@ -114,6 +114,7 @@ export default function CustomerMenu() {
             onQuickAdd={handleQuickAdd}
             displayMode={section.displayMode}
             cardStyle={section.cardStyle}
+            currency={restaurant.currency}
           />
         );
       }
