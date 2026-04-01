@@ -206,7 +206,7 @@ export default function CustomerMenu() {
         item={selectedItem}
         open={!!selectedItem}
         onClose={() => setSelectedItem(null)}
-        currency={currency}
+        currency={restaurant.currency}
         ingredients={selectedItem ? ingredients[selectedItem.id] || [] : []}
       />
       <CartSheet />
