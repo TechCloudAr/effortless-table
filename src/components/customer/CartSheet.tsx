@@ -3,8 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ShoppingCart, Minus, Plus, Trash2, Loader2 } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
-import { restaurant } from '@/data/mockData';
+import { useRestaurant } from '@/hooks/useRestaurant';
 import { useState } from 'react';
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
