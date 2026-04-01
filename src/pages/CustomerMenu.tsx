@@ -1,8 +1,7 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Search, Bell, Flame, Zap, Clock, Star, Crown, TrendingUp, Sparkles, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { restaurant, categories, menuItems } from '@/data/mockData';
 import ProductDetailModal from '@/components/customer/ProductDetailModal';
 import CartSheet from '@/components/customer/CartSheet';
 import type { MenuItem } from '@/types/restaurant';
@@ -10,6 +9,8 @@ import { useCart } from '@/contexts/CartContext';
 import { useMenuTheme } from '@/contexts/MenuThemeContext';
 import { useMenuLayout, type MenuSection } from '@/contexts/MenuLayoutContext';
 import { useBranding } from '@/contexts/BrandingContext';
+import { useMenu } from '@/hooks/useMenu';
+import { useRestaurant } from '@/hooks/useRestaurant';
 import { toast } from 'sonner';
 
 const tagConfig: Record<string, { bg: string; icon?: string }> = {
