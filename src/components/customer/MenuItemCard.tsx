@@ -13,9 +13,10 @@ const tagColors: Record<string, string> = {
 interface MenuItemCardProps {
   item: MenuItem;
   onSelect: (item: MenuItem) => void;
+  currency?: string;
 }
 
-export default function MenuItemCard({ item, onSelect }: MenuItemCardProps) {
+export default function MenuItemCard({ item, onSelect, currency = '$' }: MenuItemCardProps) {
   return (
     <button
       onClick={() => onSelect(item)}
