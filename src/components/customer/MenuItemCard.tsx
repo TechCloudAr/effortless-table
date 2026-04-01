@@ -37,7 +37,7 @@ export default function MenuItemCard({ item, onSelect, currency = '$' }: MenuIte
         </div>
         <div className="flex items-end justify-between mt-1">
           <span className="font-heading font-bold text-primary text-sm">
-            {restaurant.currency}{item.price}
+            {currency}{item.price}
           </span>
           {item.tags.length > 0 && (
             <div className="flex gap-1 flex-wrap justify-end">
