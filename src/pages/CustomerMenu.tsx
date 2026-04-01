@@ -410,7 +410,7 @@ function CategorySection({ cat, items, theme, sectionRefs, onSelect, onQuickAdd,
                 </div>
               </button>
             ) : (
-              <CompactCard key={item.id} item={item} theme={theme} onSelect={onSelect} onQuickAdd={onQuickAdd} />
+              <CompactCard key={item.id} item={item} theme={theme} onSelect={onSelect} onQuickAdd={onQuickAdd} currency={currency} />
             )
           ))}
         </div>
