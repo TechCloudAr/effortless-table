@@ -390,7 +390,7 @@ function CategorySection({ cat, items, theme, sectionRefs, onSelect, onQuickAdd,
       ) : (
         /* Vertical mode */
         <div className="space-y-2.5">
-          {cardStyle === 'hero-first' && items.length > 0 && <HeroCard item={items[0]} theme={theme} onSelect={onSelect} onQuickAdd={onQuickAdd} />}
+          {cardStyle === 'hero-first' && items.length > 0 && <HeroCard item={items[0]} theme={theme} onSelect={onSelect} onQuickAdd={onQuickAdd} currency={currency} />}
           {(cardStyle === 'hero-first' ? items.slice(1) : items).map((item: MenuItem) => (
             cardStyle === 'cards-only' ? (
               <button key={item.id} onClick={() => onSelect(item)}
