@@ -74,6 +74,8 @@ const intelligence = [
 
 export default function Index() {
   const navigate = useNavigate();
+  const { restaurant } = useRestaurant();
+  const demoUrl = `/mesa/${restaurant.id}/5`;
 
   return (
     <div className="min-h-screen bg-background">
