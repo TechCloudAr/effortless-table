@@ -12,17 +12,18 @@ import { useBranding } from '@/contexts/BrandingContext';
 import { toast } from 'sonner';
 
 export default function CustomerMenu() {
-  const { tableId } = useParams();
-  const { setTableNumber, setTaxRate, addItem } = useCart();
+  const { restaurantId, tableId } = useParams();
+  const { setTableNumber, setTaxRate, setRestaurantId, addItem } = useCart();
   const { branding } = useBranding();
-  const { restaurant } = useRestaurant();
-  const { categories, menuItems, ingredients } = useMenu();
+  const { restaurant } = useRestaurant(restaurantId);
+  const { categories, menuItems, ingredients } = useMenu(restaurantId);
   const tableNum = parseInt(tableId || '5');
 
   useEffect(() => {
     setTableNumber(tableNum);
     setTaxRate(restaurant.taxRate);
-  }, [tableNum, restaurant.taxRate, setTableNumber, setTaxRate]);
+    if (restaurantId) setRestaurantId(restaurantId);
+  }, [tableNum, restaurant.taxRate, restaurantId, setTableNumber, setTaxRate, setRestaurantId]);
 
   const [search, setSearch] = useState('');
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
