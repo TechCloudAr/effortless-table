@@ -8,6 +8,7 @@ import { MenuThemeProvider } from "@/contexts/MenuThemeContext";
 import { MenuLayoutProvider } from "@/contexts/MenuLayoutContext";
 import { BrandingProvider } from "@/contexts/BrandingContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { BranchProvider } from "@/contexts/BranchContext";
 import ProtectedRoute from "@/components/admin/ProtectedRoute";
 import Index from "./pages/Index";
 import CustomerMenu from "./pages/CustomerMenu";
@@ -29,6 +30,7 @@ import CajaScreen from "./pages/CajaScreen";
 import CocinaScreen from "./pages/CocinaScreen";
 import MozoScreen from "./pages/MozoScreen";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
+import AdminBranches from "./pages/AdminBranches";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +38,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
+        <BranchProvider>
         <CartProvider>
           <MenuThemeProvider>
           <BrandingProvider>
@@ -70,6 +73,7 @@ const App = () => (
                 <Route path="inteligencia" element={<AdminMenuIntelligence />} />
                 <Route path="mesas" element={<AdminTables />} />
                 <Route path="pagos" element={<AdminPayments />} />
+                <Route path="sucursales" element={<AdminBranches />} />
                 <Route path="diseno" element={<AdminThemes />} />
               </Route>
               <Route path="*" element={<NotFound />} />
@@ -79,6 +83,7 @@ const App = () => (
           </BrandingProvider>
           </MenuThemeProvider>
         </CartProvider>
+        </BranchProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
