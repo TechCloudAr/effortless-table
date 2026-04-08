@@ -17,6 +17,8 @@ interface CartContextType {
   setTaxRate: (r: number) => void;
   restaurantId: string | null;
   setRestaurantId: (id: string) => void;
+  branchId: string | null;
+  setBranchId: (id: string) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -40,6 +42,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [tableNumber, setTableNumber] = useState(5);
   const [taxRate, setTaxRate] = useState(0.16);
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
+  const [branchId, setBranchId] = useState<string | null>(null);
 
   const addItem = useCallback((menuItem: MenuItem, quantity: number, selectedOptions: Record<string, string[]>, notes: string) => {
     const unitPrice = calculateItemPrice(menuItem, selectedOptions);
@@ -74,7 +77,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const total = subtotal + tax;
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, itemCount, subtotal, tax, total, tableNumber, setTableNumber, taxRate, setTaxRate, restaurantId, setRestaurantId }}>
+    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, itemCount, subtotal, tax, total, tableNumber, setTableNumber, taxRate, setTaxRate, restaurantId, setRestaurantId, branchId, setBranchId }}>
       {children}
     </CartContext.Provider>
   );
