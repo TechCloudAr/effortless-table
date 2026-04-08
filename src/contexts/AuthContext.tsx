@@ -54,12 +54,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRestaurantId(data?.id ?? null);
   }
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, restaurantName?: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName },
+        data: { full_name: fullName, restaurant_name: restaurantName },
         emailRedirectTo: window.location.origin,
       },
     });
