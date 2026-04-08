@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      branches: {
+        Row: {
+          address: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branches_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_categories: {
         Row: {
           created_at: string
@@ -224,6 +262,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          branch_id: string | null
           created_at: string
           id: string
           items: Json
@@ -239,6 +278,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          branch_id?: string | null
           created_at?: string
           id?: string
           items?: Json
@@ -254,6 +294,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          branch_id?: string | null
           created_at?: string
           id?: string
           items?: Json
@@ -269,6 +310,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -343,6 +391,7 @@ export type Database = {
       }
       table_sessions: {
         Row: {
+          branch_id: string | null
           created_at: string
           ended_at: string | null
           has_orders: boolean
@@ -354,6 +403,7 @@ export type Database = {
           table_number: number
         }
         Insert: {
+          branch_id?: string | null
           created_at?: string
           ended_at?: string | null
           has_orders?: boolean
@@ -365,6 +415,7 @@ export type Database = {
           table_number: number
         }
         Update: {
+          branch_id?: string | null
           created_at?: string
           ended_at?: string | null
           has_orders?: boolean
@@ -377,6 +428,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "table_sessions_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "table_sessions_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
@@ -385,12 +443,36 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       expire_stale_table_sessions: { Args: never; Returns: undefined }
+      is_owner: { Args: { _user_id: string }; Returns: boolean }
+      is_superadmin: { Args: { _user_id: string }; Returns: boolean }
+      user_owns_branch: { Args: { _branch_id: string }; Returns: boolean }
       user_owns_menu_item: { Args: { _category_id: string }; Returns: boolean }
       user_owns_menu_item_by_id: {
         Args: { _menu_item_id: string }
@@ -406,7 +488,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "superadmin" | "owner"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -533,6 +615,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["superadmin", "owner"],
+    },
   },
 } as const
