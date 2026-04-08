@@ -14,7 +14,6 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { signIn, user, role } = useAuth();
 
   // If already logged in, redirect based on role
   if (user) {
