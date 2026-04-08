@@ -130,62 +130,37 @@ export default function Index() {
       </nav>
 
       {/* Hero */}
-      <section className="relative overflow-hidden">
-        {/* Full-width video banner */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1 }}
-          className="relative w-full"
-        >
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-[50vh] md:h-[70vh] lg:h-[80vh] object-cover"
-            src="/mesa-digital-hero.mp4"
-          />
-          {/* Dark gradient overlay for text readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/20" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent" />
+      <section className="px-4 md:px-8 pt-12 pb-16 max-w-6xl mx-auto">
+        <motion.div initial="hidden" animate="visible" variants={stagger} className="text-center">
+          <motion.div variants={fadeUp} className="inline-flex items-center gap-1.5 bg-accent text-accent-foreground text-xs font-medium px-3 py-1.5 rounded-full mb-6">
+            <Zap className="h-3 w-3" /> Se alimenta con el uso, no con carga manual
+          </motion.div>
+          <motion.h1 variants={fadeUp} className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold leading-[1.1] max-w-3xl mx-auto">
+            Tu restaurante genera datos con cada pedido.{' '}
+            <span className="bg-gradient-to-r from-primary to-[hsl(32_95%_55%)] bg-clip-text text-transparent">
+              Nosotros los convertimos en decisiones.
+            </span>
+          </motion.h1>
+          <motion.p variants={fadeUp} className="text-muted-foreground text-base md:text-lg mt-5 max-w-xl mx-auto leading-relaxed">
+            No cargás nada. El cliente pide, el sistema aprende. Vos decidís con datos reales, no con intuición.
+          </motion.p>
+          <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
+            <Button size="lg" className="gradient-primary font-heading font-semibold h-12 px-8 text-base" onClick={() => navigate(demoUrl)}>
+              Probar como cliente <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+            <Button size="lg" variant="outline" className="font-heading h-12 px-8 text-base" onClick={() => navigate('/admin')}>
+              Panel del restaurante
+            </Button>
+          </motion.div>
+          <motion.div variants={fadeUp} className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 mt-5">
+            {socialProof.map((item) => (
+              <span key={item} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                {item}
+              </span>
+            ))}
+          </motion.div>
         </motion.div>
-
-        {/* Text overlay on top of video */}
-        <div className="absolute inset-0 flex items-end">
-          <div className="px-4 md:px-8 pb-10 md:pb-16 max-w-6xl mx-auto w-full">
-            <motion.div initial="hidden" animate="visible" variants={stagger}>
-              <motion.div variants={fadeUp} className="inline-flex items-center gap-1.5 bg-accent/80 backdrop-blur-sm text-accent-foreground text-xs font-medium px-3 py-1.5 rounded-full mb-4">
-                <Zap className="h-3 w-3" /> Se alimenta con el uso, no con carga manual
-              </motion.div>
-              <motion.h1 variants={fadeUp} className="font-heading text-2xl md:text-4xl lg:text-5xl font-bold leading-[1.1] max-w-2xl">
-                Tu restaurante genera datos con cada pedido.{' '}
-                <span className="bg-gradient-to-r from-primary to-[hsl(32_95%_55%)] bg-clip-text text-transparent">
-                  Nosotros los convertimos en decisiones.
-                </span>
-              </motion.h1>
-              <motion.p variants={fadeUp} className="text-muted-foreground text-sm md:text-lg mt-4 max-w-xl leading-relaxed">
-                No cargás nada. El cliente pide, el sistema aprende. Vos decidís con datos reales, no con intuición.
-              </motion.p>
-              <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-start gap-3 mt-6">
-                <Button size="lg" className="gradient-primary font-heading font-semibold h-12 px-8 text-base" onClick={() => navigate(demoUrl)}>
-                  Probar como cliente <ArrowRight className="h-4 w-4 ml-1" />
-                </Button>
-                <Button size="lg" variant="outline" className="font-heading h-12 px-8 text-base bg-background/50 backdrop-blur-sm" onClick={() => navigate('/admin')}>
-                  Panel del restaurante
-                </Button>
-              </motion.div>
-              <motion.div variants={fadeUp} className="flex flex-wrap items-start gap-x-4 gap-y-1.5 mt-4">
-                {socialProof.map((item) => (
-                  <span key={item} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-                    {item}
-                  </span>
-                ))}
-              </motion.div>
-            </motion.div>
-          </div>
-        </div>
       </section>
 
       {/* Comparison: Traditional vs Mesa Digital */}
@@ -194,9 +169,25 @@ export default function Index() {
           <motion.h2 variants={fadeUp} className="font-heading text-2xl md:text-3xl font-bold text-center mb-3">
             Se adapta a vos, no vos a la app
           </motion.h2>
-          <motion.p variants={fadeUp} className="text-muted-foreground text-center mb-10 max-w-lg mx-auto">
+          <motion.p variants={fadeUp} className="text-muted-foreground text-center mb-6 max-w-lg mx-auto">
             Olvidate de cargar datos. Cada interacción de tus clientes alimenta tu sistema de inteligencia.
           </motion.p>
+
+          {/* Video banner */}
+          <motion.div
+            variants={fadeUp}
+            className="w-full mb-10 rounded-2xl overflow-hidden shadow-2xl"
+          >
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-auto"
+              src="/mesa-digital-hero.mp4"
+            />
+          </motion.div>
+
           <div className="grid md:grid-cols-2 gap-4">
             <motion.div variants={fadeUp} className="bg-card rounded-2xl p-6 border border-destructive/20">
               <p className="font-heading font-semibold text-destructive text-sm mb-4 uppercase tracking-wide">Software tradicional</p>
