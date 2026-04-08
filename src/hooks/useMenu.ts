@@ -5,8 +5,8 @@ import type { Ingredient } from '@/types/restaurant';
 import { categories as mockCategories, menuItems as mockMenuItems } from '@/data/mockData';
 
 export function useMenu() {
-  const [categories, setCategories] = useState<MenuCategory[]>(mockCategories);
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(mockMenuItems);
+  const [categories, setCategories] = useState<MenuCategory[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [ingredients, setIngredients] = useState<Record<string, Ingredient[]>>({});
   const [loading, setLoading] = useState(true);
 
