@@ -230,6 +230,7 @@ export type Database = {
           mercadopago_preference_id: string | null
           payment_id: string | null
           payment_status: string
+          restaurant_id: string | null
           status: string
           subtotal: number
           table_number: number
@@ -244,6 +245,7 @@ export type Database = {
           mercadopago_preference_id?: string | null
           payment_id?: string | null
           payment_status?: string
+          restaurant_id?: string | null
           status?: string
           subtotal: number
           table_number: number
@@ -258,12 +260,48 @@ export type Database = {
           mercadopago_preference_id?: string | null
           payment_id?: string | null
           payment_status?: string
+          restaurant_id?: string | null
           status?: string
           subtotal?: number
           table_number?: number
           tax?: number
           total?: number
           updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -275,6 +313,7 @@ export type Database = {
           id: string
           logo_url: string | null
           name: string
+          owner_id: string | null
           tax_rate: number
           updated_at: string
         }
@@ -285,6 +324,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           name: string
+          owner_id?: string | null
           tax_rate?: number
           updated_at?: string
         }
@@ -295,6 +335,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           name?: string
+          owner_id?: string | null
           tax_rate?: number
           updated_at?: string
         }
@@ -305,7 +346,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      user_owns_menu_item: { Args: { _category_id: string }; Returns: boolean }
+      user_owns_menu_item_by_id: {
+        Args: { _menu_item_id: string }
+        Returns: boolean
+      }
+      user_owns_option_group: {
+        Args: { _option_group_id: string }
+        Returns: boolean
+      }
+      user_owns_restaurant: {
+        Args: { _restaurant_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
