@@ -37,6 +37,7 @@ export default function CartSheet() {
         const { data: order, error: orderError } = await supabase
           .from('orders')
           .insert({
+            restaurant_id: restaurant.id,
             table_number: tableNumber,
             items: orderItems,
             subtotal,
@@ -61,6 +62,7 @@ export default function CartSheet() {
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
+          restaurant_id: restaurant.id,
           table_number: tableNumber,
           items: orderItems,
           subtotal,
