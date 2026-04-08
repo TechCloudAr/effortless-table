@@ -77,9 +77,9 @@ const intelligence = [
 ];
 
 const socialProof = [
-  'Sin tarjeta de crédito',
-  'Instalación en 5 minutos',
-  'Soporte incluido',
+  'Implementación en un día',
+  'Sin hardware adicional',
+  'Solo un QR por mesa',
 ];
 
 export default function Index() {
