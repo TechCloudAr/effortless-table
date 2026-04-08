@@ -26,11 +26,11 @@ await renderMedia({
   composition,
   serveUrl: bundled,
   codec: "h264",
-  outputLocation: "/mnt/documents/mesa-digital-hero.mp4",
+  outputLocation: "/mnt/documents/mesa-digital-60s.mp4",
   puppeteerInstance: browser,
   muted: true,
   concurrency: 1,
 });
 
 await browser.close({ silent: false });
-console.log("Done! Output: /mnt/documents/mesa-digital-hero.mp4");
+console.log("Done! Output: /mnt/documents/mesa-digital-60s.mp4");
