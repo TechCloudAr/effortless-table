@@ -130,57 +130,61 @@ export default function Index() {
       </nav>
 
       {/* Hero */}
-      <section className="px-4 md:px-8 pt-12 pb-20 max-w-6xl mx-auto overflow-hidden">
-        <div className="grid md:grid-cols-[1fr_auto] gap-8 md:gap-16 items-center">
-          <motion.div initial="hidden" animate="visible" variants={stagger} className="text-center md:text-left">
-            <motion.div variants={fadeUp} className="inline-flex items-center gap-1.5 bg-accent text-accent-foreground text-xs font-medium px-3 py-1.5 rounded-full mb-6">
-              <Zap className="h-3 w-3" /> Se alimenta con el uso, no con carga manual
-            </motion.div>
-            <motion.h1 variants={fadeUp} className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold leading-[1.1]">
-              Tu restaurante genera datos con cada pedido.{' '}
-              <span className="bg-gradient-to-r from-primary to-[hsl(32_95%_55%)] bg-clip-text text-transparent">
-                Nosotros los convertimos en decisiones.
-              </span>
-            </motion.h1>
-            <motion.p variants={fadeUp} className="text-muted-foreground text-base md:text-lg mt-5 max-w-xl leading-relaxed">
-              No cargás nada. El cliente pide, el sistema aprende. Vos decidís con datos reales, no con intuición.
-            </motion.p>
-            <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center md:items-start gap-3 mt-8">
-              <Button size="lg" className="gradient-primary font-heading font-semibold h-12 px-8 text-base" onClick={() => navigate(demoUrl)}>
-                Probar como cliente <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
-              <Button size="lg" variant="outline" className="font-heading h-12 px-8 text-base" onClick={() => navigate('/admin')}>
-                Panel del restaurante
-              </Button>
-            </motion.div>
-            <motion.div variants={fadeUp} className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-1.5 mt-5">
-              {socialProof.map((item) => (
-                <span key={item} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-                  {item}
-                </span>
-              ))}
-            </motion.div>
-          </motion.div>
+      <section className="relative overflow-hidden">
+        {/* Full-width video banner */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+          className="relative w-full"
+        >
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-[50vh] md:h-[70vh] lg:h-[80vh] object-cover"
+            src="/mesa-digital-hero.mp4"
+          />
+          {/* Dark gradient overlay for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/20" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent" />
+        </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 40, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="relative flex justify-center"
-          >
-            <div className="relative w-[320px] md:w-[400px] lg:w-[480px]">
-              <div className="absolute -inset-12 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent rounded-full blur-3xl" />
-              <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="relative z-10 rounded-2xl drop-shadow-2xl w-full"
-                src="/mesa-digital-hero.mp4"
-              />
-            </div>
-          </motion.div>
+        {/* Text overlay on top of video */}
+        <div className="absolute inset-0 flex items-end">
+          <div className="px-4 md:px-8 pb-10 md:pb-16 max-w-6xl mx-auto w-full">
+            <motion.div initial="hidden" animate="visible" variants={stagger}>
+              <motion.div variants={fadeUp} className="inline-flex items-center gap-1.5 bg-accent/80 backdrop-blur-sm text-accent-foreground text-xs font-medium px-3 py-1.5 rounded-full mb-4">
+                <Zap className="h-3 w-3" /> Se alimenta con el uso, no con carga manual
+              </motion.div>
+              <motion.h1 variants={fadeUp} className="font-heading text-2xl md:text-4xl lg:text-5xl font-bold leading-[1.1] max-w-2xl">
+                Tu restaurante genera datos con cada pedido.{' '}
+                <span className="bg-gradient-to-r from-primary to-[hsl(32_95%_55%)] bg-clip-text text-transparent">
+                  Nosotros los convertimos en decisiones.
+                </span>
+              </motion.h1>
+              <motion.p variants={fadeUp} className="text-muted-foreground text-sm md:text-lg mt-4 max-w-xl leading-relaxed">
+                No cargás nada. El cliente pide, el sistema aprende. Vos decidís con datos reales, no con intuición.
+              </motion.p>
+              <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-start gap-3 mt-6">
+                <Button size="lg" className="gradient-primary font-heading font-semibold h-12 px-8 text-base" onClick={() => navigate(demoUrl)}>
+                  Probar como cliente <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+                <Button size="lg" variant="outline" className="font-heading h-12 px-8 text-base bg-background/50 backdrop-blur-sm" onClick={() => navigate('/admin')}>
+                  Panel del restaurante
+                </Button>
+              </motion.div>
+              <motion.div variants={fadeUp} className="flex flex-wrap items-start gap-x-4 gap-y-1.5 mt-4">
+                {socialProof.map((item) => (
+                  <span key={item} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                    {item}
+                  </span>
+                ))}
+              </motion.div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
