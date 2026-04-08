@@ -9,6 +9,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useMenu } from '@/hooks/useMenu';
 import { useRestaurant } from '@/hooks/useRestaurant';
 import { useBranding } from '@/contexts/BrandingContext';
+import { useTableSession } from '@/hooks/useTableSession';
 import { toast } from 'sonner';
 
 export default function CustomerMenu() {
@@ -18,6 +19,9 @@ export default function CustomerMenu() {
   const { restaurant } = useRestaurant(restaurantId);
   const { categories, menuItems, ingredients } = useMenu(restaurantId);
   const tableNum = parseInt(tableId || '5');
+
+  // Track table session (marks table as occupied on scan)
+  useTableSession(restaurantId, tableNum);
 
   useEffect(() => {
     setTableNumber(tableNum);
