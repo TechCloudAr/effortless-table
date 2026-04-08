@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import heroPhone from '@/assets/hero-phone-mockup.png';
+
 import { Flame, ChefHat, BarChart3, Smartphone, ArrowRight, Zap, Clock, TrendingDown, ShieldCheck, Brain, Eye, PackageSearch, AlertTriangle, LayoutGrid, Lightbulb, Bot, CheckCircle2, Send } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useRestaurant } from '@/hooks/useRestaurant';
@@ -169,14 +169,15 @@ export default function Index() {
             transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="relative flex justify-center"
           >
-            <div className="relative">
+            <div className="relative w-[320px] md:w-[400px] lg:w-[480px]">
               <div className="absolute -inset-12 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent rounded-full blur-3xl" />
-              <img
-                src={heroPhone}
-                alt="Mesa Digital - Menú digital en celular"
-                width={1024}
-                height={1024}
-                className="relative z-10 drop-shadow-2xl w-[300px] md:w-[360px] lg:w-[420px]"
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="relative z-10 rounded-2xl drop-shadow-2xl w-full"
+                src="/mesa-digital-hero.mp4"
               />
             </div>
           </motion.div>
