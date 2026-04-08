@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import heroPhone from '@/assets/hero-phone-mockup.png';
 import { Flame, QrCode, ChefHat, BarChart3, Smartphone, ArrowRight, Zap, Clock, TrendingDown, ShieldCheck, Brain, Eye, PackageSearch, AlertTriangle, Utensils, Timer, LayoutGrid, LineChart, Lightbulb, Bot } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useRestaurant } from '@/hooks/useRestaurant';
