@@ -341,11 +341,50 @@ export type Database = {
         }
         Relationships: []
       }
+      table_sessions: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          id: string
+          is_active: boolean
+          restaurant_id: string
+          session_token: string
+          table_number: number
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          is_active?: boolean
+          restaurant_id: string
+          session_token: string
+          table_number: number
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          is_active?: boolean
+          restaurant_id?: string
+          session_token?: string
+          table_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "table_sessions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      expire_stale_table_sessions: { Args: never; Returns: undefined }
       user_owns_menu_item: { Args: { _category_id: string }; Returns: boolean }
       user_owns_menu_item_by_id: {
         Args: { _menu_item_id: string }
