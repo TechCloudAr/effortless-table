@@ -68,7 +68,7 @@ export default function PaymentResult({ status }: { status: Status }) {
           </Button>
         )}
 
-        <Button variant="outline" onClick={() => navigate('/mesa/5')} className="w-full font-heading">
+        <Button variant="outline" onClick={() => navigate('/')} className="w-full font-heading">
           Volver al menú
         </Button>
       </div>
