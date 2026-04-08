@@ -9,14 +9,20 @@ import { toast } from 'sonner';
 
 export default function AdminLogin() {
   const navigate = useNavigate();
-  const { signIn, user } = useAuth();
+  // role is fetched from useAuth below
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // If already logged in, redirect
+  const { signIn, user, role } = useAuth();
+
+  // If already logged in, redirect based on role
   if (user) {
-    navigate('/admin/dashboard', { replace: true });
+    if (role === 'superadmin') {
+      navigate('/superadmin', { replace: true });
+    } else {
+      navigate('/admin/dashboard', { replace: true });
+    }
     return null;
   }
 

@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-type OrderStatus = 'received' | 'preparing' | 'ready' | 'delivered';
+type OrderStatus = 'nuevo' | 'aceptado' | 'preparando' | 'listo' | 'entregado';
 
 interface OrderRow {
   id: string;
@@ -18,31 +18,35 @@ interface OrderRow {
 }
 
 const statusLabels: Record<OrderStatus, string> = {
-  received: 'Recibido',
-  preparing: 'Preparando',
-  ready: 'Listo',
-  delivered: 'Entregado',
+  nuevo: 'Nuevo',
+  aceptado: 'Aceptado',
+  preparando: 'Preparando',
+  listo: 'Listo',
+  entregado: 'Entregado',
 };
 
 const statusColors: Record<OrderStatus, string> = {
-  received: 'bg-info/10 text-info border-info/20',
-  preparing: 'bg-warning/10 text-warning border-warning/20',
-  ready: 'bg-success/10 text-success border-success/20',
-  delivered: 'bg-muted text-muted-foreground border-border',
+  nuevo: 'bg-info/10 text-info border-info/20',
+  aceptado: 'bg-primary/10 text-primary border-primary/20',
+  preparando: 'bg-warning/10 text-warning border-warning/20',
+  listo: 'bg-success/10 text-success border-success/20',
+  entregado: 'bg-muted text-muted-foreground border-border',
 };
 
 const nextStatus: Record<OrderStatus, OrderStatus | null> = {
-  received: 'preparing',
-  preparing: 'ready',
-  ready: 'delivered',
-  delivered: null,
+  nuevo: 'aceptado',
+  aceptado: 'preparando',
+  preparando: 'listo',
+  listo: 'entregado',
+  entregado: null,
 };
 
 const nextAction: Record<OrderStatus, string> = {
-  received: 'Iniciar preparación',
-  preparing: 'Marcar listo',
-  ready: 'Marcar entregado',
-  delivered: '',
+  nuevo: 'Aceptar pedido',
+  aceptado: 'Iniciar preparación',
+  preparando: 'Marcar listo',
+  listo: 'Marcar entregado',
+  entregado: '',
 };
 
 export default function AdminOrders() {
@@ -97,7 +101,7 @@ export default function AdminOrders() {
       </div>
 
       <div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar">
-        {(['all', 'received', 'preparing', 'ready', 'delivered'] as const).map(s => (
+        {(['all', 'nuevo', 'aceptado', 'preparando', 'listo', 'entregado'] as const).map(s => (
           <button
             key={s}
             onClick={() => setFilter(s)}
