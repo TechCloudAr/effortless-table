@@ -356,7 +356,7 @@ export default function Index() {
             </div>
             <Button type="submit" disabled={submitting} className="w-full gradient-primary font-heading font-semibold h-12 text-base">
               {submitting ? 'Enviando...' : (
-                <>Quiero una demo <Send className="h-4 w-4 ml-2" /></>
+                <>Agendar reunión <Send className="h-4 w-4 ml-2" /></>
               )}
             </Button>
           </motion.form>
