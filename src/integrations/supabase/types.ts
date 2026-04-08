@@ -345,8 +345,10 @@ export type Database = {
         Row: {
           created_at: string
           ended_at: string | null
+          has_orders: boolean
           id: string
           is_active: boolean
+          last_order_delivered_at: string | null
           restaurant_id: string
           session_token: string
           table_number: number
@@ -354,8 +356,10 @@ export type Database = {
         Insert: {
           created_at?: string
           ended_at?: string | null
+          has_orders?: boolean
           id?: string
           is_active?: boolean
+          last_order_delivered_at?: string | null
           restaurant_id: string
           session_token: string
           table_number: number
@@ -363,8 +367,10 @@ export type Database = {
         Update: {
           created_at?: string
           ended_at?: string | null
+          has_orders?: boolean
           id?: string
           is_active?: boolean
+          last_order_delivered_at?: string | null
           restaurant_id?: string
           session_token?: string
           table_number?: number
