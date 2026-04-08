@@ -25,7 +25,7 @@ export default function AdminSignup() {
     }
     setLoading(true);
 
-    const { error } = await signUp(email, password, fullName);
+    const { error } = await signUp(email, password, fullName, restaurantName);
     if (error) {
       setLoading(false);
       toast.error(error.message);
