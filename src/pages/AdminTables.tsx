@@ -12,9 +12,43 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 export default function AdminTables() {
   const { stats, loading } = useSalesData();
   const { restaurant } = useRestaurant();
+  const { restaurantId } = useAuth();
   const [totalTables, setTotalTables] = useState(10);
   const [qrDialog, setQrDialog] = useState<number | null>(null);
   const qrRef = useRef<HTMLDivElement>(null);
+  const [activeSessions, setActiveSessions] = useState<Record<number, boolean>>({});
+
+  // Fetch active table sessions
+  useEffect(() => {
+    if (!restaurantId) return;
+
+    async function fetchSessions() {
+      const { data } = await supabase
+        .from('table_sessions')
+        .select('table_number')
+        .eq('restaurant_id', restaurantId!)
+        .eq('is_active', true);
+      const map: Record<number, boolean> = {};
+      data?.forEach(s => { map[s.table_number] = true; });
+      setActiveSessions(map);
+    }
+    fetchSessions();
+
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel('table-sessions-live')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'table_sessions',
+        filter: `restaurant_id=eq.${restaurantId}`,
+      }, () => {
+        fetchSessions();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [restaurantId]);
 
   // Build base URL for QR codes
   const baseUrl = typeof window !== 'undefined'
@@ -30,11 +64,11 @@ export default function AdminTables() {
       const totalRevenue = orders.reduce((s, o) => s + Number(o.total), 0);
       const avgTicket = orders.length > 0 ? Math.round(totalRevenue / orders.length) : 0;
       const activeOrders = orders.filter(o => !['delivered', 'cancelled'].includes(o.status));
-      const isOccupied = activeOrders.length > 0;
+      const isOccupied = activeSessions[num] || activeOrders.length > 0;
 
       return { number: num, ordersCount: orders.length, totalRevenue, avgTicket, isOccupied, activeOrders: activeOrders.length };
     });
-  }, [stats, totalTables]);
+  }, [stats, totalTables, activeSessions]);
 
   const globalStats = useMemo(() => {
     const occupiedTables = tableData.filter(t => t.isOccupied).length;
