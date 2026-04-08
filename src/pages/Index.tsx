@@ -317,10 +317,10 @@ export default function Index() {
       <section id="contacto" className="px-4 md:px-8 pb-20 max-w-xl mx-auto">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }} variants={stagger}>
           <motion.h2 variants={fadeUp} className="font-heading text-2xl md:text-3xl font-bold text-center mb-3">
-            Quiero una demo
+            Agendá una reunión
           </motion.h2>
           <motion.p variants={fadeUp} className="text-muted-foreground text-center mb-8 text-sm max-w-md mx-auto">
-            Dejanos tus datos y te mostramos cómo Mesa Digital puede transformar tu negocio.
+            Dejanos tus datos y coordinamos un Meet para presentarte Mesa Digital en vivo.
           </motion.p>
           <motion.form variants={fadeUp} onSubmit={handleContactSubmit} className="bg-card rounded-2xl p-6 md:p-8 border border-border shadow-card space-y-4">
             <div>
@@ -356,7 +356,7 @@ export default function Index() {
             </div>
             <Button type="submit" disabled={submitting} className="w-full gradient-primary font-heading font-semibold h-12 text-base">
               {submitting ? 'Enviando...' : (
-                <>Quiero una demo <Send className="h-4 w-4 ml-2" /></>
+                <>Agendar reunión <Send className="h-4 w-4 ml-2" /></>
               )}
             </Button>
           </motion.form>
