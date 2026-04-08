@@ -32,13 +32,29 @@ export default function CartSheet() {
         notes: i.notes,
       }));
 
+      const resolvedBranchId = branchId ?? (
+        await supabase
+          .from('branches')
+          .select('id')
+          .eq('restaurant_id', restaurant.id)
+          .eq('is_active', true)
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle()
+          .then(({ data, error }) => {
+            if (error) throw error;
+            if (!data?.id) throw new Error('No se encontró una sucursal activa para este restaurante');
+            return data.id;
+          })
+      );
+
       if (paymentMethod === 'cash') {
         // Cash: create order as received, no payment gateway
         const { data: order, error: orderError } = await supabase
           .from('orders')
           .insert({
             restaurant_id: restaurant.id,
-            branch_id: branchId,
+            branch_id: resolvedBranchId,
             table_number: tableNumber,
             items: orderItems,
             subtotal,
@@ -64,7 +80,7 @@ export default function CartSheet() {
         .from('orders')
         .insert({
           restaurant_id: restaurant.id,
-          branch_id: branchId,
+          branch_id: resolvedBranchId,
           table_number: tableNumber,
           items: orderItems,
           subtotal,
@@ -95,7 +111,7 @@ export default function CartSheet() {
       }
     } catch (err: any) {
       console.error('Payment error:', err);
-      toast.error('Error al procesar el pedido. Intenta de nuevo.');
+      toast.error(err?.message || 'Error al procesar el pedido. Intenta de nuevo.');
     } finally {
       setLoading(false);
     }
