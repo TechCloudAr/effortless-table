@@ -9,12 +9,13 @@ import { useCart } from '@/contexts/CartContext';
 import { useMenu } from '@/hooks/useMenu';
 import { useRestaurant } from '@/hooks/useRestaurant';
 import { useBranding } from '@/contexts/BrandingContext';
+import { supabase } from '@/integrations/supabase/client';
 import { useTableSession } from '@/hooks/useTableSession';
 import { toast } from 'sonner';
 
 export default function CustomerMenu() {
   const { restaurantId, tableId } = useParams();
-  const { setTableNumber, setTaxRate, setRestaurantId, addItem } = useCart();
+  const { setTableNumber, setTaxRate, setRestaurantId, setBranchId, addItem } = useCart();
   const { branding } = useBranding();
   const { restaurant } = useRestaurant(restaurantId);
   const { categories, menuItems, ingredients } = useMenu(restaurantId);
@@ -26,8 +27,22 @@ export default function CustomerMenu() {
   useEffect(() => {
     setTableNumber(tableNum);
     setTaxRate(restaurant.taxRate);
-    if (restaurantId) setRestaurantId(restaurantId);
-  }, [tableNum, restaurant.taxRate, restaurantId, setTableNumber, setTaxRate, setRestaurantId]);
+    if (restaurantId) {
+      setRestaurantId(restaurantId);
+      // Fetch the first active branch for this restaurant
+      supabase
+        .from('branches')
+        .select('id')
+        .eq('restaurant_id', restaurantId)
+        .eq('is_active', true)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data?.id) setBranchId(data.id);
+        });
+    }
+  }, [tableNum, restaurant.taxRate, restaurantId, setTableNumber, setTaxRate, setRestaurantId, setBranchId]);
 
   const [search, setSearch] = useState('');
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
