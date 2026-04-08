@@ -15,8 +15,10 @@ type PaymentMethod = 'mercadopago' | 'cash';
 export default function CartSheet() {
   const { items, itemCount, subtotal, tax, total, removeItem, updateQuantity, clearCart, tableNumber } = useCart();
   const { restaurant } = useRestaurant();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('mercadopago');
 
   const handleConfirmOrder = async () => {
     setLoading(true);
