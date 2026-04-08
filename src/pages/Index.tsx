@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -84,6 +85,7 @@ const socialProof = [
 
 export default function Index() {
   const navigate = useNavigate();
+  const { role } = useAuth();
   const { restaurant } = useRestaurant();
   const demoUrl = `/mesa/${restaurant.id}/5`;
 
@@ -120,6 +122,11 @@ export default function Index() {
           <span className="font-heading font-bold text-lg">Mesa Digital</span>
         </div>
         <div className="flex items-center gap-2">
+          {role === 'superadmin' && (
+            <Button variant="outline" size="sm" className="font-heading text-sm border-primary text-primary" onClick={() => navigate('/superadmin')}>
+              Super Admin
+            </Button>
+          )}
           <Button variant="ghost" size="sm" className="font-heading text-sm" onClick={() => navigate('/admin')}>
             Acceso staff
           </Button>
