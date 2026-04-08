@@ -1,12 +1,23 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useCart } from '@/contexts/CartContext';
 
 /**
  * Registers a table session when a customer scans a QR code.
- * Marks the table as occupied immediately, and ends the session on page unload.
+ * - If no orders placed: session ends when customer leaves the page.
+ * - If orders placed: session stays active (auto-freed 30min after last delivery via cron).
  */
 export function useTableSession(restaurantId?: string, tableNumber?: number) {
   const sessionTokenRef = useRef<string | null>(null);
+  const { items } = useCart();
+  const hasOrderedRef = useRef(false);
+
+  // Track if user has items (proxy for having ordered)
+  useEffect(() => {
+    if (items.length > 0) {
+      hasOrderedRef.current = true;
+    }
+  }, [items]);
 
   useEffect(() => {
     if (!restaurantId || !tableNumber) return;
@@ -26,22 +37,18 @@ export function useTableSession(restaurantId?: string, tableNumber?: number) {
         if (error) console.error('Failed to create table session:', error);
       });
 
-    // End session on page unload
+    // End session on page unload ONLY if no orders were placed
     const endSession = () => {
-      if (!sessionTokenRef.current) return;
-      // Use sendBeacon for reliable delivery on page close
+      if (!sessionTokenRef.current || hasOrderedRef.current) return;
       const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/table_sessions?session_token=eq.${sessionTokenRef.current}`;
       const body = JSON.stringify({ is_active: false, ended_at: new Date().toISOString() });
-      const headers = {
+      const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         'Prefer': 'return=minimal',
       };
-      // Try sendBeacon first (works on page close), fallback to fetch
-      const blob = new Blob([body], { type: 'application/json' });
       try {
-        // sendBeacon doesn't support custom headers, so use fetch with keepalive
         fetch(url, { method: 'PATCH', headers, body, keepalive: true });
       } catch {
         // Best effort
@@ -49,15 +56,16 @@ export function useTableSession(restaurantId?: string, tableNumber?: number) {
       sessionTokenRef.current = null;
     };
 
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') endSession();
+    };
+
     window.addEventListener('beforeunload', endSession);
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') {
-        endSession();
-      }
-    });
+    document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
       window.removeEventListener('beforeunload', endSession);
+      document.removeEventListener('visibilitychange', handleVisibility);
       endSession();
     };
   }, [restaurantId, tableNumber]);
