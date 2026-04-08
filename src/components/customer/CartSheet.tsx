@@ -152,23 +152,59 @@ export default function CartSheet() {
           <div className="flex justify-between font-heading font-bold text-base"><span>Total</span><span>{restaurant.currency}{total.toFixed(0)}</span></div>
         </div>
 
+        {/* Payment method selector */}
+        <div className="flex gap-2 mt-3">
+          <button
+            onClick={() => setPaymentMethod('mercadopago')}
+            className={`flex-1 flex items-center gap-2 p-3 rounded-xl border-2 transition-all text-left ${
+              paymentMethod === 'mercadopago'
+                ? 'border-primary bg-primary/5'
+                : 'border-border/50 bg-muted/30'
+            }`}
+          >
+            <CreditCard className={`h-5 w-5 flex-shrink-0 ${paymentMethod === 'mercadopago' ? 'text-primary' : 'text-muted-foreground'}`} />
+            <div>
+              <p className="font-heading font-semibold text-xs">MercadoPago</p>
+              <p className="text-[10px] text-muted-foreground">Tarjeta o digital</p>
+            </div>
+          </button>
+          <button
+            onClick={() => setPaymentMethod('cash')}
+            className={`flex-1 flex items-center gap-2 p-3 rounded-xl border-2 transition-all text-left ${
+              paymentMethod === 'cash'
+                ? 'border-primary bg-primary/5'
+                : 'border-border/50 bg-muted/30'
+            }`}
+          >
+            <Banknote className={`h-5 w-5 flex-shrink-0 ${paymentMethod === 'cash' ? 'text-primary' : 'text-muted-foreground'}`} />
+            <div>
+              <p className="font-heading font-semibold text-xs">Efectivo</p>
+              <p className="text-[10px] text-muted-foreground">Pagá en mostrador</p>
+            </div>
+          </button>
+        </div>
+
         <Button
           onClick={handleConfirmOrder}
           disabled={loading}
-          className="w-full gradient-primary font-heading font-semibold h-12 text-base mt-2"
+          className="w-full gradient-primary font-heading font-semibold h-12 text-base mt-3"
         >
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Procesando...
             </>
+          ) : paymentMethod === 'cash' ? (
+            <>Confirmar pedido — {restaurant.currency}{total.toFixed(0)}</>
           ) : (
             <>Pagar con MercadoPago — {restaurant.currency}{total.toFixed(0)}</>
           )}
         </Button>
 
         <p className="text-[11px] text-muted-foreground text-center mt-2">
-          Serás redirigido a MercadoPago para completar el pago
+          {paymentMethod === 'cash'
+            ? 'Tu pedido será enviado y pagarás en efectivo en el mostrador'
+            : 'Serás redirigido a MercadoPago para completar el pago'}
         </p>
       </SheetContent>
     </Sheet>
