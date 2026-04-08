@@ -147,8 +147,8 @@ export default function AdminOrders() {
                     size="sm"
                     onClick={() => advanceStatus(order.id, status)}
                     className={`font-heading text-xs ${
-                      status === 'received' ? 'gradient-primary' :
-                      status === 'preparing' ? 'bg-success hover:bg-success/90 text-success-foreground' :
+                      status === 'nuevo' ? 'gradient-primary' :
+                      status === 'aceptado' || status === 'preparando' ? 'bg-success hover:bg-success/90 text-success-foreground' :
                       'bg-muted text-foreground hover:bg-muted/80'
                     }`}
                   >
