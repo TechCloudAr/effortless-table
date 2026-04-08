@@ -1,22 +1,87 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { CheckCircle2, Clock, ChefHat, Package, Utensils, Star, ArrowLeft } from 'lucide-react';
+import { CheckCircle2, Clock, ChefHat, Package, Utensils, Star, ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
-import { restaurant } from '@/data/mockData';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 const steps = [
   { key: 'received', label: 'Pedido recibido', icon: CheckCircle2, description: 'Tu pedido fue registrado' },
   { key: 'preparing', label: 'En preparación', icon: ChefHat, description: 'El chef está preparando tu orden' },
-  { key: 'ready', label: 'Listo', icon: Package, description: 'Tu pedido está listo' },
+  { key: 'ready', label: 'Listo', icon: Package, description: 'Tu pedido está listo para servir' },
   { key: 'delivered', label: 'Entregado', icon: Utensils, description: '¡Buen provecho!' },
 ] as const;
+
+type OrderData = {
+  id: string;
+  status: string;
+  table_number: number;
+  total: number;
+  created_at: string;
+};
 
 export default function OrderStatus() {
   const { orderId } = useParams();
   const navigate = useNavigate();
-  const [currentStatus] = useState<number>(1); // simulated: "preparing"
+  const [order, setOrder] = useState<OrderData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [rating, setRating] = useState(0);
   const [feedbackSent, setFeedbackSent] = useState(false);
+
+  // Fetch order + subscribe to realtime updates
+  useEffect(() => {
+    if (!orderId) return;
+
+    const fetchOrder = async () => {
+      const { data } = await supabase
+        .from('orders')
+        .select('id, status, table_number, total, created_at')
+        .eq('id', orderId)
+        .single();
+      if (data) setOrder(data as OrderData);
+      setLoading(false);
+    };
+
+    fetchOrder();
+
+    const channel = supabase
+      .channel(`order-${orderId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+          filter: `id=eq.${orderId}`,
+        },
+        (payload) => {
+          setOrder(prev => prev ? { ...prev, ...payload.new } as OrderData : prev);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [orderId]);
+
+  const currentStatus = order ? steps.findIndex(s => s.key === order.status) : -1;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!order) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
+        <p className="text-lg font-heading font-bold mb-2">Pedido no encontrado</p>
+        <Button variant="outline" onClick={() => navigate('/mesa/5')}>Volver al menú</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -25,12 +90,16 @@ export default function OrderStatus() {
           <ArrowLeft className="h-4 w-4" /> Volver al menú
         </button>
         <h1 className="font-heading text-lg font-bold text-primary-foreground">Estado del pedido</h1>
-        <p className="text-primary-foreground/60 text-sm mt-0.5">Pedido #{orderId}</p>
+        <p className="text-primary-foreground/60 text-sm mt-0.5">Pedido #{orderId?.slice(0, 8)}</p>
         <div className="mt-3 bg-primary-foreground/10 rounded-lg px-4 py-3 flex items-center gap-3">
           <Clock className="h-5 w-5 text-primary animate-pulse-soft" />
           <div>
-            <p className="text-primary-foreground text-sm font-medium">Tiempo estimado</p>
-            <p className="text-primary-foreground/70 text-xs">15–20 minutos</p>
+            <p className="text-primary-foreground text-sm font-medium">
+              {currentStatus >= 3 ? 'Entregado' : currentStatus >= 2 ? '¡Tu pedido está listo!' : 'Tiempo estimado'}
+            </p>
+            <p className="text-primary-foreground/70 text-xs">
+              {currentStatus >= 3 ? '¡Buen provecho!' : currentStatus >= 2 ? 'Pasá a retirarlo' : '15–20 minutos'}
+            </p>
           </div>
         </div>
       </div>
@@ -94,7 +163,7 @@ export default function OrderStatus() {
       </div>
 
       <div className="px-4 pb-8">
-        <Button variant="outline" className="w-full font-heading" onClick={() => navigate(`/mesa/5`)}>
+        <Button variant="outline" className="w-full font-heading" onClick={() => navigate(`/mesa/${order.table_number}`)}>
           Pedir algo más
         </Button>
       </div>
