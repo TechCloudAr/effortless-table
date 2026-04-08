@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import heroPhone from '@/assets/hero-phone-mockup.png';
-import { Flame, QrCode, ChefHat, BarChart3, Smartphone, ArrowRight, Zap, Clock, TrendingDown, ShieldCheck, Brain, Eye, PackageSearch, AlertTriangle, Utensils, Timer, LayoutGrid, LineChart, Lightbulb, Bot } from 'lucide-react';
+import { Flame, ChefHat, BarChart3, Smartphone, ArrowRight, Zap, Clock, TrendingDown, ShieldCheck, Brain, Eye, PackageSearch, AlertTriangle, LayoutGrid, Lightbulb, Bot, CheckCircle2, Send } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useRestaurant } from '@/hooks/useRestaurant';
+import { toast } from 'sonner';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -73,10 +76,38 @@ const intelligence = [
   { icon: Bot, text: 'Recomendaciones de IA que mejoran con cada servicio' },
 ];
 
+const socialProof = [
+  'Sin tarjeta de crédito',
+  'Instalación en 5 minutos',
+  'Soporte incluido',
+];
+
 export default function Index() {
   const navigate = useNavigate();
   const { restaurant } = useRestaurant();
   const demoUrl = `/mesa/${restaurant.id}/5`;
+
+  const [contactForm, setContactForm] = useState({ name: '', email: '', restaurant: '' });
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleContactSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contactForm.name.trim() || !contactForm.email.trim() || !contactForm.restaurant.trim()) {
+      toast.error('Completá todos los campos');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(contactForm.email.trim())) {
+      toast.error('Ingresá un email válido');
+      return;
+    }
+    setSubmitting(true);
+    setTimeout(() => {
+      toast.success('¡Gracias! Nos pondremos en contacto pronto.');
+      setContactForm({ name: '', email: '', restaurant: '' });
+      setSubmitting(false);
+    }, 1000);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -99,15 +130,17 @@ export default function Index() {
       </nav>
 
       {/* Hero */}
-      <section className="px-4 md:px-8 pt-12 pb-20 max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+      <section className="px-4 md:px-8 pt-12 pb-20 max-w-6xl mx-auto overflow-hidden">
+        <div className="grid md:grid-cols-[1fr_auto] gap-8 md:gap-16 items-center">
           <motion.div initial="hidden" animate="visible" variants={stagger} className="text-center md:text-left">
             <motion.div variants={fadeUp} className="inline-flex items-center gap-1.5 bg-accent text-accent-foreground text-xs font-medium px-3 py-1.5 rounded-full mb-6">
               <Zap className="h-3 w-3" /> Se alimenta con el uso, no con carga manual
             </motion.div>
             <motion.h1 variants={fadeUp} className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold leading-[1.1]">
               Tu restaurante genera datos con cada pedido.{' '}
-              <span className="gradient-primary bg-clip-text text-transparent">Nosotros los convertimos en decisiones.</span>
+              <span className="bg-gradient-to-r from-primary to-[hsl(32_95%_55%)] bg-clip-text text-transparent">
+                Nosotros los convertimos en decisiones.
+              </span>
             </motion.h1>
             <motion.p variants={fadeUp} className="text-muted-foreground text-base md:text-lg mt-5 max-w-xl leading-relaxed">
               No cargás nada. El cliente pide, el sistema aprende. Vos decidís con datos reales, no con intuición.
@@ -120,22 +153,30 @@ export default function Index() {
                 Panel del restaurante
               </Button>
             </motion.div>
+            <motion.div variants={fadeUp} className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-1.5 mt-5">
+              {socialProof.map((item) => (
+                <span key={item} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                  {item}
+                </span>
+              ))}
+            </motion.div>
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 40, rotate: 2 }}
-            animate={{ opacity: 1, y: 0, rotate: 0 }}
+            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="relative flex justify-center md:justify-end"
+            className="relative flex justify-center"
           >
             <div className="relative">
-              <div className="absolute -inset-8 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent rounded-full blur-3xl" />
+              <div className="absolute -inset-12 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent rounded-full blur-3xl" />
               <img
                 src={heroPhone}
                 alt="Mesa Digital - Menú digital en celular"
-                width={420}
-                height={420}
-                className="relative z-10 drop-shadow-2xl max-w-[280px] md:max-w-[380px] lg:max-w-[420px]"
+                width={1024}
+                height={1024}
+                className="relative z-10 drop-shadow-2xl w-[300px] md:w-[360px] lg:w-[420px]"
               />
             </div>
           </motion.div>
@@ -275,6 +316,56 @@ export default function Index() {
               Explorar la demo <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
+        </motion.div>
+      </section>
+
+      {/* Contact Form */}
+      <section id="contacto" className="px-4 md:px-8 pb-20 max-w-xl mx-auto">
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }} variants={stagger}>
+          <motion.h2 variants={fadeUp} className="font-heading text-2xl md:text-3xl font-bold text-center mb-3">
+            Quiero una demo
+          </motion.h2>
+          <motion.p variants={fadeUp} className="text-muted-foreground text-center mb-8 text-sm max-w-md mx-auto">
+            Dejanos tus datos y te mostramos cómo Mesa Digital puede transformar tu negocio.
+          </motion.p>
+          <motion.form variants={fadeUp} onSubmit={handleContactSubmit} className="bg-card rounded-2xl p-6 md:p-8 border border-border shadow-card space-y-4">
+            <div>
+              <label htmlFor="contact-name" className="text-sm font-medium mb-1.5 block">Nombre</label>
+              <Input
+                id="contact-name"
+                placeholder="Tu nombre"
+                maxLength={100}
+                value={contactForm.name}
+                onChange={(e) => setContactForm(prev => ({ ...prev, name: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label htmlFor="contact-email" className="text-sm font-medium mb-1.5 block">Email</label>
+              <Input
+                id="contact-email"
+                type="email"
+                placeholder="tu@email.com"
+                maxLength={255}
+                value={contactForm.email}
+                onChange={(e) => setContactForm(prev => ({ ...prev, email: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label htmlFor="contact-restaurant" className="text-sm font-medium mb-1.5 block">Nombre del restaurante</label>
+              <Input
+                id="contact-restaurant"
+                placeholder="Ej: La Parrilla de Juan"
+                maxLength={150}
+                value={contactForm.restaurant}
+                onChange={(e) => setContactForm(prev => ({ ...prev, restaurant: e.target.value }))}
+              />
+            </div>
+            <Button type="submit" disabled={submitting} className="w-full gradient-primary font-heading font-semibold h-12 text-base">
+              {submitting ? 'Enviando...' : (
+                <>Quiero una demo <Send className="h-4 w-4 ml-2" /></>
+              )}
+            </Button>
+          </motion.form>
         </motion.div>
       </section>
 
