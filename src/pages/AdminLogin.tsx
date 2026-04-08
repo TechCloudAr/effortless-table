@@ -16,13 +16,9 @@ export default function AdminLogin() {
 
   useEffect(() => {
     if (user) {
-      if (role === 'superadmin') {
-        navigate('/superadmin', { replace: true });
-      } else {
-        navigate('/admin/dashboard', { replace: true });
-      }
+      navigate('/admin/dashboard', { replace: true });
     }
-  }, [user, role, navigate]);
+  }, [user, navigate]);
 
   if (authLoading || user) {
     return (
