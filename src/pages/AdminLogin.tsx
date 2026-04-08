@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,20 +9,27 @@ import { toast } from 'sonner';
 
 export default function AdminLogin() {
   const navigate = useNavigate();
-  const { signIn, user, role } = useAuth();
+  const { signIn, user, role, loading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-
-  // If already logged in, redirect based on role
-  if (user) {
-    if (role === 'superadmin') {
-      navigate('/superadmin', { replace: true });
-    } else {
-      navigate('/admin/dashboard', { replace: true });
+  useEffect(() => {
+    if (user) {
+      if (role === 'superadmin') {
+        navigate('/superadmin', { replace: true });
+      } else {
+        navigate('/admin/dashboard', { replace: true });
+      }
     }
-    return null;
+  }, [user, role, navigate]);
+
+  if (authLoading || user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   const handleLogin = async (e: React.FormEvent) => {
