@@ -23,7 +23,6 @@ export default function CartSheet() {
   const handleConfirmOrder = async () => {
     setLoading(true);
     try {
-      // 1. Create order in DB
       const orderItems = items.map(i => ({
         name: i.menuItem.name,
         quantity: i.quantity,
@@ -33,6 +32,32 @@ export default function CartSheet() {
         notes: i.notes,
       }));
 
+      if (paymentMethod === 'cash') {
+        // Cash: create order as received, no payment gateway
+        const { data: order, error: orderError } = await supabase
+          .from('orders')
+          .insert({
+            table_number: tableNumber,
+            items: orderItems,
+            subtotal,
+            tax,
+            total,
+            status: 'received',
+            payment_status: 'cash',
+          })
+          .select('id')
+          .single();
+
+        if (orderError || !order) throw new Error(orderError?.message || 'Error creating order');
+
+        clearCart();
+        setOpen(false);
+        toast.success('¡Pedido enviado! Pagá en mostrador.');
+        navigate(`/pedido/${order.id}`);
+        return;
+      }
+
+      // MercadoPago flow
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -49,21 +74,13 @@ export default function CartSheet() {
 
       if (orderError || !order) throw new Error(orderError?.message || 'Error creating order');
 
-      // 2. Call edge function to create MercadoPago preference
       const backUrl = window.location.origin;
       const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: {
-          orderId: order.id,
-          items: orderItems,
-          total,
-          tableNumber,
-          backUrl,
-        },
+        body: { orderId: order.id, items: orderItems, total, tableNumber, backUrl },
       });
 
       if (error) throw new Error(error.message || 'Error creating payment');
 
-      // 3. Redirect to MercadoPago
       const paymentUrl = data.sandboxInitPoint || data.initPoint;
       if (paymentUrl) {
         clearCart();
@@ -74,7 +91,7 @@ export default function CartSheet() {
       }
     } catch (err: any) {
       console.error('Payment error:', err);
-      toast.error('Error al procesar el pago. Intenta de nuevo.');
+      toast.error('Error al procesar el pedido. Intenta de nuevo.');
     } finally {
       setLoading(false);
     }
