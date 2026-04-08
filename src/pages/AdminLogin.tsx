@@ -1,18 +1,37 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Flame } from 'lucide-react';
+import { Flame, Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 export default function AdminLogin() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('admin@fuegosazon.com');
-  const [password, setPassword] = useState('demo1234');
+  const { signIn, user } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  // If already logged in, redirect
+  if (user) {
+    navigate('/admin/dashboard', { replace: true });
+    return null;
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate('/admin/dashboard');
+    setLoading(true);
+    const { error } = await signIn(email, password);
+    setLoading(false);
+    if (error) {
+      toast.error(error.message === 'Invalid login credentials'
+        ? 'Credenciales inválidas. Revisá tu email y contraseña.'
+        : error.message);
+    } else {
+      navigate('/admin/dashboard');
+    }
   };
 
   return (
@@ -29,16 +48,22 @@ export default function AdminLogin() {
         <form onSubmit={handleLogin} className="bg-card rounded-xl p-6 shadow-card space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="email" className="font-heading text-sm">Correo electrónico</Label>
-            <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} />
+            <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="password" className="font-heading text-sm">Contraseña</Label>
-            <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} />
+            <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
           </div>
-          <Button type="submit" className="w-full gradient-primary font-heading font-semibold h-11">
+          <Button type="submit" disabled={loading} className="w-full gradient-primary font-heading font-semibold h-11">
+            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             Iniciar sesión
           </Button>
-          <p className="text-xs text-center text-muted-foreground">Demo: admin@fuegosazon.com / demo1234</p>
+          <p className="text-xs text-center text-muted-foreground">
+            ¿No tenés cuenta?{' '}
+            <Link to="/admin/registro" className="text-primary font-semibold hover:underline">
+              Registrate
+            </Link>
+          </p>
         </form>
       </div>
     </div>
