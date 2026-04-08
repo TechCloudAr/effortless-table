@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 type PaymentMethod = 'mercadopago' | 'cash';
 
 export default function CartSheet() {
-  const { items, itemCount, subtotal, tax, total, removeItem, updateQuantity, clearCart, tableNumber, restaurantId } = useCart();
+  const { items, itemCount, subtotal, tax, total, removeItem, updateQuantity, clearCart, tableNumber, restaurantId, branchId } = useCart();
   const { restaurant } = useRestaurant(restaurantId || undefined);
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -38,6 +38,7 @@ export default function CartSheet() {
           .from('orders')
           .insert({
             restaurant_id: restaurant.id,
+            branch_id: branchId,
             table_number: tableNumber,
             items: orderItems,
             subtotal,
@@ -63,6 +64,7 @@ export default function CartSheet() {
         .from('orders')
         .insert({
           restaurant_id: restaurant.id,
+          branch_id: branchId,
           table_number: tableNumber,
           items: orderItems,
           subtotal,
