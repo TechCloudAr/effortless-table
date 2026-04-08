@@ -5,10 +5,11 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 const steps = [
-  { key: 'received', label: 'Pedido recibido', icon: CheckCircle2, description: 'Tu pedido fue registrado' },
-  { key: 'preparing', label: 'En preparación', icon: ChefHat, description: 'El chef está preparando tu orden' },
-  { key: 'ready', label: 'Listo', icon: Package, description: 'Tu pedido está listo para servir' },
-  { key: 'delivered', label: 'Entregado', icon: Utensils, description: '¡Buen provecho!' },
+  { key: 'nuevo', label: 'Pedido recibido', icon: CheckCircle2, description: 'Tu pedido fue registrado' },
+  { key: 'aceptado', label: 'Aceptado', icon: CheckCircle2, description: 'Tu pedido fue aceptado' },
+  { key: 'preparando', label: 'En preparación', icon: ChefHat, description: 'El chef está preparando tu orden' },
+  { key: 'listo', label: 'Listo', icon: Package, description: 'Tu pedido está listo para servir' },
+  { key: 'entregado', label: 'Entregado', icon: Utensils, description: '¡Buen provecho!' },
 ] as const;
 
 type OrderData = {
