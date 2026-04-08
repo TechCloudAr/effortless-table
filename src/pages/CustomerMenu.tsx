@@ -20,6 +20,9 @@ export default function CustomerMenu() {
   const { categories, menuItems, ingredients } = useMenu(restaurantId);
   const tableNum = parseInt(tableId || '5');
 
+  // Track table session (marks table as occupied on scan)
+  useTableSession(restaurantId, tableNum);
+
   useEffect(() => {
     setTableNumber(tableNum);
     setTaxRate(restaurant.taxRate);
