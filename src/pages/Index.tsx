@@ -99,27 +99,47 @@ export default function Index() {
       </nav>
 
       {/* Hero */}
-      <section className="px-4 md:px-8 pt-16 pb-20 max-w-5xl mx-auto text-center">
-        <motion.div initial="hidden" animate="visible" variants={stagger}>
-          <motion.div variants={fadeUp} className="inline-flex items-center gap-1.5 bg-accent text-accent-foreground text-xs font-medium px-3 py-1.5 rounded-full mb-6">
-            <Zap className="h-3 w-3" /> Se alimenta con el uso, no con carga manual
+      <section className="px-4 md:px-8 pt-12 pb-20 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+          <motion.div initial="hidden" animate="visible" variants={stagger} className="text-center md:text-left">
+            <motion.div variants={fadeUp} className="inline-flex items-center gap-1.5 bg-accent text-accent-foreground text-xs font-medium px-3 py-1.5 rounded-full mb-6">
+              <Zap className="h-3 w-3" /> Se alimenta con el uso, no con carga manual
+            </motion.div>
+            <motion.h1 variants={fadeUp} className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold leading-[1.1]">
+              Tu restaurante genera datos con cada pedido.{' '}
+              <span className="gradient-primary bg-clip-text text-transparent">Nosotros los convertimos en decisiones.</span>
+            </motion.h1>
+            <motion.p variants={fadeUp} className="text-muted-foreground text-base md:text-lg mt-5 max-w-xl leading-relaxed">
+              No cargás nada. El cliente pide, el sistema aprende. Vos decidís con datos reales, no con intuición.
+            </motion.p>
+            <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center md:items-start gap-3 mt-8">
+              <Button size="lg" className="gradient-primary font-heading font-semibold h-12 px-8 text-base" onClick={() => navigate(demoUrl)}>
+                Probar como cliente <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+              <Button size="lg" variant="outline" className="font-heading h-12 px-8 text-base" onClick={() => navigate('/admin')}>
+                Panel del restaurante
+              </Button>
+            </motion.div>
           </motion.div>
-          <motion.h1 variants={fadeUp} className="font-heading text-4xl md:text-5xl lg:text-[3.5rem] font-bold leading-[1.1] max-w-4xl mx-auto">
-            Tu restaurante genera datos con cada pedido.{' '}
-            <span className="gradient-primary bg-clip-text text-transparent">Nosotros los convertimos en decisiones.</span>
-          </motion.h1>
-          <motion.p variants={fadeUp} className="text-muted-foreground text-base md:text-lg mt-5 max-w-2xl mx-auto leading-relaxed">
-            No cargás nada. El cliente pide, el sistema aprende. Vos decidís con datos reales, no con intuición.
-          </motion.p>
-          <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
-            <Button size="lg" className="gradient-primary font-heading font-semibold h-12 px-8 text-base" onClick={() => navigate(demoUrl)}>
-              Probar como cliente <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
-            <Button size="lg" variant="outline" className="font-heading h-12 px-8 text-base" onClick={() => navigate('/admin')}>
-              Panel del restaurante
-            </Button>
+
+          <motion.div
+            initial={{ opacity: 0, y: 40, rotate: 2 }}
+            animate={{ opacity: 1, y: 0, rotate: 0 }}
+            transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="relative flex justify-center md:justify-end"
+          >
+            <div className="relative">
+              <div className="absolute -inset-8 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent rounded-full blur-3xl" />
+              <img
+                src={heroPhone}
+                alt="Mesa Digital - Menú digital en celular"
+                width={420}
+                height={420}
+                className="relative z-10 drop-shadow-2xl max-w-[280px] md:max-w-[380px] lg:max-w-[420px]"
+              />
+            </div>
           </motion.div>
-        </motion.div>
+        </div>
       </section>
 
       {/* Comparison: Traditional vs Mesa Digital */}
