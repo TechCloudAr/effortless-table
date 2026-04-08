@@ -4,7 +4,7 @@ import type { MenuCategory, MenuItem, MenuItemOptionGroup, MenuItemOption } from
 import type { Ingredient } from '@/types/restaurant';
 import { categories as mockCategories, menuItems as mockMenuItems } from '@/data/mockData';
 
-export function useMenu() {
+export function useMenu(restaurantId?: string) {
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [ingredients, setIngredients] = useState<Record<string, Ingredient[]>>({});
@@ -13,9 +13,11 @@ export function useMenu() {
   const fetchMenu = async () => {
     setLoading(true);
     try {
-      // Fetch all in parallel
+      let catQuery = supabase.from('menu_categories').select('*').order('sort_order');
+      if (restaurantId) catQuery = catQuery.eq('restaurant_id', restaurantId);
+
       const [catRes, itemRes, groupRes, optRes, ingRes] = await Promise.all([
-        supabase.from('menu_categories').select('*').order('sort_order'),
+        catQuery,
         supabase.from('menu_items').select('*').order('sort_order'),
         supabase.from('menu_item_option_groups').select('*').order('sort_order'),
         supabase.from('menu_item_options').select('*').order('sort_order'),
@@ -97,7 +99,7 @@ export function useMenu() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchMenu(); }, []);
+  useEffect(() => { fetchMenu(); }, [restaurantId]);
 
   return { categories, menuItems, ingredients, loading, refetch: fetchMenu };
 }

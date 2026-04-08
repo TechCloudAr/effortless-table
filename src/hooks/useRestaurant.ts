@@ -3,17 +3,19 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Restaurant } from '@/types/restaurant';
 import { restaurant as mockRestaurant } from '@/data/mockData';
 
-export function useRestaurant() {
+export function useRestaurant(restaurantId?: string) {
   const [restaurant, setRestaurant] = useState<Restaurant>(mockRestaurant);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetch() {
-      const { data, error } = await supabase
-        .from('restaurants')
-        .select('*')
-        .limit(1)
-        .single();
+      let query = supabase.from('restaurants').select('*');
+
+      if (restaurantId) {
+        query = query.eq('id', restaurantId);
+      }
+
+      const { data, error } = await query.limit(1).single();
 
       if (!error && data) {
         setRestaurant({
@@ -28,7 +30,7 @@ export function useRestaurant() {
       setLoading(false);
     }
     fetch();
-  }, []);
+  }, [restaurantId]);
 
   return { restaurant, loading };
 }

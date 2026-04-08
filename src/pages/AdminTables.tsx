@@ -175,14 +175,14 @@ export default function AdminTables() {
               <div className="bg-white p-4 rounded-xl" ref={qrRef}>
                 <QRCodeSVG
                   id={`qr-download-${qrDialog}`}
-                  value={`${baseUrl}/mesa/${qrDialog}`}
+                  value={`${baseUrl}/mesa/${restaurant.id}/${qrDialog}`}
                   size={240}
                   level="H"
                   includeMargin
                 />
               </div>
               <p className="text-xs text-muted-foreground text-center break-all">
-                {baseUrl}/mesa/{qrDialog}
+                {baseUrl}/mesa/{restaurant.id}/{qrDialog}
               </p>
               <p className="text-sm text-muted-foreground text-center">
                 Imprimí este QR y colocalo en la mesa. Los clientes lo escanean para ver el menú y hacer pedidos.
