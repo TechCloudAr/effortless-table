@@ -43,7 +43,7 @@ export default function AdminLayout() {
             </NavLink>
           ))}
         </nav>
-        <button onClick={() => navigate('/admin')} className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <button onClick={() => signOut()} className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <LogOut className="h-4 w-4" /> Cerrar sesión
         </button>
       </aside>
