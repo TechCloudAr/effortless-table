@@ -43,7 +43,7 @@ export default function CartSheet() {
             subtotal,
             tax,
             total,
-            status: 'received',
+            status: 'nuevo',
             payment_status: 'cash',
           })
           .select('id')

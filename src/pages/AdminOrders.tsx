@@ -97,7 +97,7 @@ export default function AdminOrders() {
     <div className="p-4 md:p-8 max-w-4xl mx-auto">
       <div className="mb-6">
         <h1 className="font-heading text-2xl font-bold">Pedidos en vivo</h1>
-        <p className="text-sm text-muted-foreground">{orders.filter(o => !['delivered', 'cancelled'].includes(o.status)).length} pedidos activos</p>
+        <p className="text-sm text-muted-foreground">{orders.filter(o => !['entregado', 'delivered', 'cancelled'].includes(o.status)).length} pedidos activos</p>
       </div>
 
       <div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar">
