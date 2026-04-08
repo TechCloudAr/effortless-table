@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, ClipboardList, UtensilsCrossed, Grid3X3, Palette, LogOut, Flame, CreditCard, DollarSign, Brain, Building2, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, UtensilsCrossed, Grid3X3, Palette, LogOut, Flame, CreditCard, DollarSign, Brain, Building2, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBranch } from '@/contexts/BranchContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -18,7 +18,7 @@ const links = [
 ];
 
 export default function AdminLayout() {
-  const { signOut } = useAuth();
+  const { signOut, role } = useAuth();
   const { branches, activeBranch, setActiveBranchId } = useBranch();
 
   return (
@@ -62,6 +62,11 @@ export default function AdminLayout() {
             </NavLink>
           ))}
         </nav>
+        {role === 'superadmin' && (
+          <NavLink to="/superadmin" className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-1">
+            <Shield className="h-4 w-4" /> Super Admin
+          </NavLink>
+        )}
         <button onClick={() => signOut()} className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <LogOut className="h-4 w-4" /> Cerrar sesión
         </button>
