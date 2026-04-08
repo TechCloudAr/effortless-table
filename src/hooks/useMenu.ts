@@ -99,7 +99,7 @@ export function useMenu(restaurantId?: string) {
     setLoading(false);
   };
 
-  useEffect(() => { fetchMenu(); }, []);
+  useEffect(() => { fetchMenu(); }, [restaurantId]);
 
   return { categories, menuItems, ingredients, loading, refetch: fetchMenu };
 }
