@@ -91,7 +91,7 @@ export default function Index() {
           <Button variant="ghost" size="sm" className="font-heading text-sm" onClick={() => navigate('/admin')}>
             Acceso staff
           </Button>
-          <Button size="sm" className="gradient-primary font-heading text-sm" onClick={() => navigate('/mesa/5')}>
+          <Button size="sm" className="gradient-primary font-heading text-sm" onClick={() => navigate(demoUrl)}>
             Ver demo
           </Button>
         </div>
@@ -111,7 +111,7 @@ export default function Index() {
             No cargás nada. El cliente pide, el sistema aprende. Vos decidís con datos reales, no con intuición.
           </motion.p>
           <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
-            <Button size="lg" className="gradient-primary font-heading font-semibold h-12 px-8 text-base" onClick={() => navigate('/mesa/5')}>
+            <Button size="lg" className="gradient-primary font-heading font-semibold h-12 px-8 text-base" onClick={() => navigate(demoUrl)}>
               Probar como cliente <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
             <Button size="lg" variant="outline" className="font-heading h-12 px-8 text-base" onClick={() => navigate('/admin')}>
@@ -250,7 +250,7 @@ export default function Index() {
             <p className="text-primary-foreground/70 text-sm md:text-base mb-6 max-w-md mx-auto">
               Solo un QR por mesa y una conexión a internet. Tu restaurante empieza a aprender desde el primer pedido.
             </p>
-            <Button size="lg" className="gradient-primary font-heading font-semibold h-12 px-8" onClick={() => navigate('/mesa/5')}>
+            <Button size="lg" className="gradient-primary font-heading font-semibold h-12 px-8" onClick={() => navigate(demoUrl)}>
               Explorar la demo <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
