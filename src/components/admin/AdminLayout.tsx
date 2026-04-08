@@ -1,5 +1,6 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet } from 'react-router-dom';
 import { LayoutDashboard, ClipboardList, UtensilsCrossed, Grid3X3, Palette, LogOut, Flame, CreditCard, DollarSign, Brain } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import AIChatWidget from './AIChatWidget';
 
 const links = [
