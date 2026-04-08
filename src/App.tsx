@@ -25,6 +25,10 @@ import AdminThemes from "./pages/AdminThemes";
 import AdminPayments from "./pages/AdminPayments";
 import AdminLayout from "./components/admin/AdminLayout";
 import NotFound from "./pages/NotFound";
+import CajaScreen from "./pages/CajaScreen";
+import CocinaScreen from "./pages/CocinaScreen";
+import MozoScreen from "./pages/MozoScreen";
+import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +50,16 @@ const App = () => (
               <Route path="/pago/exito" element={<PaymentResult status="exito" />} />
               <Route path="/pago/error" element={<PaymentResult status="error" />} />
               <Route path="/pago/pendiente" element={<PaymentResult status="pendiente" />} />
+              
+              {/* Operational screens — public, no login required */}
+              <Route path="/caja/:branchId" element={<CajaScreen />} />
+              <Route path="/cocina/:branchId" element={<CocinaScreen />} />
+              <Route path="/mozo/:branchId" element={<MozoScreen />} />
+
+              {/* Super Admin */}
+              <Route path="/superadmin" element={<ProtectedRoute><SuperAdminDashboard /></ProtectedRoute>} />
+
+              {/* Admin auth */}
               <Route path="/admin" element={<AdminLogin />} />
               <Route path="/admin/registro" element={<AdminSignup />} />
               <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>

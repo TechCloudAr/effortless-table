@@ -2,10 +2,13 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { supabase } from '@/integrations/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
 
+type AppRole = 'superadmin' | 'owner' | null;
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  role: AppRole;
   restaurantId: string | null;
   signUp: (email: string, password: string, fullName: string, restaurantName?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
@@ -18,6 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [role, setRole] = useState<AppRole>(null);
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -25,9 +29,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        // Fetch restaurant owned by this user (deferred to avoid blocking)
-        setTimeout(() => fetchRestaurant(session.user.id), 0);
+        setTimeout(() => {
+          fetchRole(session.user.id);
+          fetchRestaurant(session.user.id);
+        }, 0);
       } else {
+        setRole(null);
         setRestaurantId(null);
       }
     });
@@ -36,13 +43,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchRestaurant(session.user.id);
+        Promise.all([
+          fetchRole(session.user.id),
+          fetchRestaurant(session.user.id),
+        ]).finally(() => setLoading(false));
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  async function fetchRole(userId: string) {
+    const { data } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .limit(1)
+      .maybeSingle();
+    setRole((data?.role as AppRole) ?? null);
+  }
 
   async function fetchRestaurant(userId: string) {
     const { data } = await supabase
@@ -66,7 +87,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         owner_id: userId,
       }).select('id').single();
       if (newRest) {
-        // Create default categories
         const defaults = [
           { name: 'Entradas', icon: '🥗', sort_order: 0 },
           { name: 'Principales', icon: '🍖', sort_order: 1 },
@@ -102,11 +122,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setRole(null);
     setRestaurantId(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, restaurantId, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, role, restaurantId, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
