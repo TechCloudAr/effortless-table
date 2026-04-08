@@ -51,7 +51,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq('owner_id', userId)
       .limit(1)
       .maybeSingle();
-    setRestaurantId(data?.id ?? null);
+    
+    if (data?.id) {
+      setRestaurantId(data.id);
+      return;
+    }
+
+    // Auto-create restaurant from signup metadata
+    const { data: { user } } = await supabase.auth.getUser();
+    const restaurantName = user?.user_metadata?.restaurant_name;
+    if (restaurantName) {
+      const { data: newRest } = await supabase.from('restaurants').insert({
+        name: restaurantName,
+        owner_id: userId,
+      }).select('id').single();
+      if (newRest) {
+        // Create default categories
+        const defaults = [
+          { name: 'Entradas', icon: '🥗', sort_order: 0 },
+          { name: 'Principales', icon: '🍖', sort_order: 1 },
+          { name: 'Bebidas', icon: '🥤', sort_order: 2 },
+          { name: 'Postres', icon: '🍰', sort_order: 3 },
+        ];
+        await supabase.from('menu_categories').insert(
+          defaults.map(d => ({ ...d, restaurant_id: newRest.id }))
+        );
+        setRestaurantId(newRest.id);
+      }
+    } else {
+      setRestaurantId(null);
+    }
   }
 
   const signUp = async (email: string, password: string, fullName: string, restaurantName?: string) => {
