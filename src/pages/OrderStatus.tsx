@@ -17,6 +17,7 @@ type OrderData = {
   table_number: number;
   total: number;
   created_at: string;
+  restaurant_id: string | null;
 };
 
 export default function OrderStatus() {
@@ -78,7 +79,7 @@ export default function OrderStatus() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
         <p className="text-lg font-heading font-bold mb-2">Pedido no encontrado</p>
-        <Button variant="outline" onClick={() => navigate('/mesa/5')}>Volver al menú</Button>
+        <Button variant="outline" onClick={() => navigate('/')}>Volver al inicio</Button>
       </div>
     );
   }
@@ -163,7 +164,7 @@ export default function OrderStatus() {
       </div>
 
       <div className="px-4 pb-8">
-        <Button variant="outline" className="w-full font-heading" onClick={() => navigate(`/mesa/${order.table_number}`)}>
+        <Button variant="outline" className="w-full font-heading" onClick={() => navigate(`/mesa/${order.restaurant_id}/${order.table_number}`)}>
           Pedir algo más
         </Button>
       </div>
