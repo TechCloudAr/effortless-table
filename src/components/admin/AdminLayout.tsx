@@ -15,7 +15,7 @@ const links = [
 ];
 
 export default function AdminLayout() {
-  const navigate = useNavigate();
+  const { signOut } = useAuth();
 
   return (
     <div className="min-h-screen bg-background flex">
