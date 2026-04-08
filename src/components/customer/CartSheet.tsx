@@ -1,24 +1,28 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { ShoppingCart, Minus, Plus, Trash2, Loader2 } from 'lucide-react';
+import { ShoppingCart, Minus, Plus, Trash2, Loader2, Banknote, CreditCard } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useRestaurant } from '@/hooks/useRestaurant';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+type PaymentMethod = 'mercadopago' | 'cash';
+
 export default function CartSheet() {
   const { items, itemCount, subtotal, tax, total, removeItem, updateQuantity, clearCart, tableNumber } = useCart();
   const { restaurant } = useRestaurant();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('mercadopago');
 
   const handleConfirmOrder = async () => {
     setLoading(true);
     try {
-      // 1. Create order in DB
       const orderItems = items.map(i => ({
         name: i.menuItem.name,
         quantity: i.quantity,
@@ -28,6 +32,32 @@ export default function CartSheet() {
         notes: i.notes,
       }));
 
+      if (paymentMethod === 'cash') {
+        // Cash: create order as received, no payment gateway
+        const { data: order, error: orderError } = await supabase
+          .from('orders')
+          .insert({
+            table_number: tableNumber,
+            items: orderItems,
+            subtotal,
+            tax,
+            total,
+            status: 'received',
+            payment_status: 'cash',
+          })
+          .select('id')
+          .single();
+
+        if (orderError || !order) throw new Error(orderError?.message || 'Error creating order');
+
+        clearCart();
+        setOpen(false);
+        toast.success('¡Pedido enviado! Pagá en mostrador.');
+        navigate(`/pedido/${order.id}`);
+        return;
+      }
+
+      // MercadoPago flow
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -44,21 +74,13 @@ export default function CartSheet() {
 
       if (orderError || !order) throw new Error(orderError?.message || 'Error creating order');
 
-      // 2. Call edge function to create MercadoPago preference
       const backUrl = window.location.origin;
       const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: {
-          orderId: order.id,
-          items: orderItems,
-          total,
-          tableNumber,
-          backUrl,
-        },
+        body: { orderId: order.id, items: orderItems, total, tableNumber, backUrl },
       });
 
       if (error) throw new Error(error.message || 'Error creating payment');
 
-      // 3. Redirect to MercadoPago
       const paymentUrl = data.sandboxInitPoint || data.initPoint;
       if (paymentUrl) {
         clearCart();
@@ -69,7 +91,7 @@ export default function CartSheet() {
       }
     } catch (err: any) {
       console.error('Payment error:', err);
-      toast.error('Error al procesar el pago. Intenta de nuevo.');
+      toast.error('Error al procesar el pedido. Intenta de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -130,23 +152,59 @@ export default function CartSheet() {
           <div className="flex justify-between font-heading font-bold text-base"><span>Total</span><span>{restaurant.currency}{total.toFixed(0)}</span></div>
         </div>
 
+        {/* Payment method selector */}
+        <div className="flex gap-2 mt-3">
+          <button
+            onClick={() => setPaymentMethod('mercadopago')}
+            className={`flex-1 flex items-center gap-2 p-3 rounded-xl border-2 transition-all text-left ${
+              paymentMethod === 'mercadopago'
+                ? 'border-primary bg-primary/5'
+                : 'border-border/50 bg-muted/30'
+            }`}
+          >
+            <CreditCard className={`h-5 w-5 flex-shrink-0 ${paymentMethod === 'mercadopago' ? 'text-primary' : 'text-muted-foreground'}`} />
+            <div>
+              <p className="font-heading font-semibold text-xs">MercadoPago</p>
+              <p className="text-[10px] text-muted-foreground">Tarjeta o digital</p>
+            </div>
+          </button>
+          <button
+            onClick={() => setPaymentMethod('cash')}
+            className={`flex-1 flex items-center gap-2 p-3 rounded-xl border-2 transition-all text-left ${
+              paymentMethod === 'cash'
+                ? 'border-primary bg-primary/5'
+                : 'border-border/50 bg-muted/30'
+            }`}
+          >
+            <Banknote className={`h-5 w-5 flex-shrink-0 ${paymentMethod === 'cash' ? 'text-primary' : 'text-muted-foreground'}`} />
+            <div>
+              <p className="font-heading font-semibold text-xs">Efectivo</p>
+              <p className="text-[10px] text-muted-foreground">Pagá en mostrador</p>
+            </div>
+          </button>
+        </div>
+
         <Button
           onClick={handleConfirmOrder}
           disabled={loading}
-          className="w-full gradient-primary font-heading font-semibold h-12 text-base mt-2"
+          className="w-full gradient-primary font-heading font-semibold h-12 text-base mt-3"
         >
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Procesando...
             </>
+          ) : paymentMethod === 'cash' ? (
+            <>Confirmar pedido — {restaurant.currency}{total.toFixed(0)}</>
           ) : (
             <>Pagar con MercadoPago — {restaurant.currency}{total.toFixed(0)}</>
           )}
         </Button>
 
         <p className="text-[11px] text-muted-foreground text-center mt-2">
-          Serás redirigido a MercadoPago para completar el pago
+          {paymentMethod === 'cash'
+            ? 'Tu pedido será enviado y pagarás en efectivo en el mostrador'
+            : 'Serás redirigido a MercadoPago para completar el pago'}
         </p>
       </SheetContent>
     </Sheet>
