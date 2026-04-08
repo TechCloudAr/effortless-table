@@ -347,6 +347,14 @@ export type Database = {
     }
     Functions: {
       user_owns_menu_item: { Args: { _category_id: string }; Returns: boolean }
+      user_owns_menu_item_by_id: {
+        Args: { _menu_item_id: string }
+        Returns: boolean
+      }
+      user_owns_option_group: {
+        Args: { _option_group_id: string }
+        Returns: boolean
+      }
       user_owns_restaurant: {
         Args: { _restaurant_id: string }
         Returns: boolean
