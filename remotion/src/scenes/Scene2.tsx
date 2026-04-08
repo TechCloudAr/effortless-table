@@ -1,4 +1,4 @@
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring } from "remotion";
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Img, staticFile } from "remotion";
 import { loadFont } from "@remotion/google-fonts/SpaceGrotesk";
 import { loadFont as loadBody } from "@remotion/google-fonts/DMSans";
 import { PhoneFrame } from "../components/PhoneFrame";
@@ -8,11 +8,11 @@ const { fontFamily: heading } = loadFont("normal", { weights: ["700"], subsets: 
 const { fontFamily: body } = loadBody("normal", { weights: ["400", "500", "700"], subsets: ["latin"] });
 
 const menuItems = [
-  { name: "Smash Burger Doble", price: "$6.900", tag: "🔥 Popular", color: "#FED7AA" },
-  { name: "Pizza Muzzarella", price: "$5.200", tag: "⭐ Top", color: "#FECACA" },
-  { name: "Ensalada Caesar", price: "$4.100", tag: "🥗 Fresco", color: "#BBF7D0" },
-  { name: "Papas Trufadas", price: "$3.800", tag: "✨ Nueva", color: "#FDE68A" },
-  { name: "Lomo Completo", price: "$7.500", tag: "🥩 Premium", color: "#E9D5FF" },
+  { name: "Smash Burger Doble", price: "$6.900", tag: "🔥 Popular", img: "images/food-burger.jpg" },
+  { name: "Pizza Muzzarella", price: "$5.200", tag: "⭐ Top", img: "images/food-pizza.jpg" },
+  { name: "Ensalada Caesar", price: "$4.100", tag: "🥗 Fresco", img: "images/food-salad.jpg" },
+  { name: "Papas Trufadas", price: "$3.800", tag: "✨ Nueva", img: "images/food-fries.jpg" },
+  { name: "Lomo Completo", price: "$7.500", tag: "🥩 Premium", img: "images/food-lomo.jpg" },
 ];
 
 const cartItems = [
@@ -80,15 +80,16 @@ function MenuPhoneScreen({ scrollY, addProgress }: { scrollY: number; addProgres
               </div>
               <div style={{
                 width: 64, height: 64, borderRadius: 12,
-                background: `linear-gradient(135deg, ${item.color}, ${item.color}CC)`,
                 position: "relative", flexShrink: 0,
+                overflow: "hidden",
               }}>
+                <Img src={staticFile(item.img)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 <div style={{
-                  position: "absolute", bottom: -3, right: -3,
-                  width: 24, height: 24, borderRadius: 12,
+                  position: "absolute", bottom: 2, right: 2,
+                  width: 22, height: 22, borderRadius: 11,
                   background: isAdded ? GREEN : PRIMARY,
                   color: "white", display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 14, fontWeight: 700, border: "2px solid white",
+                  fontSize: 13, fontWeight: 700, border: "2px solid white",
                   transform: isAdded ? "scale(1.1)" : "scale(1)",
                 }}>
                   {isAdded ? "✓" : "+"}
