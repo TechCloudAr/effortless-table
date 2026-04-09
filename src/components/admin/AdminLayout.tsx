@@ -22,8 +22,16 @@ export default function AdminLayout() {
   const { signOut, role } = useAuth();
   const { branches, activeBranchId, setActiveBranchId } = useBranch();
 
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const handleBranchChange = (id: string) => {
-    setActiveBranchId(id === ALL_BRANCHES_VALUE ? null : id);
+    const newBranchId = id === ALL_BRANCHES_VALUE ? null : id;
+    setActiveBranchId(newBranchId);
+    // If switching to a specific branch while on a "Todas"-only page, redirect
+    if (newBranchId && location.pathname === '/admin/sucursales') {
+      navigate('/admin/dashboard');
+    }
   };
 
   const currentValue = activeBranchId ?? ALL_BRANCHES_VALUE;
