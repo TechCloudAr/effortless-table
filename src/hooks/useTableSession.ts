@@ -32,6 +32,7 @@ export function useTableSession(restaurantId?: string, tableNumber?: number, bra
         restaurant_id: restaurantId,
         table_number: tableNumber,
         session_token: token,
+        ...(branchId ? { branch_id: branchId } : {}),
       })
       .then(({ error }) => {
         if (error) console.error('Failed to create table session:', error);
@@ -68,5 +69,5 @@ export function useTableSession(restaurantId?: string, tableNumber?: number, bra
       document.removeEventListener('visibilitychange', handleVisibility);
       endSession();
     };
-  }, [restaurantId, tableNumber]);
+  }, [restaurantId, tableNumber, branchId]);
 }
