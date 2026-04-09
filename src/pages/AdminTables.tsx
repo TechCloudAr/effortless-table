@@ -52,6 +52,15 @@ export default function AdminTables() {
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
 
+  // Build QR URL with branch if a specific branch is selected, otherwise use first branch
+  const getTableUrl = (tableNum: number) => {
+    const branch = activeBranchId || (branches.length > 0 ? branches[0].id : null);
+    if (branch) {
+      return `${baseUrl}/mesa/${restaurant.id}/${branch}/${tableNum}`;
+    }
+    return `${baseUrl}/mesa/${restaurant.id}/${tableNum}`;
+  };
+
   const tableData = useMemo(() => {
     const byTable = stats.ordersByTable;
 
