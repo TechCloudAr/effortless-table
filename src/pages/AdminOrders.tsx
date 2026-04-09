@@ -79,10 +79,10 @@ export default function AdminOrders() {
     return () => { supabase.removeChannel(channel); };
   }, [restaurantId]);
 
-  // Filter by branch
+  // Orders are branch-specific — require a branch selection
   const orders = activeBranchId
     ? allOrders.filter(o => o.branch_id === activeBranchId)
-    : allOrders;
+    : [];
 
   const advanceStatus = async (orderId: string, currentStatus: string) => {
     const next = nextStatus[currentStatus as OrderStatus];
