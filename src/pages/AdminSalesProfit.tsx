@@ -13,6 +13,19 @@ export default function AdminSalesProfit() {
   const { stats, getProductCost, loading } = useSalesData();
   const { menuItems, categories } = useMenu();
 
+  // Build menuItemId -> categoryId lookup
+  const menuItemCategoryMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const item of menuItems) map[item.id] = item.categoryId;
+    return map;
+  }, [menuItems]);
+
+  const catIdToName = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const cat of categories) map[cat.id] = cat.name;
+    return map;
+  }, [categories]);
+
   // Build product profitability from real data
   const productProfitability = useMemo(() => {
     const result: { name: string; id: string; sold: number; revenue: number; cost: number; margin: number; marginPct: number; category: string }[] = [];
@@ -20,12 +33,12 @@ export default function AdminSalesProfit() {
     for (const order of stats.orders) {
       const items = Array.isArray(order.items) ? order.items : [];
       for (const item of items) {
-        const id = (item as any)?.menuItem?.id || (item as any)?.id || 'unknown';
-        const name = (item as any)?.menuItem?.name || (item as any)?.name || 'Desconocido';
+        const id = (item as any)?.menuItemId || (item as any)?.menuItem?.id || (item as any)?.id || 'unknown';
+        const name = (item as any)?.name || (item as any)?.menuItem?.name || 'Desconocido';
         const qty = (item as any)?.quantity || 1;
         const price = ((item as any)?.unitPrice || (item as any)?.menuItem?.price || 0) * qty;
-        const catId = (item as any)?.menuItem?.categoryId || '';
-        const cat = categories.find(c => c.id === catId)?.name || 'Otros';
+        const catId = (item as any)?.categoryId || (item as any)?.menuItem?.categoryId || menuItemCategoryMap[id] || '';
+        const cat = catIdToName[catId] || 'Otros';
 
         const existing = result.find(p => p.id === id);
         if (existing) {
@@ -46,7 +59,7 @@ export default function AdminSalesProfit() {
     }
 
     return result.sort((a, b) => b.margin - a.margin);
-  }, [stats.orders, categories, getProductCost]);
+  }, [stats.orders, catIdToName, menuItemCategoryMap, getProductCost]);
 
   // Category margins
   const categoryMargins = useMemo(() => {
