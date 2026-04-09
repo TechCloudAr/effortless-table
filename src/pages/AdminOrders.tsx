@@ -88,12 +88,17 @@ export default function AdminOrders() {
   const advanceStatus = async (orderId: string, currentStatus: string) => {
     const next = nextStatus[currentStatus as OrderStatus];
     if (!next) return;
-    const { error } = await supabase.from('orders').update({ status: next }).eq('id', orderId);
+    const updateData: Record<string, any> = { status: next };
+    if (next === 'paid') updateData.paid_at = new Date().toISOString();
+    if (next === 'preparing') updateData.preparing_at = new Date().toISOString();
+    if (next === 'ready') updateData.ready_at = new Date().toISOString();
+    if (next === 'delivered') updateData.delivered_at = new Date().toISOString();
+    const { error } = await supabase.from('orders').update(updateData).eq('id', orderId);
     if (error) {
       toast.error('Error al actualizar estado');
       return;
     }
-    setAllOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: next } : o));
+    setAllOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: next, ...updateData } : o));
     toast.success(`Pedido actualizado a "${statusLabels[next]}"`);
   };
 
