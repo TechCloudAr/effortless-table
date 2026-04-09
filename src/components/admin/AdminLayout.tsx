@@ -80,7 +80,11 @@ export default function AdminLayout() {
 
         <nav className="flex-1 space-y-1">
           {links
-            .filter(link => link.to !== '/admin/sucursales' || !activeBranchId)
+            .filter(link => {
+              if (link.to === '/admin/sucursales' && activeBranchId) return false;
+              if (link.to === '/admin/pedidos' && !activeBranchId) return false;
+              return true;
+            })
             .map(link => (
             <NavLink
               key={link.to}
@@ -140,7 +144,11 @@ export default function AdminLayout() {
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card border-t border-border flex justify-around py-2">
         {links
-          .filter(link => link.to !== '/admin/sucursales' || !activeBranchId)
+          .filter(link => {
+            if (link.to === '/admin/sucursales' && activeBranchId) return false;
+            if (link.to === '/admin/pedidos' && !activeBranchId) return false;
+            return true;
+          })
           .map(link => (
           <NavLink
             key={link.to}
