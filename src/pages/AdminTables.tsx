@@ -5,6 +5,7 @@ import { useMemo, useState, useRef, useEffect } from 'react';
 import { useSalesData } from '@/hooks/useSalesData';
 import { useRestaurant } from '@/hooks/useRestaurant';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBranch } from '@/contexts/BranchContext';
 import { supabase } from '@/integrations/supabase/client';
 import { QRCodeSVG } from 'qrcode.react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -13,28 +14,29 @@ export default function AdminTables() {
   const { stats, loading } = useSalesData();
   const { restaurant } = useRestaurant();
   const { restaurantId } = useAuth();
+  const { activeBranchId } = useBranch();
   const [totalTables, setTotalTables] = useState(10);
   const [qrDialog, setQrDialog] = useState<number | null>(null);
   const qrRef = useRef<HTMLDivElement>(null);
   const [activeSessions, setActiveSessions] = useState<Record<number, boolean>>({});
 
-  // Fetch active table sessions
   useEffect(() => {
     if (!restaurantId) return;
 
     async function fetchSessions() {
-      const { data } = await supabase
+      let query = supabase
         .from('table_sessions')
         .select('table_number')
         .eq('restaurant_id', restaurantId!)
         .eq('is_active', true);
+      if (activeBranchId) query = query.eq('branch_id', activeBranchId);
+      const { data } = await query;
       const map: Record<number, boolean> = {};
       data?.forEach(s => { map[s.table_number] = true; });
       setActiveSessions(map);
     }
     fetchSessions();
 
-    // Subscribe to realtime changes
     const channel = supabase
       .channel('table-sessions-live')
       .on('postgres_changes', {
@@ -42,18 +44,13 @@ export default function AdminTables() {
         schema: 'public',
         table: 'table_sessions',
         filter: `restaurant_id=eq.${restaurantId}`,
-      }, () => {
-        fetchSessions();
-      })
+      }, () => fetchSessions())
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [restaurantId]);
+  }, [restaurantId, activeBranchId]);
 
-  // Build base URL for QR codes
-  const baseUrl = typeof window !== 'undefined'
-    ? window.location.origin
-    : '';
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
 
   const tableData = useMemo(() => {
     const byTable = stats.ordersByTable;
@@ -121,23 +118,16 @@ export default function AdminTables() {
           </p>
         </div>
         <div className="flex items-center gap-2 bg-card rounded-lg border border-border px-2 py-1">
-          <button
-            onClick={() => setTotalTables(prev => Math.max(1, prev - 1))}
-            className="h-7 w-7 rounded flex items-center justify-center hover:bg-muted"
-          >
+          <button onClick={() => setTotalTables(prev => Math.max(1, prev - 1))} className="h-7 w-7 rounded flex items-center justify-center hover:bg-muted">
             <Minus className="h-3.5 w-3.5" />
           </button>
           <span className="font-heading font-bold text-sm w-6 text-center">{totalTables}</span>
-          <button
-            onClick={() => setTotalTables(prev => Math.min(50, prev + 1))}
-            className="h-7 w-7 rounded flex items-center justify-center hover:bg-muted"
-          >
+          <button onClick={() => setTotalTables(prev => Math.min(50, prev + 1))} className="h-7 w-7 rounded flex items-center justify-center hover:bg-muted">
             <Plus className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
 
-      {/* Global stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         {[
           { label: 'Pedidos totales', value: globalStats.totalOrders, icon: Receipt },
@@ -155,7 +145,6 @@ export default function AdminTables() {
         ))}
       </div>
 
-      {/* Tables grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {tableData.map(table => (
           <div key={table.number} className="bg-card rounded-xl p-4 shadow-card">
@@ -165,34 +154,15 @@ export default function AdminTables() {
                 {table.isOccupied ? 'Ocupada' : 'Disponible'}
               </Badge>
             </div>
-
             <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs mb-3">
-              <div>
-                <span className="text-muted-foreground">Pedidos</span>
-                <p className="font-heading font-semibold">{table.ordersCount}</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Ticket prom.</span>
-                <p className="font-heading font-semibold">${table.avgTicket}</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Facturación</span>
-                <p className="font-heading font-semibold">${table.totalRevenue.toLocaleString()}</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Activos</span>
-                <p className="font-heading font-semibold">{table.activeOrders}</p>
-              </div>
+              <div><span className="text-muted-foreground">Pedidos</span><p className="font-heading font-semibold">{table.ordersCount}</p></div>
+              <div><span className="text-muted-foreground">Ticket prom.</span><p className="font-heading font-semibold">${table.avgTicket}</p></div>
+              <div><span className="text-muted-foreground">Facturación</span><p className="font-heading font-semibold">${table.totalRevenue.toLocaleString()}</p></div>
+              <div><span className="text-muted-foreground">Activos</span><p className="font-heading font-semibold">{table.activeOrders}</p></div>
             </div>
-
             <div className="flex items-center justify-between border-t border-border pt-2">
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Users className="h-3 w-3" /> Mesa {table.number}
-              </span>
-              <button
-                onClick={() => setQrDialog(table.number)}
-                className="flex items-center gap-1 text-xs text-primary hover:underline font-medium"
-              >
+              <span className="flex items-center gap-1 text-xs text-muted-foreground"><Users className="h-3 w-3" /> Mesa {table.number}</span>
+              <button onClick={() => setQrDialog(table.number)} className="flex items-center gap-1 text-xs text-primary hover:underline font-medium">
                 <QrCode className="h-3 w-3" /> QR
               </button>
             </div>
@@ -200,7 +170,6 @@ export default function AdminTables() {
         ))}
       </div>
 
-      {/* QR Dialog */}
       <Dialog open={qrDialog !== null} onOpenChange={() => setQrDialog(null)}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
@@ -209,20 +178,10 @@ export default function AdminTables() {
           {qrDialog !== null && (
             <div className="flex flex-col items-center gap-4 py-4">
               <div className="bg-white p-4 rounded-xl" ref={qrRef}>
-                <QRCodeSVG
-                  id={`qr-download-${qrDialog}`}
-                  value={`${baseUrl}/mesa/${restaurant.id}/${qrDialog}`}
-                  size={240}
-                  level="H"
-                  includeMargin
-                />
+                <QRCodeSVG id={`qr-download-${qrDialog}`} value={`${baseUrl}/mesa/${restaurant.id}/${qrDialog}`} size={240} level="H" includeMargin />
               </div>
-              <p className="text-xs text-muted-foreground text-center break-all">
-                {baseUrl}/mesa/{restaurant.id}/{qrDialog}
-              </p>
-              <p className="text-sm text-muted-foreground text-center">
-                Imprimí este QR y colocalo en la mesa. Los clientes lo escanean para ver el menú y hacer pedidos.
-              </p>
+              <p className="text-xs text-muted-foreground text-center break-all">{baseUrl}/mesa/{restaurant.id}/{qrDialog}</p>
+              <p className="text-sm text-muted-foreground text-center">Imprimí este QR y colocalo en la mesa.</p>
               <Button onClick={() => downloadQR(qrDialog)} className="w-full gradient-primary font-heading">
                 <Download className="mr-2 h-4 w-4" /> Descargar QR
               </Button>
