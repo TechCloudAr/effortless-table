@@ -104,8 +104,8 @@ export function useSalesData() {
       }
     }
 
-    return { totalRevenue, totalOrders, avgTicket, activeOrders, ordersByTable, productSales, orders };
-  }, [orders]);
+    return { totalRevenue, totalOrders, avgTicket, activeOrders, ordersByTable, ordersByBranch, productSales, orders };
+  }, [orders, allOrders]);
 
   const getProductCost = (menuItemId: string): number => {
     const ings = ingredients[menuItemId] || [];
