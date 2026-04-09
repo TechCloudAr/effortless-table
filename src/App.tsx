@@ -49,6 +49,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/mesa/:restaurantId/:tableId" element={<CustomerMenu />} />
+              <Route path="/mesa/:restaurantId/:branchId/:tableId" element={<CustomerMenu />} />
               <Route path="/pedido/:orderId" element={<OrderStatus />} />
               <Route path="/pago/exito" element={<PaymentResult status="exito" />} />
               <Route path="/pago/error" element={<PaymentResult status="error" />} />
