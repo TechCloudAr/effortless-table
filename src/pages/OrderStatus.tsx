@@ -166,7 +166,11 @@ export default function OrderStatus() {
       </div>
 
       <div className="px-4 pb-8">
-        <Button variant="outline" className="w-full font-heading" onClick={() => navigate(`/mesa/${order.restaurant_id}/${order.table_number}`)}>
+        <Button variant="outline" className="w-full font-heading" onClick={() => {
+          const base = `/mesa/${order.restaurant_id}`;
+          const path = order.branch_id ? `${base}/${order.branch_id}/${order.table_number}` : `${base}/${order.table_number}`;
+          navigate(path);
+        }}>
           Pedir algo más
         </Button>
       </div>
