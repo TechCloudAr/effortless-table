@@ -239,13 +239,14 @@ export default function AdminDashboard() {
               <BarChart3 className="h-4 w-4 text-primary" /> {timeRange === 'day' ? 'Ventas por hora' : 'Ventas diarias'}
             </h2>
             {(timeRange === 'day' ? hourlyData : dailyTrend).length > 0 ? (
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={260}>
                 <AreaChart data={timeRange === 'day' ? hourlyData : dailyTrend}>
                   <defs><linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(24, 95%, 50%)" stopOpacity={0.3} /><stop offset="95%" stopColor="hsl(24, 95%, 50%)" stopOpacity={0} /></linearGradient></defs>
-                  <XAxis dataKey={timeRange === 'day' ? 'hour' : 'dia'} tick={{ fontSize: 10, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey={timeRange === 'day' ? 'hour' : 'dia'} tick={{ fontSize: 10, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} interval={timeRange === 'day' ? 1 : 'preserveStartEnd'} />
                   <YAxis tick={{ fontSize: 11, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
                   <Tooltip contentStyle={{ background: 'hsl(0,0%,100%)', border: '1px solid hsl(35,15%,90%)', borderRadius: '8px', fontSize: '12px' }} formatter={(v: number) => [`$${v.toLocaleString()}`, 'Ventas']} />
                   <Area type="monotone" dataKey="ventas" stroke="hsl(24, 95%, 50%)" strokeWidth={2.5} fill="url(#salesGrad)" />
+                  <Brush dataKey={timeRange === 'day' ? 'hour' : 'dia'} height={20} stroke="hsl(24, 95%, 50%)" fill="hsl(35, 15%, 96%)" travellerWidth={8} />
                 </AreaChart>
               </ResponsiveContainer>
             ) : <p className="text-sm text-muted-foreground text-center py-10">Sin datos de ventas</p>}
