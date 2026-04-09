@@ -104,13 +104,40 @@ export default function AdminDashboard() {
       });
   }, [filteredOrders]);
 
-  // Sales trend by day (for week/month/90d/year)
+  // Sales trend - fill all periods
   const dailyTrend = useMemo(() => {
     if (timeRange === 'day') return [];
+
+    if (timeRange === 'year') {
+      // 12 months
+      const months: Record<string, number> = {};
+      const now = new Date();
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = d.toLocaleDateString('es', { month: 'short', year: '2-digit' });
+        months[key] = 0;
+      }
+      for (const o of filteredOrders) {
+        const d = new Date(o.created_at);
+        const key = d.toLocaleDateString('es', { month: 'short', year: '2-digit' });
+        if (key in months) months[key] = (months[key] || 0) + Number(o.total);
+      }
+      return Object.entries(months).map(([dia, ventas]) => ({ dia, ventas: Math.round(ventas) }));
+    }
+
+    // week (7), month (30), 90d (90) - fill all days
+    const numDays = timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : 90;
     const days: Record<string, number> = {};
+    const now = new Date();
+    for (let i = numDays - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const key = d.toLocaleDateString('es', { day: '2-digit', month: 'short' });
+      days[key] = 0;
+    }
     for (const o of filteredOrders) {
-      const d = new Date(o.created_at).toLocaleDateString('es', { day: '2-digit', month: 'short' });
-      days[d] = (days[d] || 0) + Number(o.total);
+      const d = new Date(o.created_at);
+      const key = d.toLocaleDateString('es', { day: '2-digit', month: 'short' });
+      if (key in days) days[key] = (days[key] || 0) + Number(o.total);
     }
     return Object.entries(days).map(([dia, ventas]) => ({ dia, ventas: Math.round(ventas) }));
   }, [filteredOrders, timeRange]);
