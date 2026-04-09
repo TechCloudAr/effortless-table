@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { TrendingUp, ShoppingBag, Clock, Users, DollarSign, ChefHat, Flame, Utensils, CreditCard, BarChart3, Timer, CalendarDays } from 'lucide-react';
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid } from 'recharts';
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid, Brush } from 'recharts';
 import ForecastingPanel from '@/components/admin/ForecastingPanel';
 import { useSalesData } from '@/hooks/useSalesData';
 import { useMenu } from '@/hooks/useMenu';
@@ -87,18 +87,20 @@ export default function AdminDashboard() {
   }, [filteredOrders]);
   const revenuePerTable = tablesWithOrders > 0 ? Math.round(totalRevenue / tablesWithOrders) : 0;
 
-  // Build hourly data from filtered orders
+  // Build hourly data - always show all 24 hours
   const hourlyData = useMemo(() => {
     const hours: Record<number, number> = {};
+    for (let i = 0; i < 24; i++) hours[i] = 0;
     for (const o of filteredOrders) {
       const h = new Date(o.created_at).getHours();
       hours[h] = (hours[h] || 0) + Number(o.total);
     }
     return Object.entries(hours)
       .sort(([a], [b]) => Number(a) - Number(b))
-      .map(([h, ventas]) => {
+      .map(([h]) => {
         const hour = Number(h);
-        return { hour: `${hour > 12 ? hour - 12 : hour || 12}${hour >= 12 ? 'pm' : 'am'}`, ventas: Math.round(ventas) };
+        const label = `${hour === 0 ? 12 : hour > 12 ? hour - 12 : hour}${hour >= 12 ? 'pm' : 'am'}`;
+        return { hour: label, ventas: Math.round(hours[hour]) };
       });
   }, [filteredOrders]);
 
@@ -237,13 +239,14 @@ export default function AdminDashboard() {
               <BarChart3 className="h-4 w-4 text-primary" /> {timeRange === 'day' ? 'Ventas por hora' : 'Ventas diarias'}
             </h2>
             {(timeRange === 'day' ? hourlyData : dailyTrend).length > 0 ? (
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={260}>
                 <AreaChart data={timeRange === 'day' ? hourlyData : dailyTrend}>
                   <defs><linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(24, 95%, 50%)" stopOpacity={0.3} /><stop offset="95%" stopColor="hsl(24, 95%, 50%)" stopOpacity={0} /></linearGradient></defs>
-                  <XAxis dataKey={timeRange === 'day' ? 'hour' : 'dia'} tick={{ fontSize: 10, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey={timeRange === 'day' ? 'hour' : 'dia'} tick={{ fontSize: 10, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} interval={timeRange === 'day' ? 1 : 'preserveStartEnd'} />
                   <YAxis tick={{ fontSize: 11, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
                   <Tooltip contentStyle={{ background: 'hsl(0,0%,100%)', border: '1px solid hsl(35,15%,90%)', borderRadius: '8px', fontSize: '12px' }} formatter={(v: number) => [`$${v.toLocaleString()}`, 'Ventas']} />
                   <Area type="monotone" dataKey="ventas" stroke="hsl(24, 95%, 50%)" strokeWidth={2.5} fill="url(#salesGrad)" />
+                  <Brush dataKey={timeRange === 'day' ? 'hour' : 'dia'} height={20} stroke="hsl(24, 95%, 50%)" fill="hsl(35, 15%, 96%)" travellerWidth={8} />
                 </AreaChart>
               </ResponsiveContainer>
             ) : <p className="text-sm text-muted-foreground text-center py-10">Sin datos de ventas</p>}
@@ -297,13 +300,14 @@ export default function AdminDashboard() {
               <span className="ml-auto text-[10px] text-muted-foreground font-normal">Hora pico: {peakHour}</span>
             </h2>
             {ordersByDayOfWeek.some(d => d.pedidos > 0) ? (
-              <ResponsiveContainer width="100%" height={200}>
+              <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={ordersByDayOfWeek} barSize={24}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(35, 15%, 90%)" vertical={false} />
                   <XAxis dataKey="dia" tick={{ fontSize: 11, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 11, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
                   <Tooltip contentStyle={{ background: 'hsl(0,0%,100%)', border: '1px solid hsl(35,15%,90%)', borderRadius: '8px', fontSize: '12px' }} formatter={(v: number, name: string) => [`${name === 'ventas' ? '$' : ''}${v.toLocaleString()}`, name === 'ventas' ? 'Ventas' : 'Pedidos']} />
                   <Bar dataKey="ventas" fill="hsl(24, 95%, 50%)" radius={[6, 6, 0, 0]} />
+                  <Brush dataKey="dia" height={20} stroke="hsl(24, 95%, 50%)" fill="hsl(35, 15%, 96%)" travellerWidth={8} />
                 </BarChart>
               </ResponsiveContainer>
             ) : <p className="text-sm text-muted-foreground text-center py-10">Sin datos</p>}
