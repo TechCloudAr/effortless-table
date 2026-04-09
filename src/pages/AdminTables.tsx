@@ -190,6 +190,9 @@ export default function AdminTables() {
                 <QRCodeSVG id={`qr-download-${qrDialog}`} value={getTableUrl(qrDialog)} size={240} level="H" includeMargin />
               </div>
               <p className="text-xs text-muted-foreground text-center break-all">{getTableUrl(qrDialog)}</p>
+              {!activeBranchId && branches.length > 1 && (
+                <p className="text-xs text-warning text-center">⚠️ Seleccioná una sucursal específica para que el QR dirija los pedidos correctamente.</p>
+              )}
               <p className="text-sm text-muted-foreground text-center">Imprimí este QR y colocalo en la mesa.</p>
               <Button onClick={() => downloadQR(qrDialog)} className="w-full gradient-primary font-heading">
                 <Download className="mr-2 h-4 w-4" /> Descargar QR
