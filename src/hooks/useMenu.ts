@@ -1,3 +1,4 @@
+// @refresh reset
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { MenuCategory, MenuItem, MenuItemOptionGroup, MenuItemOption } from '@/types/restaurant';
