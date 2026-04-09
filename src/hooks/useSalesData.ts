@@ -63,7 +63,7 @@ export function useSalesData() {
     const totalOrders = orders.length;
     const avgTicket = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
-    const activeOrders = orders.filter(o => !['entregado', 'delivered', 'cancelled'].includes(o.status));
+    const activeOrders = orders.filter(o => !['delivered', 'cancelled'].includes(o.status));
 
     const ordersByTable: Record<number, OrderRow[]> = {};
     for (const o of orders) {

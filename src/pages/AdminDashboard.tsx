@@ -172,8 +172,8 @@ export default function AdminDashboard() {
                   <div key={order.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/40 hover:bg-muted/70 transition-colors">
                     <div><p className="font-heading font-semibold text-sm">{order.id.slice(0, 8)}</p><p className="text-[11px] text-muted-foreground">Mesa {order.table_number}</p></div>
                     <div className="text-right">
-                      <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${order.status === 'nuevo' ? 'bg-info/15 text-info' : order.status === 'preparando' ? 'bg-warning/15 text-warning' : 'bg-success/15 text-success'}`}>
-                        {order.status === 'nuevo' ? '🔵 Nuevo' : order.status === 'preparando' ? '🟡 Cocina' : order.status === 'listo' ? '🟢 Listo' : '✅ Aceptado'}
+                      <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${order.status === 'received' ? 'bg-info/15 text-info' : order.status === 'preparing' ? 'bg-warning/15 text-warning' : order.status === 'ready' ? 'bg-success/15 text-success' : 'bg-primary/15 text-primary'}`}>
+                        {order.status === 'received' ? '🔵 Recibido' : order.status === 'preparing' ? '🟡 Cocina' : order.status === 'ready' ? '🟢 Listo' : order.status === 'paid' ? '💳 Cobrado' : order.status === 'pending_payment' ? '⏳ Pago pendiente' : '✅ Entregado'}
                       </span>
                       <p className="text-xs font-heading font-semibold mt-1">${Number(order.total).toFixed(0)}</p>
                     </div>
