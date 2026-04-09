@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { TrendingUp, ShoppingBag, Clock, Users, DollarSign, ChefHat, Flame, Utensils, CreditCard, BarChart3, Timer, CalendarDays } from 'lucide-react';
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid } from 'recharts';
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid, Brush } from 'recharts';
 import ForecastingPanel from '@/components/admin/ForecastingPanel';
 import { useSalesData } from '@/hooks/useSalesData';
 import { useMenu } from '@/hooks/useMenu';
@@ -87,18 +87,20 @@ export default function AdminDashboard() {
   }, [filteredOrders]);
   const revenuePerTable = tablesWithOrders > 0 ? Math.round(totalRevenue / tablesWithOrders) : 0;
 
-  // Build hourly data from filtered orders
+  // Build hourly data - always show all 24 hours
   const hourlyData = useMemo(() => {
     const hours: Record<number, number> = {};
+    for (let i = 0; i < 24; i++) hours[i] = 0;
     for (const o of filteredOrders) {
       const h = new Date(o.created_at).getHours();
       hours[h] = (hours[h] || 0) + Number(o.total);
     }
     return Object.entries(hours)
       .sort(([a], [b]) => Number(a) - Number(b))
-      .map(([h, ventas]) => {
+      .map(([h]) => {
         const hour = Number(h);
-        return { hour: `${hour > 12 ? hour - 12 : hour || 12}${hour >= 12 ? 'pm' : 'am'}`, ventas: Math.round(ventas) };
+        const label = `${hour === 0 ? 12 : hour > 12 ? hour - 12 : hour}${hour >= 12 ? 'pm' : 'am'}`;
+        return { hour: label, ventas: Math.round(hours[hour]) };
       });
   }, [filteredOrders]);
 
