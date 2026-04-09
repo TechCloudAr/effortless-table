@@ -300,13 +300,14 @@ export default function AdminDashboard() {
               <span className="ml-auto text-[10px] text-muted-foreground font-normal">Hora pico: {peakHour}</span>
             </h2>
             {ordersByDayOfWeek.some(d => d.pedidos > 0) ? (
-              <ResponsiveContainer width="100%" height={200}>
+              <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={ordersByDayOfWeek} barSize={24}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(35, 15%, 90%)" vertical={false} />
                   <XAxis dataKey="dia" tick={{ fontSize: 11, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 11, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
                   <Tooltip contentStyle={{ background: 'hsl(0,0%,100%)', border: '1px solid hsl(35,15%,90%)', borderRadius: '8px', fontSize: '12px' }} formatter={(v: number, name: string) => [`${name === 'ventas' ? '$' : ''}${v.toLocaleString()}`, name === 'ventas' ? 'Ventas' : 'Pedidos']} />
                   <Bar dataKey="ventas" fill="hsl(24, 95%, 50%)" radius={[6, 6, 0, 0]} />
+                  <Brush dataKey="dia" height={20} stroke="hsl(24, 95%, 50%)" fill="hsl(35, 15%, 96%)" travellerWidth={8} />
                 </BarChart>
               </ResponsiveContainer>
             ) : <p className="text-sm text-muted-foreground text-center py-10">Sin datos</p>}
