@@ -23,14 +23,30 @@ export default function CartSheet() {
   const handleConfirmOrder = async () => {
     setLoading(true);
     try {
-      const orderItems = items.map(i => ({
-        name: i.menuItem.name,
-        quantity: i.quantity,
-        unitPrice: i.unitPrice,
-        menuItemId: i.menuItem.id,
-        selectedOptions: i.selectedOptions,
-        notes: i.notes,
-      }));
+      const orderItems = items.map(i => {
+        // Resolve option IDs to names for kitchen display
+        const resolvedOptions: Record<string, string[]> = {};
+        if (i.menuItem.optionGroups) {
+          for (const [groupId, optIds] of Object.entries(i.selectedOptions)) {
+            const group = i.menuItem.optionGroups.find(g => g.id === groupId);
+            if (group && optIds.length > 0) {
+              resolvedOptions[group.name] = optIds.map(optId => {
+                const opt = group.options.find(o => o.id === optId);
+                return opt?.name || optId;
+              });
+            }
+          }
+        }
+        return {
+          name: i.menuItem.name,
+          quantity: i.quantity,
+          unitPrice: i.unitPrice,
+          menuItemId: i.menuItem.id,
+          selectedOptions: i.selectedOptions,
+          resolvedOptions,
+          notes: i.notes,
+        };
+      });
 
       const resolvedBranchId = branchId ?? (
         await supabase
