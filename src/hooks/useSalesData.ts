@@ -22,6 +22,7 @@ export interface SalesStats {
   avgTicket: number;
   activeOrders: OrderRow[];
   ordersByTable: Record<number, OrderRow[]>;
+  ordersByBranch: Record<string, OrderRow[]>;
   productSales: Record<string, { sold: number; revenue: number }>;
   orders: OrderRow[];
 }
