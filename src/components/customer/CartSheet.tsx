@@ -42,6 +42,7 @@ export default function CartSheet() {
           quantity: i.quantity,
           unitPrice: i.unitPrice,
           menuItemId: i.menuItem.id,
+          categoryId: i.menuItem.categoryId,
           selectedOptions: i.selectedOptions,
           resolvedOptions,
           notes: i.notes,
