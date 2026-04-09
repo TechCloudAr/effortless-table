@@ -2,7 +2,6 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { LayoutDashboard, ClipboardList, UtensilsCrossed, Grid3X3, Palette, LogOut, Flame, CreditCard, DollarSign, Brain, Building2, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBranch } from '@/contexts/BranchContext';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AIChatWidget from './AIChatWidget';
 
 const links = [
@@ -17,9 +16,17 @@ const links = [
   { to: '/admin/diseno', icon: Palette, label: 'Templates' },
 ];
 
+const ALL_BRANCHES_VALUE = '__all__';
+
 export default function AdminLayout() {
   const { signOut, role } = useAuth();
-  const { branches, activeBranch, setActiveBranchId } = useBranch();
+  const { branches, activeBranchId, setActiveBranchId } = useBranch();
+
+  const handleBranchChange = (id: string) => {
+    setActiveBranchId(id === ALL_BRANCHES_VALUE ? null : id);
+  };
+
+  const currentValue = activeBranchId ?? ALL_BRANCHES_VALUE;
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -31,21 +38,38 @@ export default function AdminLayout() {
           </div>
           <span className="font-heading font-bold text-sm">Mesa Digital</span>
         </div>
+
+        {/* Branch selector - always visible when >1 branch */}
         {branches.length > 1 && (
-          <div className="mb-6 px-1">
-            <Select value={activeBranch?.id ?? ''} onValueChange={setActiveBranchId}>
-              <SelectTrigger className="h-9 text-xs">
-                <Building2 className="h-3.5 w-3.5 mr-1.5 shrink-0" />
-                <SelectValue placeholder="Sucursal" />
-              </SelectTrigger>
-              <SelectContent>
-                {branches.map(b => (
-                  <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="mb-4 px-1">
+            <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+              <button
+                onClick={() => handleBranchChange(ALL_BRANCHES_VALUE)}
+                className={`px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all border ${
+                  currentValue === ALL_BRANCHES_VALUE
+                    ? 'gradient-primary text-primary-foreground border-transparent'
+                    : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted'
+                }`}
+              >
+                Todas
+              </button>
+              {branches.map(b => (
+                <button
+                  key={b.id}
+                  onClick={() => handleBranchChange(b.id)}
+                  className={`px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all border ${
+                    currentValue === b.id
+                      ? 'gradient-primary text-primary-foreground border-transparent'
+                      : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted'
+                  }`}
+                >
+                  {b.name}
+                </button>
+              ))}
+            </div>
           </div>
         )}
+
         <nav className="flex-1 space-y-1">
           {links.map(link => (
             <NavLink
@@ -72,6 +96,37 @@ export default function AdminLayout() {
         </button>
       </aside>
 
+      {/* Mobile top branch selector */}
+      {branches.length > 1 && (
+        <div className="fixed top-0 left-0 right-0 z-40 md:hidden bg-card border-b border-border px-3 py-2">
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+            <button
+              onClick={() => handleBranchChange(ALL_BRANCHES_VALUE)}
+              className={`px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all border ${
+                currentValue === ALL_BRANCHES_VALUE
+                  ? 'gradient-primary text-primary-foreground border-transparent'
+                  : 'bg-muted/50 text-muted-foreground border-border'
+              }`}
+            >
+              Todas
+            </button>
+            {branches.map(b => (
+              <button
+                key={b.id}
+                onClick={() => handleBranchChange(b.id)}
+                className={`px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all border ${
+                  currentValue === b.id
+                    ? 'gradient-primary text-primary-foreground border-transparent'
+                    : 'bg-muted/50 text-muted-foreground border-border'
+                }`}
+              >
+                {b.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card border-t border-border flex justify-around py-2">
         {links.map(link => (
@@ -91,11 +146,16 @@ export default function AdminLayout() {
       </nav>
 
       {/* Main */}
-      <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
+      <main className={`flex-1 overflow-y-auto pb-20 md:pb-0 ${branches.length > 1 ? 'pt-12 md:pt-0' : ''}`}>
         <Outlet />
       </main>
 
       <AIChatWidget />
+
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </div>
   );
 }
