@@ -71,7 +71,9 @@ export default function AdminLayout() {
         )}
 
         <nav className="flex-1 space-y-1">
-          {links.map(link => (
+          {links
+            .filter(link => link.to !== '/admin/sucursales' || !activeBranchId)
+            .map(link => (
             <NavLink
               key={link.to}
               to={link.to}
