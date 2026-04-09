@@ -98,7 +98,7 @@ export default function AdminOrders() {
       toast.error('Error al actualizar estado');
       return;
     }
-    setAllOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: next, ...updateData } : o));
+    setAllOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: next, ...timestamps } : o));
     toast.success(`Pedido actualizado a "${statusLabels[next]}"`);
   };
 
