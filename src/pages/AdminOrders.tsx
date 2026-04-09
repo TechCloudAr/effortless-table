@@ -79,10 +79,10 @@ export default function AdminOrders() {
     return () => { supabase.removeChannel(channel); };
   }, [restaurantId]);
 
-  // Filter by branch
+  // Orders are branch-specific — require a branch selection
   const orders = activeBranchId
     ? allOrders.filter(o => o.branch_id === activeBranchId)
-    : allOrders;
+    : [];
 
   const advanceStatus = async (orderId: string, currentStatus: string) => {
     const next = nextStatus[currentStatus as OrderStatus];
@@ -99,6 +99,15 @@ export default function AdminOrders() {
   const filtered = filter === 'all' ? orders : orders.filter(o => o.status === filter);
 
   if (loading) return <div className="p-8 text-center text-muted-foreground">Cargando pedidos...</div>;
+
+  if (!activeBranchId) {
+    return (
+      <div className="p-8 text-center text-muted-foreground">
+        <p className="text-lg mb-2">Seleccioná una sucursal</p>
+        <p className="text-sm">Los pedidos son internos de cada sucursal. Elegí una sucursal desde el selector de arriba.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto">
