@@ -37,7 +37,7 @@ export default function OrderStatus() {
     const fetchOrder = async () => {
       const { data } = await supabase
         .from('orders')
-        .select('id, status, table_number, total, created_at, restaurant_id')
+        .select('id, status, table_number, total, created_at, restaurant_id, branch_id')
         .eq('id', orderId)
         .single();
       if (data) setOrder(data as OrderData);
