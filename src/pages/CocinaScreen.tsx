@@ -24,7 +24,7 @@ export default function CocinaScreen() {
       .from('orders')
       .select('*')
       .eq('branch_id', branchId)
-      .in('status', ['aceptado', 'preparando'])
+      .in('status', ['paid', 'preparing'])
       .order('created_at', { ascending: true });
     if (data) setOrders(data as OrderRow[]);
     setLoading(false);
@@ -39,10 +39,10 @@ export default function CocinaScreen() {
     return () => { supabase.removeChannel(channel); };
   }, [branchId]);
 
-  const updateStatus = async (orderId: string, newStatus: 'preparando' | 'listo') => {
+  const updateStatus = async (orderId: string, newStatus: 'preparing' | 'ready') => {
     const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
     if (error) { toast.error('Error al actualizar'); return; }
-    toast.success(newStatus === 'preparando' ? '🔥 Preparando...' : '✅ ¡Listo para servir!');
+    toast.success(newStatus === 'preparing' ? '🔥 Preparando...' : '✅ ¡Listo para servir!');
     fetchOrders();
   };
 
@@ -67,14 +67,14 @@ export default function CocinaScreen() {
           <div className="text-center py-20 text-muted-foreground">
             <ChefHat className="h-16 w-16 mx-auto mb-4 opacity-30" />
             <p className="text-2xl font-heading">Sin pedidos en cocina</p>
-            <p className="text-lg mt-2">Los pedidos aceptados por caja aparecerán aquí</p>
+            <p className="text-lg mt-2">Los pedidos cobrados aparecerán aquí</p>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {orders.map(order => {
               const items = Array.isArray(order.items) ? order.items : [];
               const mins = minutesAgo(order.created_at);
-              const isPreparando = order.status === 'preparando';
+              const isPreparando = order.status === 'preparing';
               return (
                 <div key={order.id} className={`bg-card rounded-2xl p-5 shadow-card border-2 ${isPreparando ? 'border-warning' : 'border-border'}`}>
                   <div className="flex items-center justify-between mb-3">
@@ -100,14 +100,14 @@ export default function CocinaScreen() {
 
                   {isPreparando ? (
                     <Button
-                      onClick={() => updateStatus(order.id, 'listo')}
+                      onClick={() => updateStatus(order.id, 'ready')}
                       className="w-full h-14 text-xl font-heading font-bold bg-success hover:bg-success/90 text-success-foreground"
                     >
                       ✅ Marcar listo
                     </Button>
                   ) : (
                     <Button
-                      onClick={() => updateStatus(order.id, 'preparando')}
+                      onClick={() => updateStatus(order.id, 'preparing')}
                       className="w-full h-14 text-xl font-heading font-bold bg-warning hover:bg-warning/90 text-warning-foreground"
                     >
                       <Flame className="h-5 w-5 mr-2" /> Empezar a preparar

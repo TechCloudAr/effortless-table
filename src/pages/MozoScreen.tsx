@@ -24,7 +24,7 @@ export default function MozoScreen() {
       .from('orders')
       .select('*')
       .eq('branch_id', branchId)
-      .eq('status', 'listo')
+      .eq('status', 'ready')
       .order('created_at', { ascending: true });
     if (data) setOrders(data as OrderRow[]);
     setLoading(false);
@@ -40,7 +40,7 @@ export default function MozoScreen() {
   }, [branchId]);
 
   const markDelivered = async (orderId: string) => {
-    const { error } = await supabase.from('orders').update({ status: 'entregado' }).eq('id', orderId);
+    const { error } = await supabase.from('orders').update({ status: 'delivered' }).eq('id', orderId);
     if (error) { toast.error('Error al marcar como entregado'); return; }
     toast.success('🍽️ ¡Pedido entregado!');
     setOrders(prev => prev.filter(o => o.id !== orderId));
