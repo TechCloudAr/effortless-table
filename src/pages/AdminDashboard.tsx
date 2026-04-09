@@ -109,20 +109,30 @@ export default function AdminDashboard() {
     if (timeRange === 'day') return [];
 
     if (timeRange === 'year') {
-      // 12 months
+      // 12 months - only month name, no year
       const months: Record<string, number> = {};
+      const orderedKeys: string[] = [];
       const now = new Date();
       for (let i = 11; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const key = d.toLocaleDateString('es', { month: 'short', year: '2-digit' });
-        months[key] = 0;
+        const key = d.toLocaleDateString('es', { month: 'short' });
+        // Use index to avoid duplicate month names across years
+        const uniqueKey = `${key}${i < now.getMonth() ? '' : ''}`;
+        months[`${i}_${key}`] = 0;
+        orderedKeys.push(`${i}_${key}`);
       }
       for (const o of filteredOrders) {
         const d = new Date(o.created_at);
-        const key = d.toLocaleDateString('es', { month: 'short', year: '2-digit' });
-        if (key in months) months[key] = (months[key] || 0) + Number(o.total);
+        const monthsDiff = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth());
+        if (monthsDiff >= 0 && monthsDiff <= 11) {
+          const k = orderedKeys[11 - monthsDiff];
+          if (k) months[k] = (months[k] || 0) + Number(o.total);
+        }
       }
-      return Object.entries(months).map(([dia, ventas]) => ({ dia, ventas: Math.round(ventas) }));
+      return orderedKeys.map(k => {
+        const label = k.split('_')[1]; // just the month name
+        return { dia: label.charAt(0).toUpperCase() + label.slice(1), ventas: Math.round(months[k]) };
+      });
     }
 
     // week (7), month (30), 90d (90) - fill all days
