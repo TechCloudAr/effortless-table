@@ -14,7 +14,7 @@ export default function AdminTables() {
   const { stats, loading } = useSalesData();
   const { restaurant } = useRestaurant();
   const { restaurantId } = useAuth();
-  const { activeBranchId } = useBranch();
+  const { activeBranchId, branches } = useBranch();
   const [totalTables, setTotalTables] = useState(10);
   const [qrDialog, setQrDialog] = useState<number | null>(null);
   const qrRef = useRef<HTMLDivElement>(null);
@@ -51,6 +51,15 @@ export default function AdminTables() {
   }, [restaurantId, activeBranchId]);
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+
+  // Build QR URL with branch if a specific branch is selected, otherwise use first branch
+  const getTableUrl = (tableNum: number) => {
+    const branch = activeBranchId || (branches.length > 0 ? branches[0].id : null);
+    if (branch) {
+      return `${baseUrl}/mesa/${restaurant.id}/${branch}/${tableNum}`;
+    }
+    return `${baseUrl}/mesa/${restaurant.id}/${tableNum}`;
+  };
 
   const tableData = useMemo(() => {
     const byTable = stats.ordersByTable;
@@ -178,9 +187,12 @@ export default function AdminTables() {
           {qrDialog !== null && (
             <div className="flex flex-col items-center gap-4 py-4">
               <div className="bg-white p-4 rounded-xl" ref={qrRef}>
-                <QRCodeSVG id={`qr-download-${qrDialog}`} value={`${baseUrl}/mesa/${restaurant.id}/${qrDialog}`} size={240} level="H" includeMargin />
+                <QRCodeSVG id={`qr-download-${qrDialog}`} value={getTableUrl(qrDialog)} size={240} level="H" includeMargin />
               </div>
-              <p className="text-xs text-muted-foreground text-center break-all">{baseUrl}/mesa/{restaurant.id}/{qrDialog}</p>
+              <p className="text-xs text-muted-foreground text-center break-all">{getTableUrl(qrDialog)}</p>
+              {!activeBranchId && branches.length > 1 && (
+                <p className="text-xs text-warning text-center">⚠️ Seleccioná una sucursal específica para que el QR dirija los pedidos correctamente.</p>
+              )}
               <p className="text-sm text-muted-foreground text-center">Imprimí este QR y colocalo en la mesa.</p>
               <Button onClick={() => downloadQR(qrDialog)} className="w-full gradient-primary font-heading">
                 <Download className="mr-2 h-4 w-4" /> Descargar QR

@@ -14,7 +14,7 @@ import { useTableSession } from '@/hooks/useTableSession';
 import { toast } from 'sonner';
 
 export default function CustomerMenu() {
-  const { restaurantId, tableId } = useParams();
+  const { restaurantId, branchId: branchIdParam, tableId } = useParams();
   const { setTableNumber, setTaxRate, setRestaurantId, setBranchId, addItem } = useCart();
   const { branding } = useBranding();
   const { restaurant } = useRestaurant(restaurantId);
@@ -22,27 +22,32 @@ export default function CustomerMenu() {
   const tableNum = parseInt(tableId || '5');
 
   // Track table session (marks table as occupied on scan)
-  useTableSession(restaurantId, tableNum);
+  useTableSession(restaurantId, tableNum, branchIdParam);
 
   useEffect(() => {
     setTableNumber(tableNum);
     setTaxRate(restaurant.taxRate);
     if (restaurantId) {
       setRestaurantId(restaurantId);
-      // Fetch the first active branch for this restaurant
-      supabase
-        .from('branches')
-        .select('id')
-        .eq('restaurant_id', restaurantId)
-        .eq('is_active', true)
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .maybeSingle()
-        .then(({ data }) => {
-          if (data?.id) setBranchId(data.id);
-        });
+      if (branchIdParam) {
+        // Branch specified in URL (new QR format)
+        setBranchId(branchIdParam);
+      } else {
+        // Legacy QR without branch — fetch first active branch
+        supabase
+          .from('branches')
+          .select('id')
+          .eq('restaurant_id', restaurantId)
+          .eq('is_active', true)
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle()
+          .then(({ data }) => {
+            if (data?.id) setBranchId(data.id);
+          });
+      }
     }
-  }, [tableNum, restaurant.taxRate, restaurantId, setTableNumber, setTaxRate, setRestaurantId, setBranchId]);
+  }, [tableNum, restaurant.taxRate, restaurantId, branchIdParam, setTableNumber, setTaxRate, setRestaurantId, setBranchId]);
 
   const [search, setSearch] = useState('');
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);

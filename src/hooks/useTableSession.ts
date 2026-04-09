@@ -7,7 +7,7 @@ import { useCart } from '@/contexts/CartContext';
  * - If no orders placed: session ends when customer leaves the page.
  * - If orders placed: session stays active (auto-freed 30min after last delivery via cron).
  */
-export function useTableSession(restaurantId?: string, tableNumber?: number) {
+export function useTableSession(restaurantId?: string, tableNumber?: number, branchId?: string) {
   const sessionTokenRef = useRef<string | null>(null);
   const { items } = useCart();
   const hasOrderedRef = useRef(false);
@@ -32,6 +32,7 @@ export function useTableSession(restaurantId?: string, tableNumber?: number) {
         restaurant_id: restaurantId,
         table_number: tableNumber,
         session_token: token,
+        ...(branchId ? { branch_id: branchId } : {}),
       })
       .then(({ error }) => {
         if (error) console.error('Failed to create table session:', error);
@@ -68,5 +69,5 @@ export function useTableSession(restaurantId?: string, tableNumber?: number) {
       document.removeEventListener('visibilitychange', handleVisibility);
       endSession();
     };
-  }, [restaurantId, tableNumber]);
+  }, [restaurantId, tableNumber, branchId]);
 }
