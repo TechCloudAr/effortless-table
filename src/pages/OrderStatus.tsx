@@ -19,6 +19,7 @@ type OrderData = {
   total: number;
   created_at: string;
   restaurant_id: string | null;
+  branch_id: string | null;
 };
 
 export default function OrderStatus() {
