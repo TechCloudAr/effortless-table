@@ -22,6 +22,7 @@ export interface SalesStats {
   avgTicket: number;
   activeOrders: OrderRow[];
   ordersByTable: Record<number, OrderRow[]>;
+  ordersByBranch: Record<string, OrderRow[]>;
   productSales: Record<string, { sold: number; revenue: number }>;
   orders: OrderRow[];
 }
@@ -80,9 +81,14 @@ export function useSalesData() {
     const activeOrders = orders.filter(o => !['delivered', 'cancelled'].includes(o.status));
 
     const ordersByTable: Record<number, OrderRow[]> = {};
-    for (const o of orders) {
+    const ordersByBranch: Record<string, OrderRow[]> = {};
+    for (const o of allOrders) {
       if (!ordersByTable[o.table_number]) ordersByTable[o.table_number] = [];
       ordersByTable[o.table_number].push(o);
+      if (o.branch_id) {
+        if (!ordersByBranch[o.branch_id]) ordersByBranch[o.branch_id] = [];
+        ordersByBranch[o.branch_id].push(o);
+      }
     }
 
     const productSales: Record<string, { sold: number; revenue: number }> = {};
@@ -98,8 +104,8 @@ export function useSalesData() {
       }
     }
 
-    return { totalRevenue, totalOrders, avgTicket, activeOrders, ordersByTable, productSales, orders };
-  }, [orders]);
+    return { totalRevenue, totalOrders, avgTicket, activeOrders, ordersByTable, ordersByBranch, productSales, orders };
+  }, [orders, allOrders]);
 
   const getProductCost = (menuItemId: string): number => {
     const ings = ingredients[menuItemId] || [];

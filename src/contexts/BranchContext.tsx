@@ -8,6 +8,7 @@ export interface Branch {
   address: string | null;
   is_active: boolean;
   restaurant_id: string;
+  table_count: number;
 }
 
 interface BranchContextType {
