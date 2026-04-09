@@ -187,9 +187,9 @@ export default function AdminTables() {
           {qrDialog !== null && (
             <div className="flex flex-col items-center gap-4 py-4">
               <div className="bg-white p-4 rounded-xl" ref={qrRef}>
-                <QRCodeSVG id={`qr-download-${qrDialog}`} value={`${baseUrl}/mesa/${restaurant.id}/${qrDialog}`} size={240} level="H" includeMargin />
+                <QRCodeSVG id={`qr-download-${qrDialog}`} value={getTableUrl(qrDialog)} size={240} level="H" includeMargin />
               </div>
-              <p className="text-xs text-muted-foreground text-center break-all">{baseUrl}/mesa/{restaurant.id}/{qrDialog}</p>
+              <p className="text-xs text-muted-foreground text-center break-all">{getTableUrl(qrDialog)}</p>
               <p className="text-sm text-muted-foreground text-center">Imprimí este QR y colocalo en la mesa.</p>
               <Button onClick={() => downloadQR(qrDialog)} className="w-full gradient-primary font-heading">
                 <Download className="mr-2 h-4 w-4" /> Descargar QR
