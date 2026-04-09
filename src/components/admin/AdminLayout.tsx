@@ -131,7 +131,9 @@ export default function AdminLayout() {
 
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card border-t border-border flex justify-around py-2">
-        {links.map(link => (
+        {links
+          .filter(link => link.to !== '/admin/sucursales' || !activeBranchId)
+          .map(link => (
           <NavLink
             key={link.to}
             to={link.to}
