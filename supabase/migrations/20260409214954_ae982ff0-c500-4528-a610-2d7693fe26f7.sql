@@ -1,0 +1,1 @@
+ALTER TABLE public.branches ADD COLUMN table_count integer NOT NULL DEFAULT 10;
