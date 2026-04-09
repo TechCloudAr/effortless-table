@@ -1,35 +1,125 @@
 import { useState, useMemo } from 'react';
-import { TrendingUp, TrendingDown, ShoppingBag, Clock, Users, DollarSign, ChefHat, Flame, Star, Utensils, CreditCard, BarChart3, Target } from 'lucide-react';
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { TrendingUp, ShoppingBag, Clock, Users, DollarSign, ChefHat, Flame, Utensils, CreditCard, BarChart3, Timer, CalendarDays } from 'lucide-react';
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid } from 'recharts';
 import ForecastingPanel from '@/components/admin/ForecastingPanel';
 import { useSalesData } from '@/hooks/useSalesData';
 import { useMenu } from '@/hooks/useMenu';
 
+type TimeRange = 'day' | 'week' | 'month' | '90d' | 'year';
+
+const TIME_LABELS: Record<TimeRange, string> = { day: 'Hoy', week: 'Semana', month: 'Mes', '90d': '90 días', year: 'Año' };
+
+function getTimeRangeStart(range: TimeRange): Date {
+  const now = new Date();
+  switch (range) {
+    case 'day': return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    case 'week': { const d = new Date(now); d.setDate(d.getDate() - 7); return d; }
+    case 'month': { const d = new Date(now); d.setMonth(d.getMonth() - 1); return d; }
+    case '90d': { const d = new Date(now); d.setDate(d.getDate() - 90); return d; }
+    case 'year': { const d = new Date(now); d.setFullYear(d.getFullYear() - 1); return d; }
+  }
+}
+
 export default function AdminDashboard() {
   const [tab, setTab] = useState<'overview' | 'forecast'>('overview');
+  const [timeRange, setTimeRange] = useState<TimeRange>('month');
   const { stats, loading } = useSalesData();
   const { categories, menuItems } = useMenu();
 
-  // Build hourly data from real orders
-  const hourlyData = useMemo(() => {
-    const hours: Record<string, number> = {};
-    for (const o of stats.orders) {
-      const h = new Date(o.created_at).getHours();
-      const label = `${h > 12 ? h - 12 : h}${h >= 12 ? 'pm' : 'am'}`;
-      hours[label] = (hours[label] || 0) + Number(o.total);
+  // Build menuItemId -> categoryId lookup from menu_items
+  const menuItemCategoryMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const item of menuItems) {
+      map[item.id] = item.categoryId;
     }
-    return Object.entries(hours).map(([hour, ventas]) => ({ hour, ventas: Math.round(ventas) }));
-  }, [stats.orders]);
+    return map;
+  }, [menuItems]);
 
-  // Build top products from real orders
+  const catIdToName = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const cat of categories) map[cat.id] = cat.name;
+    return map;
+  }, [categories]);
+
+  // Filter orders by time range
+  const filteredOrders = useMemo(() => {
+    const start = getTimeRangeStart(timeRange);
+    return stats.orders.filter(o => new Date(o.created_at) >= start);
+  }, [stats.orders, timeRange]);
+
+  // Summary stats from filtered orders
+  const totalRevenue = useMemo(() => filteredOrders.reduce((s, o) => s + Number(o.total), 0), [filteredOrders]);
+  const totalOrders = filteredOrders.length;
+  const avgTicket = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+  // Avg order time (paid_at → delivered_at)
+  const avgOrderTime = useMemo(() => {
+    const times: number[] = [];
+    for (const o of filteredOrders) {
+      const start = (o as any).paid_at || (o as any).preparing_at || o.created_at;
+      const end = (o as any).delivered_at;
+      if (start && end) {
+        const diff = (new Date(end).getTime() - new Date(start).getTime()) / 60000;
+        if (diff > 0 && diff < 300) times.push(diff);
+      }
+    }
+    return times.length > 0 ? Math.round(times.reduce((s, t) => s + t, 0) / times.length) : null;
+  }, [filteredOrders]);
+
+  // Avg preparation time (preparing_at → ready_at)
+  const avgPrepTime = useMemo(() => {
+    const times: number[] = [];
+    for (const o of filteredOrders) {
+      const start = (o as any).preparing_at;
+      const end = (o as any).ready_at;
+      if (start && end) {
+        const diff = (new Date(end).getTime() - new Date(start).getTime()) / 60000;
+        if (diff > 0 && diff < 300) times.push(diff);
+      }
+    }
+    return times.length > 0 ? Math.round(times.reduce((s, t) => s + t, 0) / times.length) : null;
+  }, [filteredOrders]);
+
+  // Revenue per table (efficiency metric)
+  const tablesWithOrders = useMemo(() => {
+    const tables = new Set(filteredOrders.map(o => o.table_number));
+    return tables.size;
+  }, [filteredOrders]);
+  const revenuePerTable = tablesWithOrders > 0 ? Math.round(totalRevenue / tablesWithOrders) : 0;
+
+  // Build hourly data from filtered orders
+  const hourlyData = useMemo(() => {
+    const hours: Record<number, number> = {};
+    for (const o of filteredOrders) {
+      const h = new Date(o.created_at).getHours();
+      hours[h] = (hours[h] || 0) + Number(o.total);
+    }
+    return Object.entries(hours)
+      .sort(([a], [b]) => Number(a) - Number(b))
+      .map(([h, ventas]) => {
+        const hour = Number(h);
+        return { hour: `${hour > 12 ? hour - 12 : hour || 12}${hour >= 12 ? 'pm' : 'am'}`, ventas: Math.round(ventas) };
+      });
+  }, [filteredOrders]);
+
+  // Sales trend by day (for week/month/90d/year)
+  const dailyTrend = useMemo(() => {
+    if (timeRange === 'day') return [];
+    const days: Record<string, number> = {};
+    for (const o of filteredOrders) {
+      const d = new Date(o.created_at).toLocaleDateString('es', { day: '2-digit', month: 'short' });
+      days[d] = (days[d] || 0) + Number(o.total);
+    }
+    return Object.entries(days).map(([dia, ventas]) => ({ dia, ventas: Math.round(ventas) }));
+  }, [filteredOrders, timeRange]);
+
+  // Top products from filtered orders
   const topProducts = useMemo(() => {
-    const ps = stats.productSales;
-    // We need names from items in orders JSONB
     const products: { name: string; orders: number; revenue: number }[] = [];
-    for (const order of stats.orders) {
+    for (const order of filteredOrders) {
       const items = Array.isArray(order.items) ? order.items : [];
       for (const item of items) {
-        const name = (item as any)?.menuItem?.name || (item as any)?.name || 'Desconocido';
+        const name = (item as any)?.name || (item as any)?.menuItem?.name || 'Desconocido';
         const qty = (item as any)?.quantity || 1;
         const price = ((item as any)?.unitPrice || (item as any)?.menuItem?.price || 0) * qty;
         const existing = products.find(p => p.name === name);
@@ -38,18 +128,15 @@ export default function AdminDashboard() {
       }
     }
     return products.sort((a, b) => b.revenue - a.revenue).slice(0, 5);
-  }, [stats.orders]);
+  }, [filteredOrders]);
 
-  // Category breakdown from real orders
+  // Category breakdown - use categoryId from item or lookup from menuItems
   const categoryBreakdown = useMemo(() => {
     const catRevenue: Record<string, number> = {};
-    const catIdToName: Record<string, string> = {};
-    for (const cat of categories) catIdToName[cat.id] = cat.name;
-
-    for (const order of stats.orders) {
+    for (const order of filteredOrders) {
       const items = Array.isArray(order.items) ? order.items : [];
       for (const item of items) {
-        const catId = (item as any)?.menuItem?.categoryId || '';
+        const catId = (item as any)?.categoryId || (item as any)?.menuItem?.categoryId || menuItemCategoryMap[(item as any)?.menuItemId || ''] || '';
         const qty = (item as any)?.quantity || 1;
         const price = ((item as any)?.unitPrice || (item as any)?.menuItem?.price || 0) * qty;
         const catName = catIdToName[catId] || 'Otros';
@@ -60,43 +147,80 @@ export default function AdminDashboard() {
     const colors = ['hsl(24, 95%, 50%)', 'hsl(38, 92%, 50%)', 'hsl(152, 60%, 42%)', 'hsl(210, 80%, 55%)', 'hsl(340, 65%, 55%)'];
     return Object.entries(catRevenue)
       .sort((a, b) => b[1] - a[1])
-      .map(([name, value], i) => ({ name, value: Math.round((value / total) * 100), color: colors[i % colors.length] }));
-  }, [stats.orders, categories]);
+      .map(([name, value], i) => ({ name, value: Math.round((value / total) * 100), rawValue: Math.round(value), color: colors[i % colors.length] }));
+  }, [filteredOrders, catIdToName, menuItemCategoryMap]);
 
-  const activeOrders = stats.activeOrders;
+  // Peak hour
+  const peakHour = useMemo(() => {
+    const hours: Record<number, number> = {};
+    for (const o of filteredOrders) {
+      const h = new Date(o.created_at).getHours();
+      hours[h] = (hours[h] || 0) + 1;
+    }
+    let maxH = 0, maxCount = 0;
+    for (const [h, c] of Object.entries(hours)) { if (c > maxCount) { maxH = Number(h); maxCount = c; } }
+    return maxH > 0 ? `${maxH > 12 ? maxH - 12 : maxH || 12}${maxH >= 12 ? 'pm' : 'am'}` : '-';
+  }, [filteredOrders]);
+
+  // Orders by day of week
+  const ordersByDayOfWeek = useMemo(() => {
+    const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const days: Record<number, { orders: number; revenue: number }> = {};
+    for (let i = 0; i < 7; i++) days[i] = { orders: 0, revenue: 0 };
+    for (const o of filteredOrders) {
+      const d = new Date(o.created_at).getDay();
+      days[d].orders += 1;
+      days[d].revenue += Number(o.total);
+    }
+    return Object.entries(days).map(([d, v]) => ({ dia: dayNames[Number(d)], pedidos: v.orders, ventas: Math.round(v.revenue) }));
+  }, [filteredOrders]);
 
   const summaryStats = [
-    { label: 'Ventas totales', value: `$${stats.totalRevenue.toLocaleString()}`, icon: DollarSign, sub: `${stats.totalOrders} pedidos` },
-    { label: 'Pedidos activos', value: String(activeOrders.length), icon: ShoppingBag, sub: `de ${stats.totalOrders} totales` },
-    { label: 'Ticket promedio', value: `$${Math.round(stats.avgTicket)}`, icon: CreditCard, sub: 'por pedido' },
-    { label: 'Mesas con pedidos', value: String(Object.keys(stats.ordersByTable).length), icon: Users, sub: 'mesas registradas' },
+    { label: 'Ventas totales', value: `$${totalRevenue.toLocaleString()}`, icon: DollarSign, sub: `${totalOrders} pedidos` },
+    { label: 'Ticket promedio', value: `$${Math.round(avgTicket).toLocaleString()}`, icon: CreditCard, sub: 'por pedido' },
+    { label: 'Tiempo promedio', value: avgOrderTime ? `${avgOrderTime} min` : 'Sin datos', icon: Timer, sub: avgPrepTime ? `Cocina: ${avgPrepTime} min` : 'del pedido al entregado' },
+    { label: 'Ingreso por mesa', value: `$${revenuePerTable.toLocaleString()}`, icon: Users, sub: `${tablesWithOrders} mesas activas` },
   ];
 
   if (loading) return <div className="p-8 text-center text-muted-foreground">Cargando dashboard...</div>;
 
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="font-heading text-2xl md:text-3xl font-bold flex items-center gap-2">
             <Flame className="h-7 w-7 text-primary" /> Dashboard
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">Datos en tiempo real desde la base de datos</p>
+          <p className="text-sm text-muted-foreground mt-1">Datos en tiempo real</p>
         </div>
       </div>
 
+      {/* Main tabs */}
       <div className="flex gap-1 bg-muted/50 rounded-lg p-1 w-fit">
         <button onClick={() => setTab('overview')} className={`px-4 py-1.5 rounded-md text-xs font-heading font-semibold transition-colors ${tab === 'overview' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>Resumen</button>
         <button onClick={() => setTab('forecast')} className={`px-4 py-1.5 rounded-md text-xs font-heading font-semibold transition-colors ${tab === 'forecast' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>Forecasting & Compras</button>
       </div>
 
       {tab === 'forecast' ? <ForecastingPanel /> : <>
+        {/* Timeline filter */}
+        <div className="flex items-center gap-2">
+          <CalendarDays className="h-4 w-4 text-muted-foreground" />
+          <div className="flex gap-1 bg-muted/50 rounded-lg p-1">
+            {(['day', 'week', 'month', '90d', 'year'] as TimeRange[]).map(r => (
+              <button key={r} onClick={() => setTimeRange(r)} className={`px-3 py-1 rounded-md text-[11px] font-heading font-semibold transition-colors ${timeRange === r ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+                {TIME_LABELS[r]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Summary cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {summaryStats.map(stat => (
             <div key={stat.label} className="bg-card rounded-xl p-4 shadow-card border border-border/50 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between mb-3">
                 <div className="h-9 w-9 rounded-lg bg-accent/60 flex items-center justify-center">
-                  <stat.icon className="h-4.5 w-4.5 text-primary" />
+                  <stat.icon className="h-4 w-4 text-primary" />
                 </div>
               </div>
               <p className="font-heading font-bold text-xl leading-tight">{stat.value}</p>
@@ -106,22 +230,23 @@ export default function AdminDashboard() {
           ))}
         </div>
 
+        {/* Charts row 1: Sales trend + Category breakdown */}
         <div className="grid lg:grid-cols-5 gap-4">
           <div className="lg:col-span-3 bg-card rounded-xl p-5 shadow-card border border-border/50">
             <h2 className="font-heading font-semibold text-sm flex items-center gap-2 mb-4">
-              <BarChart3 className="h-4 w-4 text-primary" /> Ventas por hora
+              <BarChart3 className="h-4 w-4 text-primary" /> {timeRange === 'day' ? 'Ventas por hora' : 'Ventas diarias'}
             </h2>
-            {hourlyData.length > 0 ? (
+            {(timeRange === 'day' ? hourlyData : dailyTrend).length > 0 ? (
               <ResponsiveContainer width="100%" height={220}>
-                <AreaChart data={hourlyData}>
+                <AreaChart data={timeRange === 'day' ? hourlyData : dailyTrend}>
                   <defs><linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(24, 95%, 50%)" stopOpacity={0.3} /><stop offset="95%" stopColor="hsl(24, 95%, 50%)" stopOpacity={0} /></linearGradient></defs>
-                  <XAxis dataKey="hour" tick={{ fontSize: 11, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
+                  <XAxis dataKey={timeRange === 'day' ? 'hour' : 'dia'} tick={{ fontSize: 10, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
                   <Tooltip contentStyle={{ background: 'hsl(0,0%,100%)', border: '1px solid hsl(35,15%,90%)', borderRadius: '8px', fontSize: '12px' }} formatter={(v: number) => [`$${v.toLocaleString()}`, 'Ventas']} />
                   <Area type="monotone" dataKey="ventas" stroke="hsl(24, 95%, 50%)" strokeWidth={2.5} fill="url(#salesGrad)" />
                 </AreaChart>
               </ResponsiveContainer>
-            ) : <p className="text-sm text-muted-foreground text-center py-10">Sin datos de ventas por hora</p>}
+            ) : <p className="text-sm text-muted-foreground text-center py-10">Sin datos de ventas</p>}
           </div>
 
           <div className="lg:col-span-2 bg-card rounded-xl p-5 shadow-card border border-border/50">
@@ -135,7 +260,11 @@ export default function AdminDashboard() {
                 </ResponsiveContainer>
                 <div className="space-y-2 flex-1">
                   {categoryBreakdown.map(cat => (
-                    <div key={cat.name} className="flex items-center gap-2"><div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: cat.color }} /><span className="text-xs flex-1">{cat.name}</span><span className="font-heading font-semibold text-xs">{cat.value}%</span></div>
+                    <div key={cat.name} className="flex items-center gap-2">
+                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                      <span className="text-xs flex-1">{cat.name}</span>
+                      <span className="font-heading font-semibold text-xs">{cat.value}%</span>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -143,6 +272,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Charts row 2: Top products + Day of week heatmap + Peak hour */}
         <div className="grid lg:grid-cols-2 gap-4">
           <div className="bg-card rounded-xl p-5 shadow-card border border-border/50">
             <h2 className="font-heading font-semibold text-sm mb-4 flex items-center gap-2">
@@ -163,24 +293,20 @@ export default function AdminDashboard() {
 
           <div className="bg-card rounded-xl p-5 shadow-card border border-border/50">
             <h2 className="font-heading font-semibold text-sm mb-4 flex items-center gap-2">
-              <ChefHat className="h-4 w-4 text-primary" /> Pedidos activos
-              <span className="ml-auto bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">{activeOrders.length}</span>
+              <CalendarDays className="h-4 w-4 text-primary" /> Ventas por día de la semana
+              <span className="ml-auto text-[10px] text-muted-foreground font-normal">Hora pico: {peakHour}</span>
             </h2>
-            {activeOrders.length > 0 ? (
-              <div className="space-y-2.5">
-                {activeOrders.slice(0, 5).map(order => (
-                  <div key={order.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/40 hover:bg-muted/70 transition-colors">
-                    <div><p className="font-heading font-semibold text-sm">{order.id.slice(0, 8)}</p><p className="text-[11px] text-muted-foreground">Mesa {order.table_number}</p></div>
-                    <div className="text-right">
-                      <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${order.status === 'received' ? 'bg-info/15 text-info' : order.status === 'preparing' ? 'bg-warning/15 text-warning' : order.status === 'ready' ? 'bg-success/15 text-success' : 'bg-primary/15 text-primary'}`}>
-                        {order.status === 'received' ? '🔵 Recibido' : order.status === 'preparing' ? '🟡 Cocina' : order.status === 'ready' ? '🟢 Listo' : order.status === 'paid' ? '💳 Cobrado' : order.status === 'pending_payment' ? '⏳ Pago pendiente' : '✅ Entregado'}
-                      </span>
-                      <p className="text-xs font-heading font-semibold mt-1">${Number(order.total).toFixed(0)}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : <p className="text-sm text-muted-foreground text-center py-10">No hay pedidos activos</p>}
+            {ordersByDayOfWeek.some(d => d.pedidos > 0) ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={ordersByDayOfWeek} barSize={24}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(35, 15%, 90%)" vertical={false} />
+                  <XAxis dataKey="dia" tick={{ fontSize: 11, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
+                  <Tooltip contentStyle={{ background: 'hsl(0,0%,100%)', border: '1px solid hsl(35,15%,90%)', borderRadius: '8px', fontSize: '12px' }} formatter={(v: number, name: string) => [`${name === 'ventas' ? '$' : ''}${v.toLocaleString()}`, name === 'ventas' ? 'Ventas' : 'Pedidos']} />
+                  <Bar dataKey="ventas" fill="hsl(24, 95%, 50%)" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : <p className="text-sm text-muted-foreground text-center py-10">Sin datos</p>}
           </div>
         </div>
       </>}
