@@ -14,7 +14,7 @@ export default function AdminTables() {
   const { stats, loading } = useSalesData();
   const { restaurant } = useRestaurant();
   const { restaurantId } = useAuth();
-  const { activeBranchId } = useBranch();
+  const { activeBranchId, branches } = useBranch();
   const [totalTables, setTotalTables] = useState(10);
   const [qrDialog, setQrDialog] = useState<number | null>(null);
   const qrRef = useRef<HTMLDivElement>(null);
