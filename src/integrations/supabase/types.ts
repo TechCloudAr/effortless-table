@@ -267,11 +267,15 @@ export type Database = {
         Row: {
           branch_id: string | null
           created_at: string
+          delivered_at: string | null
           id: string
           items: Json
           mercadopago_preference_id: string | null
+          paid_at: string | null
           payment_id: string | null
           payment_status: string
+          preparing_at: string | null
+          ready_at: string | null
           restaurant_id: string | null
           status: string
           subtotal: number
@@ -283,11 +287,15 @@ export type Database = {
         Insert: {
           branch_id?: string | null
           created_at?: string
+          delivered_at?: string | null
           id?: string
           items?: Json
           mercadopago_preference_id?: string | null
+          paid_at?: string | null
           payment_id?: string | null
           payment_status?: string
+          preparing_at?: string | null
+          ready_at?: string | null
           restaurant_id?: string | null
           status?: string
           subtotal: number
@@ -299,11 +307,15 @@ export type Database = {
         Update: {
           branch_id?: string | null
           created_at?: string
+          delivered_at?: string | null
           id?: string
           items?: Json
           mercadopago_preference_id?: string | null
+          paid_at?: string | null
           payment_id?: string | null
           payment_status?: string
+          preparing_at?: string | null
+          ready_at?: string | null
           restaurant_id?: string | null
           status?: string
           subtotal?: number

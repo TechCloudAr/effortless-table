@@ -88,12 +88,17 @@ export default function AdminOrders() {
   const advanceStatus = async (orderId: string, currentStatus: string) => {
     const next = nextStatus[currentStatus as OrderStatus];
     if (!next) return;
-    const { error } = await supabase.from('orders').update({ status: next }).eq('id', orderId);
+    const timestamps: { paid_at?: string; preparing_at?: string; ready_at?: string; delivered_at?: string } = {};
+    if (next === 'paid') timestamps.paid_at = new Date().toISOString();
+    if (next === 'preparing') timestamps.preparing_at = new Date().toISOString();
+    if (next === 'ready') timestamps.ready_at = new Date().toISOString();
+    if (next === 'delivered') timestamps.delivered_at = new Date().toISOString();
+    const { error } = await supabase.from('orders').update({ status: next, ...timestamps }).eq('id', orderId);
     if (error) {
       toast.error('Error al actualizar estado');
       return;
     }
-    setAllOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: next } : o));
+    setAllOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: next, ...timestamps } : o));
     toast.success(`Pedido actualizado a "${statusLabels[next]}"`);
   };
 
@@ -242,11 +247,17 @@ export default function AdminOrders() {
                         <div key={i} className="text-base font-medium">
                           <span className="font-bold text-primary">{item?.quantity || 1}x</span>{' '}
                           {item?.menuItem?.name || item?.name || 'Item'}
-                          {item?.selectedOptions && Object.entries(item.selectedOptions).map(([group, opts]: [string, any]) => {
-                            const optList = Array.isArray(opts) ? opts : [];
-                            return optList.length > 0 ? (
-                              <span key={group} className="text-xs text-muted-foreground block ml-6">
-                                {optList.join(', ')}
+                          {item?.selectedOptions && item?.menuItem?.optionGroups && Object.entries(item.selectedOptions).map(([groupId, optIds]: [string, any]) => {
+                            const optIdList = Array.isArray(optIds) ? optIds : [];
+                            if (optIdList.length === 0) return null;
+                            const group = item.menuItem.optionGroups?.find((g: any) => g.id === groupId);
+                            const optNames = optIdList.map((optId: string) => {
+                              const opt = group?.options?.find((o: any) => o.id === optId);
+                              return opt?.name || optId;
+                            });
+                            return optNames.length > 0 ? (
+                              <span key={groupId} className="text-xs text-muted-foreground block ml-6">
+                                {group?.name ? `${group.name}: ` : ''}{optNames.join(', ')}
                               </span>
                             ) : null;
                           })}
