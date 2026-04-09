@@ -61,7 +61,7 @@ export interface CartItem {
   unitPrice: number;
 }
 
-export type OrderStatus = 'nuevo' | 'aceptado' | 'preparando' | 'listo' | 'entregado';
+export type OrderStatus = 'pending_payment' | 'received' | 'paid' | 'preparing' | 'ready' | 'delivered';
 
 export interface Order {
   id: string;

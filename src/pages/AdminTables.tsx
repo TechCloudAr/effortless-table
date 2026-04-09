@@ -63,7 +63,7 @@ export default function AdminTables() {
       const orders = byTable[num] || [];
       const totalRevenue = orders.reduce((s, o) => s + Number(o.total), 0);
       const avgTicket = orders.length > 0 ? Math.round(totalRevenue / orders.length) : 0;
-      const activeOrders = orders.filter(o => !['entregado', 'delivered', 'cancelled'].includes(o.status));
+      const activeOrders = orders.filter(o => !['delivered', 'cancelled'].includes(o.status));
       const isOccupied = activeSessions[num] || activeOrders.length > 0;
 
       return { number: num, ordersCount: orders.length, totalRevenue, avgTicket, isOccupied, activeOrders: activeOrders.length };

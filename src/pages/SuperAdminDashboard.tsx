@@ -56,13 +56,13 @@ export default function SuperAdminDashboard() {
   if (role !== 'superadmin') return <Navigate to="/admin/dashboard" replace />;
 
   const totalRevenue = orders.reduce((s, o) => s + Number(o.total), 0);
-  const activeOrders = orders.filter(o => !['entregado', 'delivered', 'cancelled'].includes(o.status));
+  const activeOrders = orders.filter(o => !['delivered', 'cancelled'].includes(o.status));
 
   const revenueByRestaurant = restaurants.map(r => ({
     ...r,
     revenue: orders.filter(o => o.restaurant_id === r.id).reduce((s, o) => s + Number(o.total), 0),
     orderCount: orders.filter(o => o.restaurant_id === r.id).length,
-    activeOrders: orders.filter(o => o.restaurant_id === r.id && !['entregado', 'delivered', 'cancelled'].includes(o.status)).length,
+    activeOrders: orders.filter(o => o.restaurant_id === r.id && !['delivered', 'cancelled'].includes(o.status)).length,
   }));
 
   return (
@@ -159,10 +159,11 @@ export default function SuperAdminDashboard() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                      o.status === 'nuevo' ? 'bg-info/10 text-info' :
-                      o.status === 'aceptado' ? 'bg-primary/10 text-primary' :
-                      o.status === 'preparando' ? 'bg-warning/10 text-warning' :
-                      'bg-success/10 text-success'
+                      o.status === 'received' ? 'bg-info/10 text-info' :
+                      o.status === 'paid' ? 'bg-primary/10 text-primary' :
+                      o.status === 'preparing' ? 'bg-warning/10 text-warning' :
+                      o.status === 'ready' ? 'bg-success/10 text-success' :
+                      'bg-muted text-muted-foreground'
                     }`}>
                       {o.status}
                     </span>

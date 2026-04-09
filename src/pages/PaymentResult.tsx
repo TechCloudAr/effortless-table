@@ -38,7 +38,7 @@ export default function PaymentResult({ status }: { status: Status }) {
     if (status === 'exito' && orderId) {
       supabase
         .from('orders')
-        .update({ payment_status: 'approved', status: 'nuevo' })
+        .update({ payment_status: 'approved', status: 'paid' })
         .eq('id', orderId)
         .then();
     }

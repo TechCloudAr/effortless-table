@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-type OrderStatus = 'nuevo' | 'aceptado' | 'preparando' | 'listo' | 'entregado';
+type OrderStatus = 'pending_payment' | 'received' | 'paid' | 'preparing' | 'ready' | 'delivered';
 
 interface OrderRow {
   id: string;
@@ -18,35 +18,39 @@ interface OrderRow {
 }
 
 const statusLabels: Record<OrderStatus, string> = {
-  nuevo: 'Nuevo',
-  aceptado: 'Aceptado',
-  preparando: 'Preparando',
-  listo: 'Listo',
-  entregado: 'Entregado',
+  pending_payment: 'Pago pendiente',
+  received: 'Recibido',
+  paid: 'Cobrado',
+  preparing: 'Preparando',
+  ready: 'Listo',
+  delivered: 'Entregado',
 };
 
 const statusColors: Record<OrderStatus, string> = {
-  nuevo: 'bg-info/10 text-info border-info/20',
-  aceptado: 'bg-primary/10 text-primary border-primary/20',
-  preparando: 'bg-warning/10 text-warning border-warning/20',
-  listo: 'bg-success/10 text-success border-success/20',
-  entregado: 'bg-muted text-muted-foreground border-border',
+  pending_payment: 'bg-warning/10 text-warning border-warning/20',
+  received: 'bg-info/10 text-info border-info/20',
+  paid: 'bg-primary/10 text-primary border-primary/20',
+  preparing: 'bg-warning/10 text-warning border-warning/20',
+  ready: 'bg-success/10 text-success border-success/20',
+  delivered: 'bg-muted text-muted-foreground border-border',
 };
 
 const nextStatus: Record<OrderStatus, OrderStatus | null> = {
-  nuevo: 'aceptado',
-  aceptado: 'preparando',
-  preparando: 'listo',
-  listo: 'entregado',
-  entregado: null,
+  pending_payment: null,
+  received: 'paid',
+  paid: 'preparing',
+  preparing: 'ready',
+  ready: 'delivered',
+  delivered: null,
 };
 
 const nextAction: Record<OrderStatus, string> = {
-  nuevo: 'Aceptar pedido',
-  aceptado: 'Iniciar preparación',
-  preparando: 'Marcar listo',
-  listo: 'Marcar entregado',
-  entregado: '',
+  pending_payment: '',
+  received: 'Marcar cobrado',
+  paid: 'Iniciar preparación',
+  preparing: 'Marcar listo',
+  ready: 'Marcar entregado',
+  delivered: '',
 };
 
 export default function AdminOrders() {
@@ -97,11 +101,11 @@ export default function AdminOrders() {
     <div className="p-4 md:p-8 max-w-4xl mx-auto">
       <div className="mb-6">
         <h1 className="font-heading text-2xl font-bold">Pedidos en vivo</h1>
-        <p className="text-sm text-muted-foreground">{orders.filter(o => !['entregado', 'delivered', 'cancelled'].includes(o.status)).length} pedidos activos</p>
+        <p className="text-sm text-muted-foreground">{orders.filter(o => !['delivered', 'cancelled'].includes(o.status)).length} pedidos activos</p>
       </div>
 
       <div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar">
-        {(['all', 'nuevo', 'aceptado', 'preparando', 'listo', 'entregado'] as const).map(s => (
+        {(['all', 'pending_payment', 'received', 'paid', 'preparing', 'ready', 'delivered'] as const).map(s => (
           <button
             key={s}
             onClick={() => setFilter(s)}
@@ -147,8 +151,8 @@ export default function AdminOrders() {
                     size="sm"
                     onClick={() => advanceStatus(order.id, status)}
                     className={`font-heading text-xs ${
-                      status === 'nuevo' ? 'gradient-primary' :
-                      status === 'aceptado' || status === 'preparando' ? 'bg-success hover:bg-success/90 text-success-foreground' :
+                      status === 'received' ? 'gradient-primary' :
+                      status === 'paid' || status === 'preparing' ? 'bg-success hover:bg-success/90 text-success-foreground' :
                       'bg-muted text-foreground hover:bg-muted/80'
                     }`}
                   >

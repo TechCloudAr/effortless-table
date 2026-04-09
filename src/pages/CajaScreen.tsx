@@ -26,7 +26,7 @@ export default function CajaScreen() {
       .from('orders')
       .select('*')
       .eq('branch_id', branchId)
-      .in('status', ['nuevo', 'pending_payment'])
+      .in('status', ['received', 'pending_payment'])
       .order('created_at', { ascending: true });
     if (data) setOrders(data as OrderRow[]);
     setLoading(false);
@@ -43,11 +43,11 @@ export default function CajaScreen() {
 
   const acceptOrder = async (orderId: string) => {
     const { error } = await supabase.from('orders').update({ 
-      status: 'aceptado', 
+      status: 'paid', 
       payment_status: 'paid' 
     }).eq('id', orderId);
-    if (error) { toast.error('Error al aceptar pedido'); return; }
-    toast.success('Pedido aceptado → enviado a cocina');
+    if (error) { toast.error('Error al cobrar pedido'); return; }
+    toast.success('Pedido cobrado → enviado a cocina');
     setOrders(prev => prev.filter(o => o.id !== orderId));
   };
 
