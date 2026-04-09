@@ -81,9 +81,14 @@ export function useSalesData() {
     const activeOrders = orders.filter(o => !['delivered', 'cancelled'].includes(o.status));
 
     const ordersByTable: Record<number, OrderRow[]> = {};
-    for (const o of orders) {
+    const ordersByBranch: Record<string, OrderRow[]> = {};
+    for (const o of allOrders) {
       if (!ordersByTable[o.table_number]) ordersByTable[o.table_number] = [];
       ordersByTable[o.table_number].push(o);
+      if (o.branch_id) {
+        if (!ordersByBranch[o.branch_id]) ordersByBranch[o.branch_id] = [];
+        ordersByBranch[o.branch_id].push(o);
+      }
     }
 
     const productSales: Record<string, { sold: number; revenue: number }> = {};
