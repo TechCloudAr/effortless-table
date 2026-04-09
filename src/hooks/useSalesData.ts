@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useBranch } from '@/contexts/BranchContext';
 import type { Ingredient } from '@/types/restaurant';
 
 interface OrderRow {
@@ -11,6 +13,7 @@ interface OrderRow {
   total: number;
   status: string;
   created_at: string;
+  branch_id: string | null;
 }
 
 export interface SalesStats {
@@ -24,18 +27,23 @@ export interface SalesStats {
 }
 
 export function useSalesData() {
-  const [orders, setOrders] = useState<OrderRow[]>([]);
+  const { restaurantId } = useAuth();
+  const { activeBranchId } = useBranch();
+  const [allOrders, setAllOrders] = useState<OrderRow[]>([]);
   const [ingredients, setIngredients] = useState<Record<string, Ingredient[]>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetch() {
+      let ordersQuery = supabase.from('orders').select('*').order('created_at', { ascending: false });
+      if (restaurantId) ordersQuery = ordersQuery.eq('restaurant_id', restaurantId);
+
       const [ordersRes, ingRes] = await Promise.all([
-        supabase.from('orders').select('*').order('created_at', { ascending: false }),
+        ordersQuery,
         supabase.from('menu_item_ingredients').select('*'),
       ]);
 
-      if (ordersRes.data) setOrders(ordersRes.data as OrderRow[]);
+      if (ordersRes.data) setAllOrders(ordersRes.data as OrderRow[]);
 
       if (ingRes.data) {
         const map: Record<string, Ingredient[]> = {};
@@ -56,7 +64,13 @@ export function useSalesData() {
       setLoading(false);
     }
     fetch();
-  }, []);
+  }, [restaurantId]);
+
+  // Filter orders by active branch
+  const orders = useMemo(() => {
+    if (!activeBranchId) return allOrders; // null = todas
+    return allOrders.filter(o => o.branch_id === activeBranchId);
+  }, [allOrders, activeBranchId]);
 
   const stats = useMemo<SalesStats>(() => {
     const totalRevenue = orders.reduce((s, o) => s + Number(o.total), 0);
@@ -71,26 +85,22 @@ export function useSalesData() {
       ordersByTable[o.table_number].push(o);
     }
 
-    // Parse items JSONB to count product sales
     const productSales: Record<string, { sold: number; revenue: number }> = {};
     for (const order of orders) {
       const items = Array.isArray(order.items) ? order.items : [];
       for (const item of items) {
         const id = (item as any)?.menuItem?.id || (item as any)?.id || 'unknown';
-        const name = (item as any)?.menuItem?.name || (item as any)?.name || 'Unknown';
         const qty = (item as any)?.quantity || 1;
         const price = ((item as any)?.unitPrice || (item as any)?.menuItem?.price || 0) * qty;
-        const key = id;
-        if (!productSales[key]) productSales[key] = { sold: 0, revenue: 0 };
-        productSales[key].sold += qty;
-        productSales[key].revenue += price;
+        if (!productSales[id]) productSales[id] = { sold: 0, revenue: 0 };
+        productSales[id].sold += qty;
+        productSales[id].revenue += price;
       }
     }
 
     return { totalRevenue, totalOrders, avgTicket, activeOrders, ordersByTable, productSales, orders };
   }, [orders]);
 
-  // Calculate cost for a product given its ingredients
   const getProductCost = (menuItemId: string): number => {
     const ings = ingredients[menuItemId] || [];
     return ings.reduce((sum, ing) => sum + ing.quantity * ing.costPerUnit, 0);

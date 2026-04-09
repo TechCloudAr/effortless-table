@@ -12,8 +12,11 @@ export interface Branch {
 
 interface BranchContextType {
   branches: Branch[];
+  /** null = "Todas las sucursales" */
+  activeBranchId: string | null;
   activeBranch: Branch | null;
-  setActiveBranchId: (id: string) => void;
+  /** Pass null to select "Todas" */
+  setActiveBranchId: (id: string | null) => void;
   loading: boolean;
   refetch: () => Promise<void>;
 }
@@ -23,6 +26,7 @@ const BranchContext = createContext<BranchContextType | undefined>(undefined);
 export function BranchProvider({ children }: { children: ReactNode }) {
   const { restaurantId } = useAuth();
   const [branches, setBranches] = useState<Branch[]>([]);
+  // null means "all branches"
   const [activeBranchId, setActiveBranchId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -43,8 +47,9 @@ export function BranchProvider({ children }: { children: ReactNode }) {
     const list = (data ?? []) as Branch[];
     setBranches(list);
 
-    if (!activeBranchId || !list.find(b => b.id === activeBranchId)) {
-      setActiveBranchId(list[0]?.id ?? null);
+    // Keep activeBranchId as-is (null = todas). Only reset if selected branch no longer exists
+    if (activeBranchId !== null && !list.find(b => b.id === activeBranchId)) {
+      setActiveBranchId(null);
     }
     setLoading(false);
   };
@@ -53,10 +58,10 @@ export function BranchProvider({ children }: { children: ReactNode }) {
     fetchBranches();
   }, [restaurantId]);
 
-  const activeBranch = branches.find(b => b.id === activeBranchId) ?? null;
+  const activeBranch = activeBranchId ? branches.find(b => b.id === activeBranchId) ?? null : null;
 
   return (
-    <BranchContext.Provider value={{ branches, activeBranch, setActiveBranchId, loading, refetch: fetchBranches }}>
+    <BranchContext.Provider value={{ branches, activeBranchId, activeBranch, setActiveBranchId, loading, refetch: fetchBranches }}>
       {children}
     </BranchContext.Provider>
   );

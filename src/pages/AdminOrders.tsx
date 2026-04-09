@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBranch } from '@/contexts/BranchContext';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -15,6 +16,7 @@ interface OrderRow {
   total: number;
   status: string;
   created_at: string;
+  branch_id: string | null;
 }
 
 const statusLabels: Record<OrderStatus, string> = {
@@ -55,7 +57,8 @@ const nextAction: Record<OrderStatus, string> = {
 
 export default function AdminOrders() {
   const { restaurantId } = useAuth();
-  const [orders, setOrders] = useState<OrderRow[]>([]);
+  const { activeBranchId } = useBranch();
+  const [allOrders, setAllOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
 
@@ -63,23 +66,23 @@ export default function AdminOrders() {
     let query = supabase.from('orders').select('*').order('created_at', { ascending: false });
     if (restaurantId) query = query.eq('restaurant_id', restaurantId);
     const { data } = await query;
-    if (data) setOrders(data as OrderRow[]);
+    if (data) setAllOrders(data as OrderRow[]);
     setLoading(false);
   };
 
   useEffect(() => {
     fetchOrders();
-
-    // Realtime subscription
     const channel = supabase
       .channel('orders-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
-        fetchOrders();
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => fetchOrders())
       .subscribe();
-
     return () => { supabase.removeChannel(channel); };
   }, [restaurantId]);
+
+  // Filter by branch
+  const orders = activeBranchId
+    ? allOrders.filter(o => o.branch_id === activeBranchId)
+    : allOrders;
 
   const advanceStatus = async (orderId: string, currentStatus: string) => {
     const next = nextStatus[currentStatus as OrderStatus];
@@ -89,7 +92,7 @@ export default function AdminOrders() {
       toast.error('Error al actualizar estado');
       return;
     }
-    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: next } : o));
+    setAllOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: next } : o));
     toast.success(`Pedido actualizado a "${statusLabels[next]}"`);
   };
 
