@@ -19,6 +19,7 @@ type OrderData = {
   total: number;
   created_at: string;
   restaurant_id: string | null;
+  branch_id: string | null;
 };
 
 export default function OrderStatus() {
@@ -36,7 +37,7 @@ export default function OrderStatus() {
     const fetchOrder = async () => {
       const { data } = await supabase
         .from('orders')
-        .select('id, status, table_number, total, created_at')
+        .select('id, status, table_number, total, created_at, restaurant_id, branch_id')
         .eq('id', orderId)
         .single();
       if (data) setOrder(data as OrderData);
@@ -165,7 +166,11 @@ export default function OrderStatus() {
       </div>
 
       <div className="px-4 pb-8">
-        <Button variant="outline" className="w-full font-heading" onClick={() => navigate(`/mesa/${order.restaurant_id}/${order.table_number}`)}>
+        <Button variant="outline" className="w-full font-heading" onClick={() => {
+          const base = `/mesa/${order.restaurant_id}`;
+          const path = order.branch_id ? `${base}/${order.branch_id}/${order.table_number}` : `${base}/${order.table_number}`;
+          navigate(path);
+        }}>
           Pedir algo más
         </Button>
       </div>
