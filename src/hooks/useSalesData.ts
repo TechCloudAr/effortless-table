@@ -14,6 +14,10 @@ interface OrderRow {
   status: string;
   created_at: string;
   branch_id: string | null;
+  paid_at: string | null;
+  preparing_at: string | null;
+  ready_at: string | null;
+  delivered_at: string | null;
 }
 
 export interface SalesStats {
