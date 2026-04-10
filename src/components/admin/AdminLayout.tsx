@@ -5,15 +5,15 @@ import { useBranch } from '@/contexts/BranchContext';
 import AIChatWidget from './AIChatWidget';
 
 const links = [
-  { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Overview' },
-  { to: '/admin/pedidos', icon: ClipboardList, label: 'Pedidos' },
-  { to: '/admin/menu', icon: UtensilsCrossed, label: 'Menú' },
-  { to: '/admin/rentabilidad', icon: DollarSign, label: 'Sales & Profit' },
-  { to: '/admin/inteligencia', icon: Brain, label: 'Menu Intelligence' },
-  { to: '/admin/mesas', icon: Grid3X3, label: 'Mesas' },
-  { to: '/admin/pagos', icon: CreditCard, label: 'Pagos' },
-  { to: '/admin/sucursales', icon: Building2, label: 'Sucursales' },
-  { to: '/admin/diseno', icon: Palette, label: 'Templates' },
+  { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Overview', mobileLabel: 'Inicio' },
+  { to: '/admin/pedidos', icon: ClipboardList, label: 'Pedidos', mobileLabel: 'Pedidos' },
+  { to: '/admin/menu', icon: UtensilsCrossed, label: 'Menú', mobileLabel: 'Menú' },
+  { to: '/admin/rentabilidad', icon: DollarSign, label: 'Sales & Profit', mobileLabel: 'Ventas' },
+  { to: '/admin/inteligencia', icon: Brain, label: 'Menu Intelligence', mobileLabel: 'Intel' },
+  { to: '/admin/mesas', icon: Grid3X3, label: 'Mesas', mobileLabel: 'Mesas' },
+  { to: '/admin/pagos', icon: CreditCard, label: 'Pagos', mobileLabel: 'Pagos' },
+  { to: '/admin/sucursales', icon: Building2, label: 'Sucursales', mobileLabel: 'Locales' },
+  { to: '/admin/diseno', icon: Palette, label: 'Templates', mobileLabel: 'Diseño' },
 ];
 
 const ALL_BRANCHES_VALUE = '__all__';
@@ -142,7 +142,7 @@ export default function AdminLayout() {
       )}
 
       {/* Mobile bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card border-t border-border flex justify-around py-2">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card border-t border-border flex overflow-x-auto no-scrollbar gap-1 py-2 px-2">
         {links
           .filter(link => {
             if (link.to === '/admin/sucursales' && activeBranchId) return false;
@@ -154,13 +154,13 @@ export default function AdminLayout() {
             key={link.to}
             to={link.to}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium ${
+              `flex flex-col items-center gap-0.5 min-w-[60px] flex-shrink-0 px-2 py-1 text-[10px] font-medium ${
                 isActive ? 'text-primary' : 'text-muted-foreground'
               }`
             }
           >
             <link.icon className="h-5 w-5" />
-            {link.label}
+            {link.mobileLabel}
           </NavLink>
         ))}
       </nav>
