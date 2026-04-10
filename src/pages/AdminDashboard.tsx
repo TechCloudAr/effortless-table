@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { TrendingUp, ShoppingBag, Clock, Users, DollarSign, ChefHat, Flame, Utensils, CreditCard, BarChart3, Timer, CalendarDays } from 'lucide-react';
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid } from 'recharts';
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ForecastingPanel from '@/components/admin/ForecastingPanel';
 import { useSalesData } from '@/hooks/useSalesData';
@@ -9,6 +9,35 @@ import { useMenu } from '@/hooks/useMenu';
 type TimeRange = 'day' | 'week' | 'month' | '90d' | 'year';
 
 const TIME_LABELS: Record<TimeRange, string> = { day: 'Hoy', week: 'Semana', month: 'Mes', '90d': '90 días', year: 'Año' };
+
+/** Format currency short for axis ticks: $0, $500, $1,5k, $10k */
+function fmtShort(v: number): string {
+  if (v === 0) return '$0';
+  if (v >= 1_000_000) return `$${(v / 1_000_000).toLocaleString('es-AR', { maximumFractionDigits: 1 })}M`;
+  if (v >= 1000) return `$${(v / 1000).toLocaleString('es-AR', { maximumFractionDigits: 1 })}k`;
+  return `$${Math.round(v).toLocaleString('es-AR')}`;
+}
+
+/** Format currency full for tooltips */
+function fmtARS(v: number): string {
+  return v.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+/** Custom tooltip component – Stripe/Linear style */
+function ChartTooltipContent({ active, payload, label, prefix = '' }: any) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-lg border border-border/30 bg-card/95 backdrop-blur-md px-3 py-2 shadow-lg">
+      <p className="text-[10px] text-muted-foreground mb-1">{label}</p>
+      {payload.map((p: any, i: number) => (
+        <div key={i} className="flex items-center gap-2">
+          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: p.color || p.fill }} />
+          <span className="text-[11px] font-medium tabular-nums">{prefix}{fmtARS(p.value)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function getTimeRangeStart(range: TimeRange): Date {
   const now = new Date();
