@@ -56,14 +56,16 @@ export default function AdminDashboard() {
   const avgOrderTime = useMemo(() => {
     const times: number[] = [];
     for (const o of filteredOrders) {
-      const start = (o as any).paid_at || (o as any).preparing_at || o.created_at;
-      const end = (o as any).delivered_at;
+      const start = o.paid_at || o.preparing_at || o.created_at;
+      const end = o.delivered_at;
       if (start && end) {
-        const diff = (new Date(end).getTime() - new Date(start).getTime()) / 60000;
-        if (diff > 0 && diff < 300) times.push(diff);
+        const diffSec = (new Date(end).getTime() - new Date(start).getTime()) / 1000;
+        if (diffSec > 0 && diffSec < 18000) times.push(diffSec);
       }
     }
-    return times.length > 0 ? Math.round(times.reduce((s, t) => s + t, 0) / times.length) : null;
+    if (times.length === 0) return null;
+    const avgSec = Math.round(times.reduce((s, t) => s + t, 0) / times.length);
+    return avgSec >= 60 ? `${Math.round(avgSec / 60)} min` : `${avgSec} seg`;
   }, [filteredOrders]);
 
   // Avg preparation time (preparing_at → ready_at)
