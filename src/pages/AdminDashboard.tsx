@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { TrendingUp, ShoppingBag, Clock, Users, DollarSign, ChefHat, Flame, Utensils, CreditCard, BarChart3, Timer, CalendarDays } from 'lucide-react';
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid, Brush } from 'recharts';
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid } from 'recharts';
+import { useIsMobile } from '@/hooks/use-mobile';
 import ForecastingPanel from '@/components/admin/ForecastingPanel';
 import { useSalesData } from '@/hooks/useSalesData';
 import { useMenu } from '@/hooks/useMenu';
@@ -25,6 +26,7 @@ export default function AdminDashboard() {
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
   const { stats, loading } = useSalesData();
   const { categories, menuItems } = useMenu();
+  const isMobile = useIsMobile();
 
   // Build menuItemId -> categoryId lookup from menu_items
   const menuItemCategoryMap = useMemo(() => {
@@ -280,14 +282,13 @@ export default function AdminDashboard() {
               <BarChart3 className="h-4 w-4 text-primary" /> {timeRange === 'day' ? 'Ventas por hora' : 'Ventas diarias'}
             </h2>
             {(timeRange === 'day' ? hourlyData : dailyTrend).length > 0 ? (
-              <ResponsiveContainer width="100%" height={260}>
+              <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
                 <AreaChart data={timeRange === 'day' ? hourlyData : dailyTrend}>
                   <defs><linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(24, 95%, 50%)" stopOpacity={0.3} /><stop offset="95%" stopColor="hsl(24, 95%, 50%)" stopOpacity={0} /></linearGradient></defs>
-                  <XAxis dataKey={timeRange === 'day' ? 'hour' : 'dia'} tick={{ fontSize: 10, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} interval={timeRange === 'day' ? 1 : 'preserveStartEnd'} />
-                  <YAxis tick={{ fontSize: 11, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
+                  <XAxis dataKey={timeRange === 'day' ? 'hour' : 'dia'} tick={{ fontSize: isMobile ? 9 : 10, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} interval={timeRange === 'day' ? (isMobile ? 5 : 2) : 'preserveStartEnd'} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 40 : 30} />
+                  <YAxis tick={{ fontSize: isMobile ? 9 : 11, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} width={isMobile ? 40 : 60} />
                   <Tooltip contentStyle={{ background: 'hsl(0,0%,100%)', border: '1px solid hsl(35,15%,90%)', borderRadius: '8px', fontSize: '12px' }} formatter={(v: number) => [`$${v.toLocaleString()}`, 'Ventas']} />
                   <Area type="monotone" dataKey="ventas" stroke="hsl(24, 95%, 50%)" strokeWidth={2.5} fill="url(#salesGrad)" />
-                  <Brush dataKey={timeRange === 'day' ? 'hour' : 'dia'} height={20} stroke="hsl(24, 95%, 50%)" fill="hsl(35, 15%, 96%)" travellerWidth={8} />
                 </AreaChart>
               </ResponsiveContainer>
             ) : <p className="text-sm text-muted-foreground text-center py-10">Sin datos de ventas</p>}
@@ -299,9 +300,9 @@ export default function AdminDashboard() {
             </h2>
             {categoryBreakdown.length > 0 ? (
               <div className="flex items-center gap-4">
-                <ResponsiveContainer width={140} height={140}>
-                  <PieChart><Pie data={categoryBreakdown} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" strokeWidth={2} stroke="hsl(0,0%,100%)">{categoryBreakdown.map((entry, i) => <Cell key={i} fill={entry.color} />)}</Pie></PieChart>
-                </ResponsiveContainer>
+                <div style={{ width: isMobile ? 110 : 140, height: isMobile ? 110 : 140 }}>
+                  <PieChart width={isMobile ? 110 : 140} height={isMobile ? 110 : 140}><Pie data={categoryBreakdown} cx="50%" cy="50%" innerRadius={isMobile ? 30 : 40} outerRadius={isMobile ? 50 : 65} dataKey="value" strokeWidth={2} stroke="hsl(0,0%,100%)">{categoryBreakdown.map((entry, i) => <Cell key={i} fill={entry.color} />)}</Pie></PieChart>
+                </div>
                 <div className="space-y-2 flex-1">
                   {categoryBreakdown.map(cat => (
                     <div key={cat.name} className="flex items-center gap-2">
@@ -341,14 +342,13 @@ export default function AdminDashboard() {
               <span className="ml-auto text-[10px] text-muted-foreground font-normal">Hora pico: {peakHour}</span>
             </h2>
             {ordersByDayOfWeek.some(d => d.pedidos > 0) ? (
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={ordersByDayOfWeek} barSize={24}>
+              <ResponsiveContainer width="100%" height={isMobile ? 200 : 240}>
+                <BarChart data={ordersByDayOfWeek} barSize={isMobile ? 16 : 24}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(35, 15%, 90%)" vertical={false} />
-                  <XAxis dataKey="dia" tick={{ fontSize: 11, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
+                  <XAxis dataKey="dia" tick={{ fontSize: isMobile ? 9 : 11, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: isMobile ? 9 : 11, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} width={isMobile ? 40 : 60} />
                   <Tooltip contentStyle={{ background: 'hsl(0,0%,100%)', border: '1px solid hsl(35,15%,90%)', borderRadius: '8px', fontSize: '12px' }} formatter={(v: number, name: string) => [`${name === 'ventas' ? '$' : ''}${v.toLocaleString()}`, name === 'ventas' ? 'Ventas' : 'Pedidos']} />
                   <Bar dataKey="ventas" fill="hsl(24, 95%, 50%)" radius={[6, 6, 0, 0]} />
-                  <Brush dataKey="dia" height={20} stroke="hsl(24, 95%, 50%)" fill="hsl(35, 15%, 96%)" travellerWidth={8} />
                 </BarChart>
               </ResponsiveContainer>
             ) : <p className="text-sm text-muted-foreground text-center py-10">Sin datos</p>}
