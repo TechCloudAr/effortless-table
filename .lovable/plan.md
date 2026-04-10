@@ -1,20 +1,15 @@
 
 
-# Plan: Arreglar menú de navegación móvil cortado
+# Plan: Ajustar header de Menu Intelligence
 
-## Problema
-La barra de navegación inferior en móvil usa `flex justify-around` con hasta 9 ítems (Overview, Pedidos, Menú, Sales & Profit, Menu Intelligence, Mesas, Pagos, Sucursales, Templates). En una pantalla de 390px, los ítems se comprimen y se cortan — no se pueden ver todos.
+## Cambios (archivo único: `src/pages/AdminMenuIntelligence.tsx`)
 
-## Solución
-Cambiar la barra inferior móvil a scroll horizontal, para que todos los ítems sean visibles deslizando.
+1. **Agregar selector de semana** al header, tipo "Semana del 22 al 28 Mar" con flechas para navegar entre semanas (← →), similar al patrón usado en otros dashboards del proyecto.
 
-## Cambios (archivo único: `src/components/admin/AdminLayout.tsx`)
+2. **Eliminar la línea descriptiva** "Entendé cómo interactúan tus clientes con el menú" — queda solo el título "Menu Intelligence" y el selector de semana debajo.
 
-1. **Barra inferior scrollable**: Cambiar `flex justify-around` a `flex overflow-x-auto no-scrollbar gap-1` para que los ítems se puedan deslizar horizontalmente
-2. **Tamaño mínimo por ítem**: Agregar `min-w-[60px] flex-shrink-0` a cada ítem para que no se compriman
-3. **Labels más cortos**: Acortar los labels largos en móvil (ej: "Sales & Profit" → "Ventas", "Menu Intelligence" → "Intel", "Sucursales" → "Locales", "Templates" → "Diseño")
-4. **Padding lateral**: Agregar `px-2` al contenedor para que el primer y último ítem tengan espacio
-
-## Resultado
-Todos los ítems del menú serán visibles y legibles, con scroll horizontal suave para acceder a los que no caben en pantalla.
+### Detalle técnico
+- Línea 79: Eliminar el `<p>` con el texto descriptivo
+- Agregar debajo del `<h1>` un selector de semana con botones de navegación (← semana →) que muestre el rango de fechas actual
+- El selector será visual (mock) ya que los datos son mock — mostrará la semana actual calculada dinámicamente
 
