@@ -250,10 +250,10 @@ export default function AdminDashboard() {
   }, [filteredOrders]);
 
   const summaryStats = [
-    { label: 'Ventas totales', value: `$${totalRevenue.toLocaleString()}`, icon: DollarSign, sub: `${totalOrders} pedidos` },
-    { label: 'Ticket promedio', value: `$${Math.round(avgTicket).toLocaleString()}`, icon: CreditCard, sub: 'por pedido' },
+    { label: 'Ventas totales', value: fmtARS(totalRevenue), icon: DollarSign, sub: `${totalOrders} pedidos` },
+    { label: 'Ticket promedio', value: fmtARS(Math.round(avgTicket)), icon: CreditCard, sub: 'por pedido' },
     { label: 'Tiempo promedio', value: avgOrderTime || 'Sin datos', icon: Timer, sub: avgPrepTime ? `Cocina: ${avgPrepTime}` : 'del pedido al entregado' },
-    { label: 'Ingreso por mesa', value: `$${revenuePerTable.toLocaleString()}`, icon: Users, sub: `${tablesWithOrders} mesas activas` },
+    { label: 'Ingreso por mesa', value: fmtARS(revenuePerTable), icon: Users, sub: `${tablesWithOrders} mesas activas` },
   ];
 
   if (loading) return <div className="p-8 text-center text-muted-foreground">Cargando dashboard...</div>;
@@ -311,13 +311,13 @@ export default function AdminDashboard() {
               <BarChart3 className="h-4 w-4 text-primary" /> {timeRange === 'day' ? 'Ventas por hora' : 'Ventas diarias'}
             </h2>
             {(timeRange === 'day' ? hourlyData : dailyTrend).length > 0 ? (
-              <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
-                <AreaChart data={timeRange === 'day' ? hourlyData : dailyTrend}>
-                  <defs><linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(24, 95%, 50%)" stopOpacity={0.3} /><stop offset="95%" stopColor="hsl(24, 95%, 50%)" stopOpacity={0} /></linearGradient></defs>
-                  <XAxis dataKey={timeRange === 'day' ? 'hour' : 'dia'} tick={{ fontSize: isMobile ? 9 : 10, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} interval={timeRange === 'day' ? (isMobile ? 5 : 2) : 'preserveStartEnd'} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 40 : 30} />
-                  <YAxis tick={{ fontSize: isMobile ? 9 : 11, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} width={isMobile ? 40 : 60} />
-                  <Tooltip contentStyle={{ background: 'hsl(0,0%,100%)', border: '1px solid hsl(35,15%,90%)', borderRadius: '8px', fontSize: '12px' }} formatter={(v: number) => [`$${v.toLocaleString()}`, 'Ventas']} />
-                  <Area type="monotone" dataKey="ventas" stroke="hsl(24, 95%, 50%)" strokeWidth={2.5} fill="url(#salesGrad)" />
+              <ResponsiveContainer width="100%" height={isMobile ? 180 : 280}>
+                <AreaChart data={timeRange === 'day' ? hourlyData : dailyTrend} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                  <defs><linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(24, 95%, 50%)" stopOpacity={0.15} /><stop offset="95%" stopColor="hsl(24, 95%, 50%)" stopOpacity={0.02} /></linearGradient></defs>
+                  <XAxis dataKey={timeRange === 'day' ? 'hour' : 'dia'} tick={{ fontSize: isMobile ? 9 : 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} interval={timeRange === 'day' ? (isMobile ? 5 : 2) : (isMobile ? Math.ceil(dailyTrend.length / 5) : 'preserveStartEnd')} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 45 : 30} />
+                  {!isMobile && <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={fmtShort} width={55} allowDecimals={false} tickCount={5} />}
+                  <Tooltip content={<ChartTooltipContent />} cursor={{ stroke: 'hsl(var(--border))', strokeDasharray: '4 4' }} />
+                  <Area type="monotone" dataKey="ventas" stroke="hsl(24, 95%, 50%)" strokeWidth={2} fill="url(#salesGrad)" dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
             ) : <p className="text-sm text-muted-foreground text-center py-10">Sin datos de ventas</p>}
@@ -358,7 +358,7 @@ export default function AdminDashboard() {
                   <div key={product.name} className="flex items-center gap-3">
                     <span className={`font-heading font-bold text-sm w-6 h-6 rounded-full flex items-center justify-center ${i === 0 ? 'bg-primary text-primary-foreground' : i === 1 ? 'bg-warning text-warning-foreground' : 'bg-muted text-muted-foreground'}`}>{i + 1}</span>
                     <div className="flex-1 min-w-0"><p className="font-heading font-semibold text-sm truncate">{product.name}</p><p className="text-[11px] text-muted-foreground">{product.orders} pedidos</p></div>
-                    <span className="font-heading font-semibold text-sm">${product.revenue.toLocaleString()}</span>
+                    <span className="font-heading font-semibold text-sm">{fmtARS(product.revenue)}</span>
                   </div>
                 ))}
               </div>
@@ -371,12 +371,11 @@ export default function AdminDashboard() {
               <span className="ml-auto text-[10px] text-muted-foreground font-normal">Hora pico: {peakHour}</span>
             </h2>
             {ordersByDayOfWeek.some(d => d.pedidos > 0) ? (
-              <ResponsiveContainer width="100%" height={isMobile ? 200 : 240}>
-                <BarChart data={ordersByDayOfWeek} barSize={isMobile ? 16 : 24}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(35, 15%, 90%)" vertical={false} />
-                  <XAxis dataKey="dia" tick={{ fontSize: isMobile ? 9 : 11, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: isMobile ? 9 : 11, fill: 'hsl(20, 10%, 45%)' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} width={isMobile ? 40 : 60} />
-                  <Tooltip contentStyle={{ background: 'hsl(0,0%,100%)', border: '1px solid hsl(35,15%,90%)', borderRadius: '8px', fontSize: '12px' }} formatter={(v: number, name: string) => [`${name === 'ventas' ? '$' : ''}${v.toLocaleString()}`, name === 'ventas' ? 'Ventas' : 'Pedidos']} />
+              <ResponsiveContainer width="100%" height={isMobile ? 180 : 240}>
+                <BarChart data={ordersByDayOfWeek} barSize={isMobile ? 12 : 24} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                  <XAxis dataKey="dia" tick={{ fontSize: isMobile ? 9 : 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                  {!isMobile && <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={fmtShort} width={55} allowDecimals={false} tickCount={5} />}
+                  <Tooltip content={<ChartTooltipContent />} cursor={{ fill: 'hsl(var(--muted) / 0.3)' }} />
                   <Bar dataKey="ventas" fill="hsl(24, 95%, 50%)" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
