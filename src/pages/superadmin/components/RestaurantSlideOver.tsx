@@ -1,5 +1,5 @@
 import { X, Building2, ShoppingBag, DollarSign, MapPin } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { LineChart, Line, ResponsiveContainer, Tooltip } from 'recharts';
 import { formatARS } from '../utils';
 
 interface Order {
@@ -38,52 +38,74 @@ export default function RestaurantSlideOver({ restaurant, orders, branches, onCl
   const revenue = restOrders.reduce((s, o) => s + Number(o.total), 0);
   const activeOrders = restOrders.filter(o => !['entregado', 'delivered', 'cancelled', 'cancelado'].includes(o.status));
   const restBranches = branches.filter(b => (b as any).restaurant_id === restaurant.id);
+  const avgTicket = restOrders.length > 0 ? revenue / restOrders.length : 0;
+
+  // Mini chart: daily orders last 14 days
+  const chartData = (() => {
+    const data: { day: string; count: number }[] = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      data.push({ day: key, count: restOrders.filter(o => o.created_at.slice(0, 10) === key).length });
+    }
+    return data;
+  })();
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-card border-l border-border shadow-xl overflow-y-auto animate-in slide-in-from-right">
-        <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between z-10">
-          <h2 className="font-heading font-bold text-lg flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-primary" />
-            {restaurant.name}
-          </h2>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
+      <div className="absolute inset-0 bg-black/20" onClick={onClose} />
+      <div className="relative w-full max-w-[480px] bg-white overflow-y-auto" style={{ borderLeft: '0.5px solid rgba(0,0,0,0.08)', animation: 'slideFromRight 300ms ease-out' }}>
+        <div className="sticky top-0 bg-white z-10 px-5 py-4 flex items-center justify-between" style={{ borderBottom: '0.5px solid rgba(0,0,0,0.08)' }}>
+          <div>
+            <h2 className="text-[15px] font-medium text-[#111110]">{restaurant.name}</h2>
+            <p className="text-[10px] text-[#9ca3af]">Registrado {new Date(restaurant.created_at).toLocaleDateString('es-AR')}</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-md hover:bg-[#f8f8f7] transition-colors">
+            <X className="h-4 w-4 text-[#6b7280]" />
+          </button>
         </div>
 
-        <div className="p-4 space-y-6">
-          {/* Metrics */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="text-center">
-              <ShoppingBag className="h-4 w-4 mx-auto text-primary mb-1" />
-              <p className="font-bold text-lg">{restOrders.length}</p>
-              <p className="text-[10px] text-muted-foreground">Pedidos</p>
-            </div>
-            <div className="text-center">
-              <ShoppingBag className="h-4 w-4 mx-auto text-green-500 mb-1" />
-              <p className="font-bold text-lg">{activeOrders.length}</p>
-              <p className="text-[10px] text-muted-foreground">Activos</p>
-            </div>
-            <div className="text-center">
-              <DollarSign className="h-4 w-4 mx-auto text-primary mb-1" />
-              <p className="font-bold text-lg">{formatARS(revenue)}</p>
-              <p className="text-[10px] text-muted-foreground">Facturación</p>
+        <div className="p-5 space-y-5">
+          {/* KPIs */}
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: 'Pedidos', value: restOrders.length, icon: ShoppingBag },
+              { label: 'Activos', value: activeOrders.length, icon: ShoppingBag },
+              { label: 'GMV', value: formatARS(revenue), icon: DollarSign },
+              { label: 'Ticket prom.', value: avgTicket > 0 ? formatARS(avgTicket) : '—', icon: DollarSign },
+            ].map(m => (
+              <div key={m.label} className="rounded-md p-3" style={{ border: '0.5px solid rgba(0,0,0,0.08)' }}>
+                <p className="text-[9px] font-medium text-[#9ca3af] uppercase tracking-[0.06em] mb-1">{m.label}</p>
+                <p className="text-[15px] font-medium text-[#111110]">{m.value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Mini chart */}
+          <div>
+            <p className="text-[9px] font-medium text-[#9ca3af] uppercase tracking-[0.06em] mb-2">Pedidos últimos 14 días</p>
+            <div className="h-[120px] bg-[#f8f8f7] rounded-md p-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
+                  <Line type="monotone" dataKey="count" stroke="#f97316" strokeWidth={1.5} dot={false} />
+                  <Tooltip
+                    contentStyle={{ fontSize: 10, borderRadius: 6, border: '0.5px solid rgba(0,0,0,0.08)', boxShadow: 'none' }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
           {/* Branches */}
           {restBranches.length > 0 && (
             <div>
-              <h3 className="font-heading font-semibold text-sm mb-2 flex items-center gap-1.5">
-                <MapPin className="h-4 w-4 text-primary" /> Sucursales
-              </h3>
-              <div className="space-y-2">
+              <p className="text-[9px] font-medium text-[#9ca3af] uppercase tracking-[0.06em] mb-2">Sucursales</p>
+              <div className="space-y-1.5">
                 {restBranches.map(b => (
-                  <div key={b.id} className="flex items-center justify-between bg-muted/30 rounded-lg px-3 py-2 text-sm">
-                    <span>{b.name}</span>
-                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${b.is_active ? 'bg-green-500/10 text-green-600' : 'bg-muted text-muted-foreground'}`}>
+                  <div key={b.id} className="flex items-center justify-between rounded-md px-3 py-2 text-[12px]" style={{ border: '0.5px solid rgba(0,0,0,0.04)', backgroundColor: '#f9f9f8' }}>
+                    <span className="text-[#111110]">{b.name}</span>
+                    <span className={`text-[10px] font-medium ${b.is_active ? 'text-[#16a34a]' : 'text-[#9ca3af]'}`}>
                       {b.is_active ? 'Activa' : 'Inactiva'}
                     </span>
                   </div>
@@ -94,29 +116,26 @@ export default function RestaurantSlideOver({ restaurant, orders, branches, onCl
 
           {/* Recent orders */}
           <div>
-            <h3 className="font-heading font-semibold text-sm mb-2">Últimos pedidos</h3>
-            <div className="space-y-2 max-h-64 overflow-y-auto">
+            <p className="text-[9px] font-medium text-[#9ca3af] uppercase tracking-[0.06em] mb-2">Últimos pedidos</p>
+            <div className="space-y-1.5 max-h-52 overflow-y-auto">
               {restOrders.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">Sin pedidos</p>
+                <p className="text-[12px] text-[#9ca3af] text-center py-4">Sin pedidos</p>
               ) : restOrders.slice(0, 10).map(o => (
-                <div key={o.id} className="flex items-center justify-between bg-muted/30 rounded-lg px-3 py-2 text-sm">
+                <div key={o.id} className="flex items-center justify-between rounded-md px-3 py-2 text-[12px]" style={{ border: '0.5px solid rgba(0,0,0,0.04)', backgroundColor: '#f9f9f8' }}>
                   <div>
-                    <span className="font-medium">Mesa {o.table_number}</span>
-                    <span className="text-muted-foreground text-xs ml-2">
+                    <span className="font-medium text-[#111110]">Mesa {o.table_number}</span>
+                    <span className="text-[#9ca3af] text-[10px] ml-2">
                       {new Date(o.created_at).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
-                  <span className="font-heading font-semibold">{formatARS(Number(o.total))}</span>
+                  <span className="font-medium text-[#111110]">{formatARS(Number(o.total))}</span>
                 </div>
               ))}
             </div>
           </div>
-
-          <p className="text-[10px] text-muted-foreground">
-            Registrado: {new Date(restaurant.created_at).toLocaleDateString('es-AR')}
-          </p>
         </div>
       </div>
+      <style>{`@keyframes slideFromRight{from{transform:translateX(100%)}to{transform:translateX(0)}}`}</style>
     </div>
   );
 }
