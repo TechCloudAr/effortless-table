@@ -221,7 +221,7 @@ export default function AdminDashboard() {
   const summaryStats = [
     { label: 'Ventas totales', value: `$${totalRevenue.toLocaleString()}`, icon: DollarSign, sub: `${totalOrders} pedidos` },
     { label: 'Ticket promedio', value: `$${Math.round(avgTicket).toLocaleString()}`, icon: CreditCard, sub: 'por pedido' },
-    { label: 'Tiempo promedio', value: avgOrderTime ? `${avgOrderTime} min` : 'Sin datos', icon: Timer, sub: avgPrepTime ? `Cocina: ${avgPrepTime} min` : 'del pedido al entregado' },
+    { label: 'Tiempo promedio', value: avgOrderTime || 'Sin datos', icon: Timer, sub: avgPrepTime ? `Cocina: ${avgPrepTime}` : 'del pedido al entregado' },
     { label: 'Ingreso por mesa', value: `$${revenuePerTable.toLocaleString()}`, icon: Users, sub: `${tablesWithOrders} mesas activas` },
   ];
 
