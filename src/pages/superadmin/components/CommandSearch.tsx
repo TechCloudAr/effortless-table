@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Building2, ShoppingBag, LayoutDashboard, Users } from 'lucide-react';
+import { Search, Building2, LayoutDashboard, Users, Clock, DollarSign, MessageCircle } from 'lucide-react';
 import {
   CommandDialog,
   CommandEmpty,
@@ -22,8 +22,10 @@ interface CommandSearchProps {
 const pages = [
   { label: 'Overview', path: '/superadmin', icon: LayoutDashboard },
   { label: 'Restaurantes', path: '/superadmin/restaurantes', icon: Building2 },
-  { label: 'Pedidos en vivo', path: '/superadmin/pedidos', icon: ShoppingBag },
-  { label: 'Usuarios', path: '/superadmin/usuarios', icon: Users },
+  { label: 'Facturación', path: '/superadmin/facturacion', icon: DollarSign },
+  { label: 'Pedidos en vivo', path: '/superadmin/pedidos', icon: Clock },
+  { label: 'Soporte', path: '/superadmin/soporte', icon: MessageCircle },
+  { label: 'Equipo', path: '/superadmin/equipo', icon: Users },
 ];
 
 export default function CommandSearch({ restaurants }: CommandSearchProps) {
@@ -50,11 +52,12 @@ export default function CommandSearch({ restaurants }: CommandSearchProps) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-muted/50 text-sm text-muted-foreground hover:bg-muted transition-colors"
+        className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-md bg-white text-[11px] text-[#6b7280] hover:text-[#111110] transition-colors"
+        style={{ border: '0.5px solid rgba(0,0,0,0.08)' }}
       >
-        <Search className="h-3.5 w-3.5" />
+        <Search className="h-3 w-3" />
         Buscar...
-        <kbd className="ml-2 text-[10px] bg-background px-1.5 py-0.5 rounded border border-border font-mono">⌘K</kbd>
+        <kbd className="ml-2 text-[9px] text-[#9ca3af] px-1 py-0.5 rounded bg-[#f8f8f7] font-mono">⌘K</kbd>
       </button>
 
       <CommandDialog open={open} onOpenChange={setOpen}>
