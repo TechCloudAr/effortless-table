@@ -65,6 +65,18 @@ type Tab = 'funnel' | 'products' | 'recommendations';
 
 export default function AdminMenuIntelligence() {
   const [tab, setTab] = useState<Tab>('funnel');
+  const [weekOffset, setWeekOffset] = useState(0);
+
+  const weekRange = useMemo(() => {
+    const now = new Date();
+    const start = new Date(now);
+    start.setDate(now.getDate() - now.getDay() + 1 + weekOffset * 7);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const fmt = (d: Date) => `${d.getDate()} ${months[d.getMonth()]}`;
+    return `${fmt(start)} – ${fmt(end)}`;
+  }, [weekOffset]);
 
   const avgConversion = (productPerformance.reduce((s, p) => s + p.conversion, 0) / productPerformance.length).toFixed(1);
   const avgDecisionTime = Math.round(productPerformance.reduce((s, p) => s + p.avgTimeToDecide, 0) / productPerformance.length);
@@ -76,7 +88,15 @@ export default function AdminMenuIntelligence() {
         <h1 className="font-heading text-2xl md:text-3xl font-bold flex items-center gap-2">
           <Brain className="h-7 w-7 text-primary" /> Menu Intelligence
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">Entendé cómo interactúan tus clientes con el menú — Semana del 22 al 28 Mar</p>
+        <div className="flex items-center gap-2 mt-2">
+          <button onClick={() => setWeekOffset(w => w - 1)} className="p-1 rounded-md hover:bg-muted transition-colors">
+            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+          </button>
+          <span className="text-sm font-heading font-semibold text-muted-foreground">{weekRange}</span>
+          <button onClick={() => setWeekOffset(w => Math.min(w + 1, 0))} className="p-1 rounded-md hover:bg-muted transition-colors" disabled={weekOffset >= 0}>
+            <ChevronRight className={`h-4 w-4 ${weekOffset >= 0 ? 'text-muted-foreground/30' : 'text-muted-foreground'}`} />
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-1 bg-muted/50 rounded-lg p-1 w-fit">
