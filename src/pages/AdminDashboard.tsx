@@ -300,9 +300,9 @@ export default function AdminDashboard() {
             </h2>
             {categoryBreakdown.length > 0 ? (
               <div className="flex items-center gap-4">
-                <ResponsiveContainer width={140} height={140}>
-                  <PieChart><Pie data={categoryBreakdown} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" strokeWidth={2} stroke="hsl(0,0%,100%)">{categoryBreakdown.map((entry, i) => <Cell key={i} fill={entry.color} />)}</Pie></PieChart>
-                </ResponsiveContainer>
+                <div style={{ width: isMobile ? 110 : 140, height: isMobile ? 110 : 140 }}>
+                  <PieChart width={isMobile ? 110 : 140} height={isMobile ? 110 : 140}><Pie data={categoryBreakdown} cx="50%" cy="50%" innerRadius={isMobile ? 30 : 40} outerRadius={isMobile ? 50 : 65} dataKey="value" strokeWidth={2} stroke="hsl(0,0%,100%)">{categoryBreakdown.map((entry, i) => <Cell key={i} fill={entry.color} />)}</Pie></PieChart>
+                </div>
                 <div className="space-y-2 flex-1">
                   {categoryBreakdown.map(cat => (
                     <div key={cat.name} className="flex items-center gap-2">
