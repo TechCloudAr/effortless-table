@@ -61,7 +61,7 @@ const App = () => (
               <Route path="/mozo/:branchId" element={<MozoScreen />} />
 
               {/* Super Admin */}
-              <Route path="/superadmin" element={<ProtectedRoute><SuperAdminDashboard /></ProtectedRoute>} />
+              <Route path="/superadmin/*" element={<ProtectedRoute><SuperAdminDashboard /></ProtectedRoute>} />
 
               {/* Admin auth */}
               <Route path="/admin" element={<AdminLogin />} />
