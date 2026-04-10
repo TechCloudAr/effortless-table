@@ -312,9 +312,9 @@ export default function AdminDashboard() {
             </h2>
             {(timeRange === 'day' ? hourlyData : dailyTrend).length > 0 ? (
               <ResponsiveContainer width="100%" height={isMobile ? 180 : 280}>
-                <AreaChart data={timeRange === 'day' ? hourlyData : dailyTrend} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                <AreaChart data={timeRange === 'day' ? hourlyData : dailyTrend} margin={{ top: 4, right: 8, left: 0, bottom: isMobile ? 4 : 0 }}>
                   <defs><linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(24, 95%, 50%)" stopOpacity={0.15} /><stop offset="95%" stopColor="hsl(24, 95%, 50%)" stopOpacity={0.02} /></linearGradient></defs>
-                  <XAxis dataKey={timeRange === 'day' ? 'hour' : 'dia'} tick={{ fontSize: isMobile ? 9 : 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} interval={timeRange === 'day' ? (isMobile ? 5 : 2) : (isMobile ? Math.ceil(dailyTrend.length / 5) : 'preserveStartEnd')} angle={isMobile ? -45 : 0} textAnchor={isMobile ? 'end' : 'middle'} height={isMobile ? 45 : 30} />
+                  <XAxis dataKey={timeRange === 'day' ? 'hour' : 'dia'} tick={{ fontSize: isMobile ? 9 : 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} interval={timeRange === 'day' ? (isMobile ? 5 : 2) : (isMobile ? Math.max(1, Math.floor(dailyTrend.length / 6)) : (timeRange === 'year' ? 0 : 'preserveStartEnd'))} angle={isMobile && timeRange !== 'year' ? -45 : 0} textAnchor={isMobile && timeRange !== 'year' ? 'end' : 'middle'} height={isMobile ? 35 : 30} />
                   {!isMobile && <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={fmtShort} width={55} allowDecimals={false} tickCount={5} />}
                   <Tooltip content={<ChartTooltipContent />} cursor={{ stroke: 'hsl(var(--border))', strokeDasharray: '4 4' }} />
                   <Area type="monotone" dataKey="ventas" stroke="hsl(24, 95%, 50%)" strokeWidth={2} fill="url(#salesGrad)" dot={false} />
