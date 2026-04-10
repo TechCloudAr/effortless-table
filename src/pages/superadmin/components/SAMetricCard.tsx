@@ -4,18 +4,41 @@ interface SAMetricCardProps {
   label: string;
   value: string | number;
   icon: LucideIcon;
+  iconColor?: string;
+  iconBg?: string;
+  trend?: string;
+  trendColor?: string;
   pulse?: boolean;
 }
 
-export default function SAMetricCard({ label, value, icon: Icon, pulse }: SAMetricCardProps) {
+export default function SAMetricCard({
+  label,
+  value,
+  icon: Icon,
+  iconColor = '#f97316',
+  iconBg = 'rgba(249,115,22,0.1)',
+  trend,
+  trendColor = '#6b7280',
+  pulse,
+}: SAMetricCardProps) {
   return (
-    <div className="bg-card rounded-xl p-4 shadow-sm border border-border/50">
-      <div className="flex items-center gap-2 mb-2">
-        <Icon className="h-5 w-5 text-primary" />
-        {pulse && <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />}
+    <div className="bg-white rounded-lg p-4" style={{ border: '0.5px solid rgba(0,0,0,0.08)' }}>
+      <div className="flex items-center gap-2 mb-3">
+        <div
+          className="h-[26px] w-[26px] rounded-[7px] flex items-center justify-center"
+          style={{ backgroundColor: iconBg }}
+        >
+          <Icon className="h-3.5 w-3.5" style={{ color: iconColor }} />
+        </div>
+        {pulse && (
+          <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+        )}
       </div>
-      <p className="font-heading font-bold text-2xl">{value}</p>
-      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-[9px] font-medium text-[#9ca3af] uppercase tracking-[0.06em] mb-1">{label}</p>
+      <p className="text-[22px] font-medium text-[#111110] leading-tight">{value}</p>
+      {trend && (
+        <p className="text-[11px] mt-1" style={{ color: trendColor }}>{trend}</p>
+      )}
     </div>
   );
 }
