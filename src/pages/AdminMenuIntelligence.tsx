@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Brain, Eye, ShoppingCart, TrendingUp, TrendingDown, ArrowUp, ArrowDown, EyeOff, Lightbulb, Link2, AlertTriangle, Zap, BarChart3, MousePointerClick } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Brain, Eye, ShoppingCart, TrendingUp, TrendingDown, ArrowUp, ArrowDown, EyeOff, Lightbulb, Link2, AlertTriangle, Zap, BarChart3, MousePointerClick, ChevronLeft, ChevronRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell, FunnelChart, Funnel, LabelList } from 'recharts';
 
 // --- MOCK DATA ---
