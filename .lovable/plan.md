@@ -1,22 +1,42 @@
 
 
-# Plan: Fix 3 Build Errors
+# Plan: Auto-cancelar sesiones con pago pendiente después de 15 min
 
-## 1. Create `src/components/admin/MenuExcelImport.tsx`
-A stub component that accepts `onSuccess` prop. It renders an "Importar Excel" button (functionality can be built out later).
+## Problema
+Si un pedido queda en `pending_payment` más de 15 minutos, la mesa sigue apareciendo como "ocupada" indefinidamente. El pago debería confirmarse casi al instante — si no pasó, el cliente se fue.
 
-## 2. Fix `AdminMenuPage.tsx` broken JSX
-The diff shows the `<MenuExcelImport>` was placed incorrectly inside the `<Button>` tag. Move it to be a sibling element before the button.
+## Cambios
 
-## 3. Fix `supabase/functions/business-chat/index.ts`
-- Add `!` assertions on `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (or throw if missing)
-- Type `productCount` as `Record<string, number>`
-- Type the `.sort()` callback params
+### 1. Migración SQL — Actualizar `expire_stale_table_sessions()`
+Agregar una regla: cancelar pedidos `pending_payment` con más de 15 minutos y liberar la sesión de mesa asociada.
 
-## 4. Fix `supabase/functions/create-payment/index.ts`
-- Add type annotation `(item: any)` on the `.map()` callback
-- Add `!` assertions on env vars
-- Cast `error` to `Error` in the catch block
+```sql
+-- Dentro de expire_stale_table_sessions():
+-- Cancelar pedidos pending_payment > 15 min
+UPDATE public.orders
+SET status = 'cancelado', updated_at = now()
+WHERE status = 'pending_payment'
+AND created_at < now() - interval '15 minutes';
+```
 
-No database changes needed.
+### 2. Migración SQL — Limpiar datos actuales
+Cancelar todos los pedidos `pending_payment` existentes con más de 15 min (los fantasma de ahora).
+
+### 3. Corregir filtro en `AdminTables.tsx` (~línea 91)
+Cambiar el filtro de `activeOrders` para excluir `pending_payment` y pedidos con más de 4 horas:
+
+```ts
+const activeOrders = orders.filter(o =>
+  ['nuevo', 'preparing', 'preparando', 'ready', 'listo'].includes(o.status)
+  && (Date.now() - new Date(o.created_at).getTime()) < 4 * 3600000
+);
+```
+
+### 4. Mismo fix en `useSalesData.ts` (~línea 76)
+Aplicar el mismo filtro de estados activos para consistencia en el dashboard.
+
+## Resultado
+- Mesa 5 aparece como "Disponible" inmediatamente
+- Pedidos que nunca se pagaron → `cancelado`
+- A futuro, la función cron limpia automáticamente cada 15 min
 
