@@ -161,6 +161,28 @@ export default function AdminMenuPage() {
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto">
+      {/* Branch selector */}
+      {branches.length > 1 && (
+        <div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar pb-1">
+          <button onClick={() => setActiveBranchId(null)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-all ${!activeBranchId ? 'gradient-primary text-primary-foreground border-transparent' : 'bg-card text-muted-foreground border-border'}`}>
+            🏠 Menú base
+          </button>
+          {branches.map(b => (
+            <button key={b.id} onClick={() => setActiveBranchId(b.id)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-all ${activeBranchId === b.id ? 'gradient-primary text-primary-foreground border-transparent' : 'bg-card text-muted-foreground border-border'}`}>
+              📍 {b.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {isBranchView && (
+        <div className="bg-accent/50 border border-border rounded-lg px-3 py-2 mb-4 text-xs text-muted-foreground">
+          📍 Viendo menú de <strong className="text-foreground">{branches.find(b => b.id === activeBranchId)?.name}</strong> — los cambios de disponibilidad y precio solo aplican a esta sucursal.
+        </div>
+      )}
+
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="font-heading text-2xl font-bold">Gestión del Menú</h1>
@@ -170,10 +192,12 @@ export default function AdminMenuPage() {
             {unavailableCount > 0 && <span className="text-sm text-destructive font-medium">{unavailableCount} inactivos</span>}
           </div>
         </div>
-        <Button onClick={openCreate} className="gradient-primary gap-2 shadow-lg">        <MenuExcelImport onSuccess={refetch} />
-
-          <Plus className="h-4 w-4" /> Nuevo producto
-        </Button>
+        {!isBranchView && (
+          <Button onClick={openCreate} className="gradient-primary gap-2 shadow-lg">
+            <MenuExcelImport onSuccess={refetch} />
+            <Plus className="h-4 w-4" /> Nuevo producto
+          </Button>
+        )}
       </div>
 
       <div className="relative mb-4">
