@@ -1,38 +1,22 @@
 
 
-# Plan: Corregir todos los charts del Dashboard admin
+# Plan: Fix 3 Build Errors
 
-## Problemas detectados
+## 1. Create `src/components/admin/MenuExcelImport.tsx`
+A stub component that accepts `onSuccess` prop. It renders an "Importar Excel" button (functionality can be built out later).
 
-1. **Eje Y duplicado**: "$2k" aparece dos veces porque `tickFormatter` redondea valores distintos (1800, 2200) al mismo "$2k". Recharts no deduplica ticks.
-2. **Formato de moneda inconsistente**: Se usa `$${v.toLocaleString()}` en vez del formato ARS estándar del proyecto.
-3. **Charts apretados en mobile**: Altura insuficiente, labels cortados, tooltips grandes.
-4. **PieChart con dimensiones fijas**: No usa `ResponsiveContainer`, genera warnings.
-5. **BarChart "Ventas por día"**: CartesianGrid innecesaria, barras gruesas en mobile.
+## 2. Fix `AdminMenuPage.tsx` broken JSX
+The diff shows the `<MenuExcelImport>` was placed incorrectly inside the `<Button>` tag. Move it to be a sibling element before the button.
 
-## Cambios (archivo único: `src/pages/AdminDashboard.tsx`)
+## 3. Fix `supabase/functions/business-chat/index.ts`
+- Add `!` assertions on `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (or throw if missing)
+- Type `productCount` as `Record<string, number>`
+- Type the `.sort()` callback params
 
-### 1. Eje Y inteligente
-- Usar `YAxis` con `domain={[0, 'auto']}` y `allowDecimals={false}` para evitar ticks duplicados.
-- Crear un `tickFormatter` que distinga entre valores < 1000 (`$500`), miles (`$1,5k`), y millones.
-- Agregar `tickCount={5}` para forzar distribución uniforme.
+## 4. Fix `supabase/functions/create-payment/index.ts`
+- Add type annotation `(item: any)` on the `.map()` callback
+- Add `!` assertions on env vars
+- Cast `error` to `Error` in the catch block
 
-### 2. Formato ARS consistente
-- Crear helper `fmtShort(v)` para ejes: `$0`, `$500`, `$1,5k`, `$10k`.
-- En tooltips usar `toLocaleString('es-AR', {style:'currency', currency:'ARS'})` completo.
-
-### 3. Mobile-first charts
-- AreaChart (Ventas diarias): height 180px mobile / 280px desktop. Ocultar YAxis en mobile para dar más espacio al gráfico. Reducir strokeWidth a 2.
-- BarChart (Ventas por día): height 180px mobile / 240px desktop. `barSize={12}` en mobile. Quitar CartesianGrid en mobile.
-- PieChart: Envolver en `ResponsiveContainer` con height fijo. Tamaño dinámico con `outerRadius="75%"`.
-
-### 4. Tooltip mejorado
-- Fondo semi-transparente con backdrop-blur (estilo Stripe/Linear).
-- Font size 11px, border 0.5px, sin sombra agresiva.
-- Mostrar valor formateado como moneda ARS completa.
-
-### 5. Pequeñas mejoras de diseño
-- Quitar `CartesianGrid` de todos los charts (estilo clean/flat como Linear).
-- Gradiente del AreaChart más sutil (opacity 0.15 → 0.02).
-- Labels del eje X en mobile: solo mostrar cada 2do o 3er label para evitar overlap.
+No database changes needed.
 
