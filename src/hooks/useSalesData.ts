@@ -82,7 +82,10 @@ export function useSalesData() {
     const totalOrders = orders.length;
     const avgTicket = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
-    const activeOrders = orders.filter(o => !['delivered', 'cancelled'].includes(o.status));
+    const activeOrders = orders.filter(o =>
+      ['nuevo', 'preparing', 'preparando', 'ready', 'listo'].includes(o.status)
+      && (Date.now() - new Date(o.created_at).getTime()) < 4 * 3600000
+    );
 
     const ordersByTable: Record<number, OrderRow[]> = {};
     const ordersByBranch: Record<string, OrderRow[]> = {};
