@@ -7,8 +7,8 @@ export function formatARS(value: number): string {
   });
 }
 
-export function isTestAccount(name: string): boolean {
-  return name.toLowerCase().includes('francisco');
+export function isTestAccount(_name: string): boolean {
+  return false;
 }
 
 export const STATUS_LABELS: Record<string, string> = {
