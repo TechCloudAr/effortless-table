@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useMenu } from '@/hooks/useMenu';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBranch } from '@/contexts/BranchContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -37,8 +38,9 @@ const emptyForm: FormData = {
 };
 
 export default function AdminMenuPage() {
-  const { categories, menuItems, loading, refetch } = useMenu();
   const { restaurantId } = useAuth();
+  const { branches, activeBranchId, setActiveBranchId } = useBranch();
+  const { categories, menuItems, branchOverrides, loading, refetch } = useMenu(restaurantId ?? undefined, activeBranchId);
   const [activeCategory, setActiveCategory] = useState('all');
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -51,9 +53,21 @@ export default function AdminMenuPage() {
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const isBranchView = !!activeBranchId;
+
   const toggleAvailability = async (id: string, current: boolean) => {
-    const { error } = await supabase.from('menu_items').update({ available: !current }).eq('id', id);
-    if (error) { toast.error('Error al cambiar disponibilidad'); return; }
+    if (isBranchView) {
+      // Upsert branch override
+      const { error } = await supabase.from('branch_menu_overrides').upsert({
+        branch_id: activeBranchId!,
+        menu_item_id: id,
+        available_override: !current,
+      }, { onConflict: 'branch_id,menu_item_id' });
+      if (error) { toast.error('Error al cambiar disponibilidad en sucursal'); return; }
+    } else {
+      const { error } = await supabase.from('menu_items').update({ available: !current }).eq('id', id);
+      if (error) { toast.error('Error al cambiar disponibilidad'); return; }
+    }
     refetch();
   };
 
