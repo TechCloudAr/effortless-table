@@ -17,7 +17,6 @@ serve(async (req) => {
       throw new Error('MERCADOPAGO_ACCESS_TOKEN is not configured');
     }
 
-    // Fix 1 — Currency corregida a ARS (Argentina)
     const { orderId, items, total, tableNumber, backUrl, currencyId = 'ARS' } = await req.json();
 
     if (!orderId || !items || !total || !tableNumber || !backUrl) {
@@ -27,7 +26,7 @@ serve(async (req) => {
     }
 
     const preference = {
-      items: items.map((item) => ({
+      items: items.map((item: { name: string; quantity: number; unitPrice: number }) => ({
         title: item.name,
         quantity: item.quantity,
         unit_price: Number(item.unitPrice),
@@ -59,8 +58,8 @@ serve(async (req) => {
       throw new Error('MercadoPago API error [' + mpResponse.status + ']: ' + JSON.stringify(mpData));
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     await supabase
@@ -77,9 +76,10 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error creating payment:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

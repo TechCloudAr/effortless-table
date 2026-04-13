@@ -9,7 +9,6 @@ const corsHeaders = {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  // Fix 2 - Verificar autenticacion
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -24,9 +23,8 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    // Fix 4 - Traer datos reales del restaurante desde Supabase
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     let contextData = "";
@@ -49,20 +47,20 @@ serve(async (req) => {
         .gte("created_at", since.toISOString());
 
       if (orders && orders.length > 0) {
-        const totalVentas = orders.reduce((sum, o) => sum + Number(o.total), 0);
+        const totalVentas = orders.reduce((sum: number, o: { total: number }) => sum + Number(o.total), 0);
         const ticketPromedio = totalVentas / orders.length;
         const ventasDiarias = totalVentas / 30;
 
-        const productCount = {};
+        const productCount: Record<string, number> = {};
         for (const order of orders) {
           const items = Array.isArray(order.items) ? order.items : [];
-          for (const item of items) {
+          for (const item of items as Array<{ name?: string; quantity?: number }>) {
             const name = item.name || "Desconocido";
             productCount[name] = (productCount[name] || 0) + (item.quantity || 1);
           }
         }
         const topProductos = Object.entries(productCount)
-          .sort((a, b) => b[1] - a[1])
+          .sort((a: [string, number], b: [string, number]) => b[1] - a[1])
           .slice(0, 5)
           .map(([name, qty]) => name + " (" + qty + " vendidos)")
           .join(", ");
@@ -124,9 +122,10 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
 
-  } catch (e) {
+  } catch (e: unknown) {
     console.error("business-chat error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Error desconocido" }), {
+    const message = e instanceof Error ? e.message : "Error desconocido";
+    return new Response(JSON.stringify({ error: message }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
