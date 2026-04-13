@@ -5,6 +5,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import ForecastingPanel from '@/components/admin/ForecastingPanel';
 import { useSalesData } from '@/hooks/useSalesData';
 import { useMenu } from '@/hooks/useMenu';
+import { useBranch } from '@/contexts/BranchContext';
 
 type TimeRange = 'day' | 'week' | 'month' | '90d' | 'year';
 
