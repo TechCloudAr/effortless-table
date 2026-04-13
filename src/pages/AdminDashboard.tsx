@@ -306,12 +306,7 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        {/* Branch comparison — only when viewing all branches */}
-        {branches.length > 1 && !useBranch && (() => {
-          // This always renders since we check branches.length
-          return null;
-        })()}
-        {branches.length > 1 && (
+        {/* Branch comparison — only when viewing all branches and multiple branches exist */}
           <div>
             <h2 className="font-heading font-semibold text-sm flex items-center gap-2 mb-3">
               <Building2 className="h-4 w-4 text-primary" /> Comparativa por sucursal
