@@ -19,6 +19,7 @@ import {
 import { Plus, Pencil, Trash2, ImagePlus, Search, GripVertical, X, Upload, Link } from 'lucide-react';
 import type { MenuItem } from '@/types/restaurant';
 import { toast } from 'sonner';
+import MenuExcelImport from '@/components/admin/MenuExcelImport';
 
 type FormData = {
   name: string;
@@ -155,7 +156,8 @@ export default function AdminMenuPage() {
             {unavailableCount > 0 && <span className="text-sm text-destructive font-medium">{unavailableCount} inactivos</span>}
           </div>
         </div>
-        <Button onClick={openCreate} className="gradient-primary gap-2 shadow-lg">
+        <Button onClick={openCreate} className="gradient-primary gap-2 shadow-lg">        <MenuExcelImport onSuccess={refetch} />
+
           <Plus className="h-4 w-4" /> Nuevo producto
         </Button>
       </div>
