@@ -1,43 +1,48 @@
 import { useState, useRef, useEffect } from 'react';
 import { Bot, Send, X, Sparkles, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/business-chat`;
+const CHAT_URL = import.meta.env.VITE_SUPABASE_URL + '/functions/v1/business-chat';
 
 const quickPrompts = [
-  '¿Cómo puedo aumentar el ticket promedio?',
-  '¿Qué producto debería promocionar hoy?',
-  'Análisis de mis ventas de esta semana',
-  '¿Cuánto debo comprar de ingredientes para la semana?',
+  'Como puedo aumentar el ticket promedio?',
+  'Que producto deberia promocionar hoy?',
+  'Analisis de mis ventas de esta semana',
+  'Cuanto debo comprar de ingredientes para la semana?',
 ];
 
 export default function AIChatWidget() {
+  const { restaurantId } = useAuth();
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Msg[]>([]);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef(null);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+    }
   }, [messages]);
 
-  const send = async (text: string) => {
+  const send = async (text) => {
     if (!text.trim() || isLoading) return;
-    const userMsg: Msg = { role: 'user', content: text.trim() };
+    const userMsg = { role: 'user', content: text.trim() };
     const allMessages = [...messages, userMsg];
     setMessages(allMessages);
     setInput('');
     setIsLoading(true);
 
     let assistantSoFar = '';
-    const upsert = (chunk: string) => {
+    const upsert = (chunk) => {
       assistantSoFar += chunk;
       setMessages(prev => {
         const last = prev[prev.length - 1];
-        if (last?.role === 'assistant') {
+        if (last && last.role === 'assistant') {
           return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantSoFar } : m);
         }
         return [...prev, { role: 'assistant', content: assistantSoFar }];
@@ -45,17 +50,20 @@ export default function AIChatWidget() {
     };
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = (session && session.access_token) ? session.access_token : import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
       const resp = await fetch(CHAT_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: 'Bearer ' + token,
         },
-        body: JSON.stringify({ messages: allMessages }),
+        body: JSON.stringify({ messages: allMessages, restaurantId }),
       });
 
       if (!resp.ok || !resp.body) {
-        const err = await resp.json().catch(() => ({ error: 'Error de conexión' }));
+        const err = await resp.json().catch(() => ({ error: 'Error de conexion' }));
         upsert(err.error || 'Error al procesar la solicitud.');
         setIsLoading(false);
         return;
@@ -70,7 +78,7 @@ export default function AIChatWidget() {
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
 
-        let idx: number;
+        let idx;
         while ((idx = buffer.indexOf('\n')) !== -1) {
           let line = buffer.slice(0, idx);
           buffer = buffer.slice(idx + 1);
@@ -80,13 +88,13 @@ export default function AIChatWidget() {
           if (json === '[DONE]') break;
           try {
             const parsed = JSON.parse(json);
-            const content = parsed.choices?.[0]?.delta?.content;
+            const content = parsed.choices && parsed.choices[0] && parsed.choices[0].delta && parsed.choices[0].delta.content;
             if (content) upsert(content);
-          } catch { /* partial */ }
+          } catch (e) {}
         }
       }
-    } catch {
-      upsert('Error de conexión. Intenta de nuevo.');
+    } catch (e) {
+      upsert('Error de conexion. Intenta de nuevo.');
     }
     setIsLoading(false);
   };
@@ -104,7 +112,6 @@ export default function AIChatWidget() {
 
   return (
     <div className="fixed bottom-24 right-4 md:bottom-4 md:right-4 z-50 w-[360px] max-h-[520px] bg-card rounded-2xl shadow-2xl border border-border/50 flex flex-col overflow-hidden">
-      {/* Header */}
       <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border/50 bg-accent/30">
         <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
           <Bot className="h-4 w-4 text-primary" />
@@ -118,11 +125,10 @@ export default function AIChatWidget() {
         </button>
       </div>
 
-      {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px] max-h-[340px]">
         {messages.length === 0 && (
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground text-center mb-3">¿En qué te puedo ayudar?</p>
+            <p className="text-sm text-muted-foreground text-center mb-3">En que te puedo ayudar?</p>
             {quickPrompts.map(q => (
               <button
                 key={q}
@@ -135,12 +141,8 @@ export default function AIChatWidget() {
           </div>
         )}
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${
-              msg.role === 'user'
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted/60 text-foreground'
-            }`}>
+          <div key={i} className={"flex " + (msg.role === 'user' ? 'justify-end' : 'justify-start')}>
+            <div className={"max-w-[85%] rounded-xl px-3 py-2 text-sm " + (msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted/60 text-foreground')}>
               {msg.role === 'assistant' ? (
                 <div className="prose prose-sm max-w-none [&>p]:m-0 [&>ul]:my-1 [&>ol]:my-1">
                   <ReactMarkdown>{msg.content}</ReactMarkdown>
@@ -149,20 +151,19 @@ export default function AIChatWidget() {
             </div>
           </div>
         ))}
-        {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
+        {isLoading && messages[messages.length - 1] && messages[messages.length - 1].role !== 'assistant' && (
           <div className="flex items-center gap-2 text-muted-foreground">
             <Loader2 className="h-3 w-3 animate-spin" /> <span className="text-xs">Pensando...</span>
           </div>
         )}
       </div>
 
-      {/* Input */}
       <form onSubmit={e => { e.preventDefault(); send(input); }} className="p-3 border-t border-border/50">
         <div className="flex gap-2">
           <input
             value={input}
             onChange={e => setInput(e.target.value)}
-            placeholder="Preguntá sobre tu negocio..."
+            placeholder="Pregunta sobre tu negocio..."
             className="flex-1 bg-muted/40 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground"
             disabled={isLoading}
           />
