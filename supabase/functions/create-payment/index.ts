@@ -17,7 +17,8 @@ serve(async (req) => {
       throw new Error('MERCADOPAGO_ACCESS_TOKEN is not configured');
     }
 
-    const { orderId, items, total, tableNumber, backUrl, currencyId = 'MXN' } = await req.json();
+    // Fix 1 — Currency corregida a ARS (Argentina)
+    const { orderId, items, total, tableNumber, backUrl, currencyId = 'ARS' } = await req.json();
 
     if (!orderId || !items || !total || !tableNumber || !backUrl) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
@@ -25,28 +26,28 @@ serve(async (req) => {
       });
     }
 
-    // Build MercadoPago preference
     const preference = {
-      items: items.map((item: any) => ({
+      items: items.map((item) => ({
         title: item.name,
         quantity: item.quantity,
         unit_price: Number(item.unitPrice),
+        currency_id: currencyId,
       })),
       back_urls: {
-        success: `${backUrl}/pago/exito?order=${orderId}`,
-        failure: `${backUrl}/pago/error?order=${orderId}`,
-        pending: `${backUrl}/pago/pendiente?order=${orderId}`,
+        success: backUrl + '/pago/exito?order=' + orderId,
+        failure: backUrl + '/pago/error?order=' + orderId,
+        pending: backUrl + '/pago/pendiente?order=' + orderId,
       },
       auto_return: 'approved',
       external_reference: orderId,
-      notification_url: undefined, // webhook for production
+      notification_url: undefined,
     };
 
     const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${MERCADOPAGO_ACCESS_TOKEN}`,
+        'Authorization': 'Bearer ' + MERCADOPAGO_ACCESS_TOKEN,
       },
       body: JSON.stringify(preference),
     });
@@ -55,12 +56,11 @@ serve(async (req) => {
 
     if (!mpResponse.ok) {
       console.error('MercadoPago error:', mpData);
-      throw new Error(`MercadoPago API error [${mpResponse.status}]: ${JSON.stringify(mpData)}`);
+      throw new Error('MercadoPago API error [' + mpResponse.status + ']: ' + JSON.stringify(mpData));
     }
 
-    // Update order with preference ID
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     await supabase
