@@ -25,7 +25,7 @@ export function useMenu(restaurantId?: string, branchId?: string | null) {
       let catQuery = supabase.from('menu_categories').select('*').order('sort_order');
       if (restaurantId) catQuery = catQuery.eq('restaurant_id', restaurantId);
 
-      const queries: Promise<any>[] = [
+      const queries: PromiseLike<any>[] = [
         catQuery,
         supabase.from('menu_items').select('*').order('sort_order'),
         supabase.from('menu_item_option_groups').select('*').order('sort_order'),
