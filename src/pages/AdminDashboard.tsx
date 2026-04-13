@@ -306,7 +306,36 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        {/* Charts row 1: Sales trend + Category breakdown */}
+        {/* Branch comparison — only when viewing all branches */}
+        {branches.length > 1 && !useBranch && (() => {
+          // This always renders since we check branches.length
+          return null;
+        })()}
+        {branches.length > 1 && (
+          <div>
+            <h2 className="font-heading font-semibold text-sm flex items-center gap-2 mb-3">
+              <Building2 className="h-4 w-4 text-primary" /> Comparativa por sucursal
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {branches.map(branch => {
+                const branchOrders = filteredOrders.filter(o => o.branch_id === branch.id);
+                const branchRevenue = branchOrders.reduce((s, o) => s + Number(o.total), 0);
+                const branchAvg = branchOrders.length > 0 ? branchRevenue / branchOrders.length : 0;
+                return (
+                  <div key={branch.id} className="bg-card rounded-xl p-4 shadow-card border border-border/50">
+                    <p className="font-heading font-semibold text-sm truncate">{branch.name}</p>
+                    <p className="font-heading font-bold text-lg mt-1">{fmtARS(branchRevenue)}</p>
+                    <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
+                      <span>{branchOrders.length} pedidos</span>
+                      <span>Ticket: {fmtARS(Math.round(branchAvg))}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="grid lg:grid-cols-5 gap-4">
           <div className="lg:col-span-3 bg-card rounded-xl p-5 shadow-card border border-border/50">
             <h2 className="font-heading font-semibold text-sm flex items-center gap-2 mb-4">
