@@ -56,6 +56,7 @@ export default function AdminDashboard() {
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
   const { stats, loading } = useSalesData();
   const { categories, menuItems } = useMenu();
+  const { branches } = useBranch();
   const isMobile = useIsMobile();
 
   // Build menuItemId -> categoryId lookup from menu_items
