@@ -249,8 +249,8 @@ export default function AdminMenuPage() {
                   <p className="text-xs font-semibold mt-0.5 text-primary">${item.price} • {categories.find(c => c.id === item.categoryId)?.name}</p>
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => openEdit(item)}><Pencil className="h-3.5 w-3.5" /></Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive" onClick={() => openDelete(item)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                  {!isBranchView && <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => openEdit(item)}><Pencil className="h-3.5 w-3.5" /></Button>}
+                  {!isBranchView && <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive" onClick={() => openDelete(item)}><Trash2 className="h-3.5 w-3.5" /></Button>}
                   <Switch checked={item.available} onCheckedChange={() => toggleAvailability(item.id, item.available)} />
                 </div>
               </div>
