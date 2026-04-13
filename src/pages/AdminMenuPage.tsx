@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useMenu } from '@/hooks/useMenu';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBranch } from '@/contexts/BranchContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -37,8 +38,9 @@ const emptyForm: FormData = {
 };
 
 export default function AdminMenuPage() {
-  const { categories, menuItems, loading, refetch } = useMenu();
   const { restaurantId } = useAuth();
+  const { branches, activeBranchId, setActiveBranchId } = useBranch();
+  const { categories, menuItems, branchOverrides, loading, refetch } = useMenu(restaurantId ?? undefined, activeBranchId);
   const [activeCategory, setActiveCategory] = useState('all');
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -51,9 +53,21 @@ export default function AdminMenuPage() {
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const isBranchView = !!activeBranchId;
+
   const toggleAvailability = async (id: string, current: boolean) => {
-    const { error } = await supabase.from('menu_items').update({ available: !current }).eq('id', id);
-    if (error) { toast.error('Error al cambiar disponibilidad'); return; }
+    if (isBranchView) {
+      // Upsert branch override
+      const { error } = await supabase.from('branch_menu_overrides').upsert({
+        branch_id: activeBranchId!,
+        menu_item_id: id,
+        available_override: !current,
+      }, { onConflict: 'branch_id,menu_item_id' });
+      if (error) { toast.error('Error al cambiar disponibilidad en sucursal'); return; }
+    } else {
+      const { error } = await supabase.from('menu_items').update({ available: !current }).eq('id', id);
+      if (error) { toast.error('Error al cambiar disponibilidad'); return; }
+    }
     refetch();
   };
 
@@ -147,6 +161,28 @@ export default function AdminMenuPage() {
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto">
+      {/* Branch selector */}
+      {branches.length > 1 && (
+        <div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar pb-1">
+          <button onClick={() => setActiveBranchId(null)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-all ${!activeBranchId ? 'gradient-primary text-primary-foreground border-transparent' : 'bg-card text-muted-foreground border-border'}`}>
+            🏠 Menú base
+          </button>
+          {branches.map(b => (
+            <button key={b.id} onClick={() => setActiveBranchId(b.id)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-all ${activeBranchId === b.id ? 'gradient-primary text-primary-foreground border-transparent' : 'bg-card text-muted-foreground border-border'}`}>
+              📍 {b.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {isBranchView && (
+        <div className="bg-accent/50 border border-border rounded-lg px-3 py-2 mb-4 text-xs text-muted-foreground">
+          📍 Viendo menú de <strong className="text-foreground">{branches.find(b => b.id === activeBranchId)?.name}</strong> — los cambios de disponibilidad y precio solo aplican a esta sucursal.
+        </div>
+      )}
+
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="font-heading text-2xl font-bold">Gestión del Menú</h1>
@@ -156,10 +192,12 @@ export default function AdminMenuPage() {
             {unavailableCount > 0 && <span className="text-sm text-destructive font-medium">{unavailableCount} inactivos</span>}
           </div>
         </div>
-        <Button onClick={openCreate} className="gradient-primary gap-2 shadow-lg">        <MenuExcelImport onSuccess={refetch} />
-
-          <Plus className="h-4 w-4" /> Nuevo producto
-        </Button>
+        {!isBranchView && (
+          <Button onClick={openCreate} className="gradient-primary gap-2 shadow-lg">
+            <MenuExcelImport onSuccess={refetch} />
+            <Plus className="h-4 w-4" /> Nuevo producto
+          </Button>
+        )}
       </div>
 
       <div className="relative mb-4">
@@ -211,8 +249,8 @@ export default function AdminMenuPage() {
                   <p className="text-xs font-semibold mt-0.5 text-primary">${item.price} • {categories.find(c => c.id === item.categoryId)?.name}</p>
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => openEdit(item)}><Pencil className="h-3.5 w-3.5" /></Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive" onClick={() => openDelete(item)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                  {!isBranchView && <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => openEdit(item)}><Pencil className="h-3.5 w-3.5" /></Button>}
+                  {!isBranchView && <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive" onClick={() => openDelete(item)}><Trash2 className="h-3.5 w-3.5" /></Button>}
                   <Switch checked={item.available} onCheckedChange={() => toggleAvailability(item.id, item.available)} />
                 </div>
               </div>

@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      branch_menu_overrides: {
+        Row: {
+          available_override: boolean | null
+          branch_id: string
+          created_at: string
+          id: string
+          menu_item_id: string
+          price_override: number | null
+          updated_at: string
+        }
+        Insert: {
+          available_override?: boolean | null
+          branch_id: string
+          created_at?: string
+          id?: string
+          menu_item_id: string
+          price_override?: number | null
+          updated_at?: string
+        }
+        Update: {
+          available_override?: boolean | null
+          branch_id?: string
+          created_at?: string
+          id?: string
+          menu_item_id?: string
+          price_override?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branch_menu_overrides_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_menu_overrides_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       branches: {
         Row: {
           address: string | null
